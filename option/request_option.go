@@ -3,7 +3,7 @@
 package option
 
 import (
-	core "github.com/AgentPaid/paid-go/core"
+	core "github.com/paid-ai/paid-go/core"
 	http "net/http"
 	url "net/url"
 )

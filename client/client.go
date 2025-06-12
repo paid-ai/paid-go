@@ -3,14 +3,14 @@
 package client
 
 import (
-	agents "github.com/AgentPaid/paid-go/agents"
-	contacts "github.com/AgentPaid/paid-go/contacts"
-	core "github.com/AgentPaid/paid-go/core"
-	customers "github.com/AgentPaid/paid-go/customers"
-	internal "github.com/AgentPaid/paid-go/internal"
-	option "github.com/AgentPaid/paid-go/option"
-	ordersclient "github.com/AgentPaid/paid-go/orders/client"
-	usage "github.com/AgentPaid/paid-go/usage"
+	agents "github.com/paid-ai/paid-go/agents"
+	contacts "github.com/paid-ai/paid-go/contacts"
+	core "github.com/paid-ai/paid-go/core"
+	customers "github.com/paid-ai/paid-go/customers"
+	internal "github.com/paid-ai/paid-go/internal"
+	option "github.com/paid-ai/paid-go/option"
+	ordersclient "github.com/paid-ai/paid-go/orders/client"
+	usage "github.com/paid-ai/paid-go/usage"
 	http "net/http"
 )
 

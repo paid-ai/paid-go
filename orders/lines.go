@@ -3,7 +3,7 @@
 package orders
 
 import (
-	paidgo "github.com/AgentPaid/paid-go"
+	paidgo "github.com/paid-ai/paid-go"
 )
 
 type LinesUpdateRequest struct {

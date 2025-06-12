@@ -4,11 +4,11 @@ package lines
 
 import (
 	context "context"
-	paidgo "github.com/AgentPaid/paid-go"
-	core "github.com/AgentPaid/paid-go/core"
-	internal "github.com/AgentPaid/paid-go/internal"
-	option "github.com/AgentPaid/paid-go/option"
-	orders "github.com/AgentPaid/paid-go/orders"
+	paidgo "github.com/paid-ai/paid-go"
+	core "github.com/paid-ai/paid-go/core"
+	internal "github.com/paid-ai/paid-go/internal"
+	option "github.com/paid-ai/paid-go/option"
+	orders "github.com/paid-ai/paid-go/orders"
 	http "net/http"
 )
 

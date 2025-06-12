@@ -5,7 +5,7 @@ package api
 import (
 	json "encoding/json"
 	fmt "fmt"
-	internal "github.com/AgentPaid/paid-go/internal"
+	internal "github.com/paid-ai/paid-go/internal"
 )
 
 type UsageRecordBulkRequest struct {

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/AgentPaid/paid-go/core"
+	"github.com/paid-ai/paid-go/core"
 	"github.com/stretchr/testify/assert"
 )
 
