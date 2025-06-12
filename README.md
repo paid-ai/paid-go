@@ -1,8 +1,34 @@
-# Paid Go Library
+<div align="center">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="./assets/paid_light.svg" width=600>
+        <source media="(prefers-color-scheme: light)" srcset="./assets/paid_dark.svg" width=600>
+        <img alt="Fallback image description" src="./assets/paid_light.svg" width=600>
+    </picture>
+</div>
 
-[![fern shield](https://img.shields.io/badge/%F0%9F%8C%BF-Built%20with%20Fern-brightgreen)](https://buildwithfern.com?utm_source=github&utm_medium=github&utm_campaign=readme&utm_source=https%3A%2F%2Fgithub.com%2FAgentPaid%2Fpaid-go)
+# 
 
-The Paid Go library provides convenient access to the Paid API from Go.
+<div align="center">
+    <a href="https://buildwithfern.com?utm_source=github&utm_medium=github&utm_campaign=readme&utm_source=https%3A%2F%2Fgithub.com%2Fpaid-ai%2Fpaid-node">
+        <img src="https://img.shields.io/badge/%F0%9F%8C%BF-Built%20with%20Fern-brightgreen" alt="fern shield">
+    </a>
+    <a href="https://www.npmjs.com/package/@paid-ai/paid-node">
+        <img src="https://img.shields.io/npm/v/@paid-ai/paid-node" alt="npm shield">
+    </a>
+</div>
+
+Paid is the all-in-one, drop-in Business Engine for AI Agents that handles your pricing, subscriptions, margins, billing, and renewals with just 5 lines of code. 
+The Paid Go library provides convenient access to the Paid API from Go applications. 
+
+## Documentation
+
+See the full API docs [here](https://paid.docs.buildwithfern.com/api-reference/api-reference/customers/list)
+
+## Installation
+
+```sh
+go get -u github.com/paid-ai/paid-go
+```
 
 ## Usage
 
@@ -12,10 +38,10 @@ Instantiate and use the client with the following:
 package example
 
 import (
-    client "github.com/AgentPaid/paid-go/client"
-    option "github.com/AgentPaid/paid-go/option"
+    client "github.com/paid-ai/paid-go/client"
+    option "github.com/paid-ai/paid-go/option"
     context "context"
-    paid "github.com/AgentPaid/paid-go"
+    paid "github.com/paid-ai/paid-go"
 )
 
 func do() () {
