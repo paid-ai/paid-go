@@ -4,12 +4,12 @@ package lines
 
 import (
 	context "context"
+	paidgo "github.com/paid-ai/paid-go"
+	core "github.com/paid-ai/paid-go/core"
+	internal "github.com/paid-ai/paid-go/internal"
+	option "github.com/paid-ai/paid-go/option"
+	orders "github.com/paid-ai/paid-go/orders"
 	http "net/http"
-	sdk "sdk"
-	core "sdk/core"
-	internal "sdk/internal"
-	option "sdk/option"
-	orders "sdk/orders"
 )
 
 type Client struct {
@@ -37,7 +37,7 @@ func (c *Client) Update(
 	orderId string,
 	request *orders.LinesUpdateRequest,
 	opts ...option.RequestOption,
-) (*sdk.Order, error) {
+) (*paidgo.Order, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -54,7 +54,7 @@ func (c *Client) Update(
 	)
 	headers.Set("Content-Type", "application/json")
 
-	var response *sdk.Order
+	var response *paidgo.Order
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

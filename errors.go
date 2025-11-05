@@ -4,7 +4,7 @@ package api
 
 import (
 	json "encoding/json"
-	core "sdk/core"
+	core "github.com/paid-ai/paid-go/core"
 )
 
 // Bad request - Invalid query parameters

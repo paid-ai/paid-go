@@ -4,12 +4,12 @@ package client
 
 import (
 	context "context"
+	paidgo "github.com/paid-ai/paid-go"
+	core "github.com/paid-ai/paid-go/core"
+	internal "github.com/paid-ai/paid-go/internal"
+	option "github.com/paid-ai/paid-go/option"
+	lines "github.com/paid-ai/paid-go/orders/lines"
 	http "net/http"
-	sdk "sdk"
-	core "sdk/core"
-	internal "sdk/internal"
-	option "sdk/option"
-	lines "sdk/orders/lines"
 )
 
 type Client struct {
@@ -38,7 +38,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 func (c *Client) List(
 	ctx context.Context,
 	opts ...option.RequestOption,
-) ([]*sdk.Order, error) {
+) ([]*paidgo.Order, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -51,7 +51,7 @@ func (c *Client) List(
 		options.ToHeader(),
 	)
 
-	var response []*sdk.Order
+	var response []*paidgo.Order
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -72,9 +72,9 @@ func (c *Client) List(
 
 func (c *Client) Create(
 	ctx context.Context,
-	request *sdk.OrderCreate,
+	request *paidgo.OrderCreate,
 	opts ...option.RequestOption,
-) (*sdk.Order, error) {
+) (*paidgo.Order, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -88,7 +88,7 @@ func (c *Client) Create(
 	)
 	headers.Set("Content-Type", "application/json")
 
-	var response *sdk.Order
+	var response *paidgo.Order
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -112,7 +112,7 @@ func (c *Client) Get(
 	ctx context.Context,
 	orderId string,
 	opts ...option.RequestOption,
-) (*sdk.Order, error) {
+) (*paidgo.Order, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -128,7 +128,7 @@ func (c *Client) Get(
 		options.ToHeader(),
 	)
 
-	var response *sdk.Order
+	var response *paidgo.Order
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -188,7 +188,7 @@ func (c *Client) Activate(
 	ctx context.Context,
 	orderId string,
 	opts ...option.RequestOption,
-) (*sdk.Order, error) {
+) (*paidgo.Order, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -204,7 +204,7 @@ func (c *Client) Activate(
 		options.ToHeader(),
 	)
 
-	var response *sdk.Order
+	var response *paidgo.Order
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

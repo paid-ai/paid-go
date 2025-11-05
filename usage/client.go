@@ -4,11 +4,11 @@ package usage
 
 import (
 	context "context"
+	paidgo "github.com/paid-ai/paid-go"
+	core "github.com/paid-ai/paid-go/core"
+	internal "github.com/paid-ai/paid-go/internal"
+	option "github.com/paid-ai/paid-go/option"
 	http "net/http"
-	sdk "sdk"
-	core "sdk/core"
-	internal "sdk/internal"
-	option "sdk/option"
 )
 
 type Client struct {
@@ -33,7 +33,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 
 func (c *Client) RecordBulk(
 	ctx context.Context,
-	request *sdk.UsageRecordBulkRequest,
+	request *paidgo.UsageRecordBulkRequest,
 	opts ...option.RequestOption,
 ) error {
 	options := core.NewRequestOptions(opts...)

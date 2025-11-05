@@ -4,11 +4,11 @@ package contacts
 
 import (
 	context "context"
+	paidgo "github.com/paid-ai/paid-go"
+	core "github.com/paid-ai/paid-go/core"
+	internal "github.com/paid-ai/paid-go/internal"
+	option "github.com/paid-ai/paid-go/option"
 	http "net/http"
-	sdk "sdk"
-	core "sdk/core"
-	internal "sdk/internal"
-	option "sdk/option"
 )
 
 type Client struct {
@@ -34,7 +34,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 func (c *Client) List(
 	ctx context.Context,
 	opts ...option.RequestOption,
-) ([]*sdk.Contact, error) {
+) ([]*paidgo.Contact, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -47,7 +47,7 @@ func (c *Client) List(
 		options.ToHeader(),
 	)
 
-	var response []*sdk.Contact
+	var response []*paidgo.Contact
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -68,9 +68,9 @@ func (c *Client) List(
 
 func (c *Client) Create(
 	ctx context.Context,
-	request *sdk.ContactCreate,
+	request *paidgo.ContactCreate,
 	opts ...option.RequestOption,
-) (*sdk.Contact, error) {
+) (*paidgo.Contact, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -84,7 +84,7 @@ func (c *Client) Create(
 	)
 	headers.Set("Content-Type", "application/json")
 
-	var response *sdk.Contact
+	var response *paidgo.Contact
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -108,7 +108,7 @@ func (c *Client) Get(
 	ctx context.Context,
 	contactId string,
 	opts ...option.RequestOption,
-) (*sdk.Contact, error) {
+) (*paidgo.Contact, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -124,7 +124,7 @@ func (c *Client) Get(
 		options.ToHeader(),
 	)
 
-	var response *sdk.Contact
+	var response *paidgo.Contact
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -184,7 +184,7 @@ func (c *Client) GetByExternalId(
 	ctx context.Context,
 	externalId string,
 	opts ...option.RequestOption,
-) (*sdk.Contact, error) {
+) (*paidgo.Contact, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -200,7 +200,7 @@ func (c *Client) GetByExternalId(
 		options.ToHeader(),
 	)
 
-	var response *sdk.Contact
+	var response *paidgo.Contact
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
