@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"strings"
 
-	"sdk/core"
+	"github.com/paid-ai/paid-go/core"
 )
 
 const (

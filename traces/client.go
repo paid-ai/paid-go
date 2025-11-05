@@ -4,11 +4,11 @@ package traces
 
 import (
 	context "context"
+	paidgo "github.com/paid-ai/paid-go"
+	core "github.com/paid-ai/paid-go/core"
+	internal "github.com/paid-ai/paid-go/internal"
+	option "github.com/paid-ai/paid-go/option"
 	http "net/http"
-	sdk "sdk"
-	core "sdk/core"
-	internal "sdk/internal"
-	option "sdk/option"
 )
 
 type Client struct {
@@ -33,9 +33,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 
 func (c *Client) GetTraces(
 	ctx context.Context,
-	request *sdk.GetTracesRequest,
+	request *paidgo.GetTracesRequest,
 	opts ...option.RequestOption,
-) (*sdk.TracesResponse, error) {
+) (*paidgo.TracesResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -56,18 +56,18 @@ func (c *Client) GetTraces(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &sdk.BadRequestError{
+			return &paidgo.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &sdk.ForbiddenError{
+			return &paidgo.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *sdk.TracesResponse
+	var response *paidgo.TracesResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
