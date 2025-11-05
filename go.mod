@@ -1,4 +1,4 @@
-module sdk
+module github.com/paid-ai/paid-go
 
 go 1.13
 
