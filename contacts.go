@@ -5,7 +5,7 @@ package api
 import (
 	json "encoding/json"
 	fmt "fmt"
-	internal "github.com/paid-ai/paid-go/internal"
+	internal "sdk/internal"
 )
 
 type ContactCreate struct {
@@ -17,11 +17,11 @@ type ContactCreate struct {
 	LastName             string     `json:"lastName" url:"-"`
 	Email                string     `json:"email" url:"-"`
 	Phone                *string    `json:"phone,omitempty" url:"-"`
-	BillingStreet        string     `json:"billingStreet" url:"-"`
-	BillingCity          string     `json:"billingCity" url:"-"`
+	BillingStreet        *string    `json:"billingStreet,omitempty" url:"-"`
+	BillingCity          *string    `json:"billingCity,omitempty" url:"-"`
 	BillingStateProvince *string    `json:"billingStateProvince,omitempty" url:"-"`
-	BillingCountry       string     `json:"billingCountry" url:"-"`
-	BillingPostalCode    string     `json:"billingPostalCode" url:"-"`
+	BillingCountry       *string    `json:"billingCountry,omitempty" url:"-"`
+	BillingPostalCode    *string    `json:"billingPostalCode,omitempty" url:"-"`
 }
 
 type Contact struct {

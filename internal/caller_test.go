@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/paid-ai/paid-go/core"
+	"sdk/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

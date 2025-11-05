@@ -5,7 +5,7 @@ package api
 import (
 	json "encoding/json"
 	fmt "fmt"
-	internal "github.com/paid-ai/paid-go/internal"
+	internal "sdk/internal"
 )
 
 type AgentCreate struct {
@@ -13,6 +13,7 @@ type AgentCreate struct {
 	Description string  `json:"description" url:"-"`
 	AgentCode   *string `json:"agentCode,omitempty" url:"-"`
 	ExternalId  *string `json:"externalId,omitempty" url:"-"`
+	Active      *bool   `json:"active,omitempty" url:"-"`
 }
 
 type AgentUpdate struct {

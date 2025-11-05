@@ -4,11 +4,11 @@ package usage
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
 	http "net/http"
+	sdk "sdk"
+	core "sdk/core"
+	internal "sdk/internal"
+	option "sdk/option"
 )
 
 type Client struct {
@@ -33,9 +33,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 
 func (c *Client) RecordBulk(
 	ctx context.Context,
-	request *paidgo.UsageRecordBulkRequest,
+	request *sdk.UsageRecordBulkRequest,
 	opts ...option.RequestOption,
-) ([]interface{}, error) {
+) error {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -49,7 +49,6 @@ func (c *Client) RecordBulk(
 	)
 	headers.Set("Content-Type", "application/json")
 
-	var response []interface{}
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -61,10 +60,9 @@ func (c *Client) RecordBulk(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Request:         request,
-			Response:        &response,
 		},
 	); err != nil {
-		return nil, err
+		return err
 	}
-	return response, nil
+	return nil
 }

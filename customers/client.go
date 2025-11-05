@@ -4,11 +4,11 @@ package customers
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
 	http "net/http"
+	sdk "sdk"
+	core "sdk/core"
+	internal "sdk/internal"
+	option "sdk/option"
 )
 
 type Client struct {
@@ -34,7 +34,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 func (c *Client) List(
 	ctx context.Context,
 	opts ...option.RequestOption,
-) ([]*paidgo.Customer, error) {
+) ([]*sdk.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -47,7 +47,7 @@ func (c *Client) List(
 		options.ToHeader(),
 	)
 
-	var response []*paidgo.Customer
+	var response []*sdk.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -68,9 +68,9 @@ func (c *Client) List(
 
 func (c *Client) Create(
 	ctx context.Context,
-	request *paidgo.CustomerCreate,
+	request *sdk.CustomerCreate,
 	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
+) (*sdk.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -84,7 +84,7 @@ func (c *Client) Create(
 	)
 	headers.Set("Content-Type", "application/json")
 
-	var response *paidgo.Customer
+	var response *sdk.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -108,7 +108,7 @@ func (c *Client) Get(
 	ctx context.Context,
 	customerId string,
 	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
+) (*sdk.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -124,7 +124,7 @@ func (c *Client) Get(
 		options.ToHeader(),
 	)
 
-	var response *paidgo.Customer
+	var response *sdk.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -146,9 +146,9 @@ func (c *Client) Get(
 func (c *Client) Update(
 	ctx context.Context,
 	customerId string,
-	request *paidgo.CustomerUpdate,
+	request *sdk.CustomerUpdate,
 	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
+) (*sdk.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -165,7 +165,7 @@ func (c *Client) Update(
 	)
 	headers.Set("Content-Type", "application/json")
 
-	var response *paidgo.Customer
+	var response *sdk.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -222,11 +222,59 @@ func (c *Client) Delete(
 	return nil
 }
 
+func (c *Client) GetEntitlements(
+	ctx context.Context,
+	// The customer ID
+	customerId string,
+	opts ...option.RequestOption,
+) ([]*sdk.EntitlementUsage, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/%v/credit-bundles",
+		customerId,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &sdk.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response []*sdk.EntitlementUsage
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
 func (c *Client) GetByExternalId(
 	ctx context.Context,
 	externalId string,
 	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
+) (*sdk.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -242,7 +290,7 @@ func (c *Client) GetByExternalId(
 		options.ToHeader(),
 	)
 
-	var response *paidgo.Customer
+	var response *sdk.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -264,9 +312,9 @@ func (c *Client) GetByExternalId(
 func (c *Client) UpdateByExternalId(
 	ctx context.Context,
 	externalId string,
-	request *paidgo.CustomerUpdate,
+	request *sdk.CustomerUpdate,
 	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
+) (*sdk.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -283,7 +331,7 @@ func (c *Client) UpdateByExternalId(
 	)
 	headers.Set("Content-Type", "application/json")
 
-	var response *paidgo.Customer
+	var response *sdk.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -338,4 +386,70 @@ func (c *Client) DeleteByExternalId(
 		return err
 	}
 	return nil
+}
+
+func (c *Client) GetCostsByExternalId(
+	ctx context.Context,
+	// The external ID of the customer
+	externalId string,
+	request *sdk.CustomersGetCostsByExternalIdRequest,
+	opts ...option.RequestOption,
+) (*sdk.CostTracesResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v1",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/external/%v/costs",
+		externalId,
+	)
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &sdk.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &sdk.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &sdk.NotFoundError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *sdk.CostTracesResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
 }

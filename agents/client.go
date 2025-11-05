@@ -4,11 +4,11 @@ package agents
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
 	http "net/http"
+	sdk "sdk"
+	core "sdk/core"
+	internal "sdk/internal"
+	option "sdk/option"
 )
 
 type Client struct {
@@ -34,7 +34,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 func (c *Client) List(
 	ctx context.Context,
 	opts ...option.RequestOption,
-) ([]*paidgo.Agent, error) {
+) ([]*sdk.Agent, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -47,7 +47,7 @@ func (c *Client) List(
 		options.ToHeader(),
 	)
 
-	var response []*paidgo.Agent
+	var response []*sdk.Agent
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -68,9 +68,9 @@ func (c *Client) List(
 
 func (c *Client) Create(
 	ctx context.Context,
-	request *paidgo.AgentCreate,
+	request *sdk.AgentCreate,
 	opts ...option.RequestOption,
-) (*paidgo.Agent, error) {
+) (*sdk.Agent, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -84,7 +84,7 @@ func (c *Client) Create(
 	)
 	headers.Set("Content-Type", "application/json")
 
-	var response *paidgo.Agent
+	var response *sdk.Agent
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -108,7 +108,7 @@ func (c *Client) Get(
 	ctx context.Context,
 	agentId string,
 	opts ...option.RequestOption,
-) (*paidgo.Agent, error) {
+) (*sdk.Agent, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -124,7 +124,7 @@ func (c *Client) Get(
 		options.ToHeader(),
 	)
 
-	var response *paidgo.Agent
+	var response *sdk.Agent
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -146,9 +146,9 @@ func (c *Client) Get(
 func (c *Client) Update(
 	ctx context.Context,
 	agentId string,
-	request *paidgo.AgentUpdate,
+	request *sdk.AgentUpdate,
 	opts ...option.RequestOption,
-) (*paidgo.Agent, error) {
+) (*sdk.Agent, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -165,7 +165,7 @@ func (c *Client) Update(
 	)
 	headers.Set("Content-Type", "application/json")
 
-	var response *paidgo.Agent
+	var response *sdk.Agent
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -226,7 +226,7 @@ func (c *Client) GetByExternalId(
 	ctx context.Context,
 	externalId string,
 	opts ...option.RequestOption,
-) (*paidgo.Agent, error) {
+) (*sdk.Agent, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -242,7 +242,7 @@ func (c *Client) GetByExternalId(
 		options.ToHeader(),
 	)
 
-	var response *paidgo.Agent
+	var response *sdk.Agent
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -264,9 +264,9 @@ func (c *Client) GetByExternalId(
 func (c *Client) UpdateByExternalId(
 	ctx context.Context,
 	externalId string,
-	request *paidgo.AgentUpdate,
+	request *sdk.AgentUpdate,
 	opts ...option.RequestOption,
-) (*paidgo.Agent, error) {
+) (*sdk.Agent, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -283,7 +283,7 @@ func (c *Client) UpdateByExternalId(
 	)
 	headers.Set("Content-Type", "application/json")
 
-	var response *paidgo.Agent
+	var response *sdk.Agent
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

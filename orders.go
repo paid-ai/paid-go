@@ -3,9 +3,9 @@
 package api
 
 type OrderCreate struct {
-	CustomerId         string             `json:"customerId" url:"-"`
+	CustomerId         *string            `json:"customerId,omitempty" url:"-"`
 	CustomerExternalId *string            `json:"customerExternalId,omitempty" url:"-"`
-	BillingContactId   string             `json:"billingContactId" url:"-"`
+	BillingContactId   *string            `json:"billingContactId,omitempty" url:"-"`
 	Name               string             `json:"name" url:"-"`
 	Description        *string            `json:"description,omitempty" url:"-"`
 	StartDate          string             `json:"startDate" url:"-"`

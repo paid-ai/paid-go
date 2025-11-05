@@ -5,7 +5,8 @@ package api
 import (
 	json "encoding/json"
 	fmt "fmt"
-	internal "github.com/paid-ai/paid-go/internal"
+	internal "sdk/internal"
+	time "time"
 )
 
 type CustomerCreate struct {
@@ -18,6 +19,173 @@ type CustomerCreate struct {
 	CreationSource  *CreationSource  `json:"creationSource,omitempty" url:"-"`
 	Website         *string          `json:"website,omitempty" url:"-"`
 	BillingAddress  *Address         `json:"billingAddress,omitempty" url:"-"`
+}
+
+type CustomersGetCostsByExternalIdRequest struct {
+	// Maximum number of traces to return (1-1000)
+	Limit *int `json:"-" url:"limit,omitempty"`
+	// Number of traces to skip for pagination
+	Offset *int `json:"-" url:"offset,omitempty"`
+	// Filter traces starting from this time (ISO 8601 format)
+	StartTime *time.Time `json:"-" url:"startTime,omitempty"`
+	// Filter traces up to this time (ISO 8601 format)
+	EndTime *time.Time `json:"-" url:"endTime,omitempty"`
+}
+
+// A single cost trace record
+type CostTrace struct {
+	// The name/type of the operation (e.g., "trace.openai.agents.on_agent")
+	Name string `json:"name" url:"name"`
+	// The vendor/provider (e.g., "openai", "anthropic", "mistral")
+	Vendor string `json:"vendor" url:"vendor"`
+	// The model used for the operation (e.g., "gpt-4o-mini", "claude-3-sonnet")
+	Model *string     `json:"model,omitempty" url:"model,omitempty"`
+	Cost  *CostAmount `json:"cost" url:"cost"`
+	// Unix timestamp in nanoseconds when the operation started
+	StartTimeUnixNano string `json:"startTimeUnixNano" url:"startTimeUnixNano"`
+	// Unix timestamp in nanoseconds when the operation completed
+	EndTimeUnixNano string `json:"endTimeUnixNano" url:"endTimeUnixNano"`
+	// Additional metadata about the trace (e.g., tokens, etc.)
+	Attributes map[string]interface{} `json:"attributes" url:"attributes"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CostTrace) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CostTrace) GetVendor() string {
+	if c == nil {
+		return ""
+	}
+	return c.Vendor
+}
+
+func (c *CostTrace) GetModel() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Model
+}
+
+func (c *CostTrace) GetCost() *CostAmount {
+	if c == nil {
+		return nil
+	}
+	return c.Cost
+}
+
+func (c *CostTrace) GetStartTimeUnixNano() string {
+	if c == nil {
+		return ""
+	}
+	return c.StartTimeUnixNano
+}
+
+func (c *CostTrace) GetEndTimeUnixNano() string {
+	if c == nil {
+		return ""
+	}
+	return c.EndTimeUnixNano
+}
+
+func (c *CostTrace) GetAttributes() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.Attributes
+}
+
+func (c *CostTrace) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CostTrace) UnmarshalJSON(data []byte) error {
+	type unmarshaler CostTrace
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CostTrace(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CostTrace) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Response containing cost traces and pagination metadata
+type CostTracesResponse struct {
+	Traces []*CostTrace    `json:"traces" url:"traces"`
+	Meta   *PaginationMeta `json:"meta" url:"meta"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CostTracesResponse) GetTraces() []*CostTrace {
+	if c == nil {
+		return nil
+	}
+	return c.Traces
+}
+
+func (c *CostTracesResponse) GetMeta() *PaginationMeta {
+	if c == nil {
+		return nil
+	}
+	return c.Meta
+}
+
+func (c *CostTracesResponse) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CostTracesResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler CostTracesResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CostTracesResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CostTracesResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
 }
 
 type CustomerUpdate struct {
@@ -128,4 +296,172 @@ func (c *CustomerUpdate) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", c)
+}
+
+// Tracks the usage of an entitlement for a customer
+type EntitlementUsage struct {
+	Id             string     `json:"id" url:"id"`
+	CreatedAt      *time.Time `json:"createdAt,omitempty" url:"createdAt,omitempty"`
+	UpdatedAt      *time.Time `json:"updatedAt,omitempty" url:"updatedAt,omitempty"`
+	OrganizationId string     `json:"organizationId" url:"organizationId"`
+	ProductId      string     `json:"productId" url:"productId"`
+	EntitlementId  string     `json:"entitlementId" url:"entitlementId"`
+	CustomerId     string     `json:"customerId" url:"customerId"`
+	StartDate      time.Time  `json:"startDate" url:"startDate"`
+	EndDate        *time.Time `json:"endDate,omitempty" url:"endDate,omitempty"`
+	// Total entitlement amount
+	Total int64 `json:"total" url:"total"`
+	// Available entitlement amount
+	Available int64 `json:"available" url:"available"`
+	// Used entitlement amount
+	Used int64 `json:"used" url:"used"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EntitlementUsage) GetId() string {
+	if e == nil {
+		return ""
+	}
+	return e.Id
+}
+
+func (e *EntitlementUsage) GetCreatedAt() *time.Time {
+	if e == nil {
+		return nil
+	}
+	return e.CreatedAt
+}
+
+func (e *EntitlementUsage) GetUpdatedAt() *time.Time {
+	if e == nil {
+		return nil
+	}
+	return e.UpdatedAt
+}
+
+func (e *EntitlementUsage) GetOrganizationId() string {
+	if e == nil {
+		return ""
+	}
+	return e.OrganizationId
+}
+
+func (e *EntitlementUsage) GetProductId() string {
+	if e == nil {
+		return ""
+	}
+	return e.ProductId
+}
+
+func (e *EntitlementUsage) GetEntitlementId() string {
+	if e == nil {
+		return ""
+	}
+	return e.EntitlementId
+}
+
+func (e *EntitlementUsage) GetCustomerId() string {
+	if e == nil {
+		return ""
+	}
+	return e.CustomerId
+}
+
+func (e *EntitlementUsage) GetStartDate() time.Time {
+	if e == nil {
+		return time.Time{}
+	}
+	return e.StartDate
+}
+
+func (e *EntitlementUsage) GetEndDate() *time.Time {
+	if e == nil {
+		return nil
+	}
+	return e.EndDate
+}
+
+func (e *EntitlementUsage) GetTotal() int64 {
+	if e == nil {
+		return 0
+	}
+	return e.Total
+}
+
+func (e *EntitlementUsage) GetAvailable() int64 {
+	if e == nil {
+		return 0
+	}
+	return e.Available
+}
+
+func (e *EntitlementUsage) GetUsed() int64 {
+	if e == nil {
+		return 0
+	}
+	return e.Used
+}
+
+func (e *EntitlementUsage) GetExtraProperties() map[string]interface{} {
+	return e.extraProperties
+}
+
+func (e *EntitlementUsage) UnmarshalJSON(data []byte) error {
+	type embed EntitlementUsage
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt,omitempty"`
+		UpdatedAt *internal.DateTime `json:"updatedAt,omitempty"`
+		StartDate *internal.DateTime `json:"startDate"`
+		EndDate   *internal.DateTime `json:"endDate,omitempty"`
+	}{
+		embed: embed(*e),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*e = EntitlementUsage(unmarshaler.embed)
+	e.CreatedAt = unmarshaler.CreatedAt.TimePtr()
+	e.UpdatedAt = unmarshaler.UpdatedAt.TimePtr()
+	e.StartDate = unmarshaler.StartDate.Time()
+	e.EndDate = unmarshaler.EndDate.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EntitlementUsage) MarshalJSON() ([]byte, error) {
+	type embed EntitlementUsage
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt,omitempty"`
+		UpdatedAt *internal.DateTime `json:"updatedAt,omitempty"`
+		StartDate *internal.DateTime `json:"startDate"`
+		EndDate   *internal.DateTime `json:"endDate,omitempty"`
+	}{
+		embed:     embed(*e),
+		CreatedAt: internal.NewOptionalDateTime(e.CreatedAt),
+		UpdatedAt: internal.NewOptionalDateTime(e.UpdatedAt),
+		StartDate: internal.NewDateTime(e.StartDate),
+		EndDate:   internal.NewOptionalDateTime(e.EndDate),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (e *EntitlementUsage) String() string {
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
 }

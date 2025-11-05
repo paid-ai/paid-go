@@ -3,15 +3,16 @@
 package client
 
 import (
-	agents "github.com/paid-ai/paid-go/agents"
-	contacts "github.com/paid-ai/paid-go/contacts"
-	core "github.com/paid-ai/paid-go/core"
-	customers "github.com/paid-ai/paid-go/customers"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
-	ordersclient "github.com/paid-ai/paid-go/orders/client"
-	usage "github.com/paid-ai/paid-go/usage"
 	http "net/http"
+	agents "sdk/agents"
+	contacts "sdk/contacts"
+	core "sdk/core"
+	customers "sdk/customers"
+	internal "sdk/internal"
+	option "sdk/option"
+	ordersclient "sdk/orders/client"
+	traces "sdk/traces"
+	usage "sdk/usage"
 )
 
 type Client struct {
@@ -24,6 +25,7 @@ type Client struct {
 	Contacts  *contacts.Client
 	Orders    *ordersclient.Client
 	Usage     *usage.Client
+	Traces    *traces.Client
 }
 
 func NewClient(opts ...option.RequestOption) *Client {
@@ -42,5 +44,6 @@ func NewClient(opts ...option.RequestOption) *Client {
 		Contacts:  contacts.NewClient(opts...),
 		Orders:    ordersclient.NewClient(opts...),
 		Usage:     usage.NewClient(opts...),
+		Traces:    traces.NewClient(opts...),
 	}
 }

@@ -5,7 +5,8 @@ package api
 import (
 	json "encoding/json"
 	fmt "fmt"
-	internal "github.com/paid-ai/paid-go/internal"
+	internal "sdk/internal"
+	time "time"
 )
 
 type Address struct {
@@ -457,18 +458,18 @@ func (a *ApiError) String() string {
 type BillingFrequency string
 
 const (
-	BillingFrequencyMonthly   BillingFrequency = "Monthly"
-	BillingFrequencyQuarterly BillingFrequency = "Quarterly"
-	BillingFrequencyAnnual    BillingFrequency = "Annual"
+	BillingFrequencyMonthly   BillingFrequency = "monthly"
+	BillingFrequencyQuarterly BillingFrequency = "quarterly"
+	BillingFrequencyAnnual    BillingFrequency = "annual"
 )
 
 func NewBillingFrequencyFromString(s string) (BillingFrequency, error) {
 	switch s {
-	case "Monthly":
+	case "monthly":
 		return BillingFrequencyMonthly, nil
-	case "Quarterly":
+	case "quarterly":
 		return BillingFrequencyQuarterly, nil
-	case "Annual":
+	case "annual":
 		return BillingFrequencyAnnual, nil
 	}
 	var t BillingFrequency
@@ -505,6 +506,63 @@ func NewChargeTypeFromString(s string) (ChargeType, error) {
 
 func (c ChargeType) Ptr() *ChargeType {
 	return &c
+}
+
+// Cost amount with currency
+type CostAmount struct {
+	// The cost amount
+	Amount float64 `json:"amount" url:"amount"`
+	// The currency code (e.g., "USD")
+	Currency string `json:"currency" url:"currency"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CostAmount) GetAmount() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Amount
+}
+
+func (c *CostAmount) GetCurrency() string {
+	if c == nil {
+		return ""
+	}
+	return c.Currency
+}
+
+func (c *CostAmount) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CostAmount) UnmarshalJSON(data []byte) error {
+	type unmarshaler CostAmount
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CostAmount(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CostAmount) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
 }
 
 type CreationSource string
@@ -1124,6 +1182,71 @@ func (o *OrderLineAttribute) String() string {
 	return fmt.Sprintf("%#v", o)
 }
 
+type OrderLineAttributeCreate struct {
+	// The name of the agent attribute to override (e.g., "api_call", "call_placed")
+	AgentAttributeName string `json:"agentAttributeName" url:"agentAttributeName"`
+	// Quantity for this attribute (defaults to 0)
+	Quantity *float64 `json:"quantity,omitempty" url:"quantity,omitempty"`
+	// Custom pricing configuration for this attribute
+	Pricing *OrderLineAttributePricing `json:"pricing" url:"pricing"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (o *OrderLineAttributeCreate) GetAgentAttributeName() string {
+	if o == nil {
+		return ""
+	}
+	return o.AgentAttributeName
+}
+
+func (o *OrderLineAttributeCreate) GetQuantity() *float64 {
+	if o == nil {
+		return nil
+	}
+	return o.Quantity
+}
+
+func (o *OrderLineAttributeCreate) GetPricing() *OrderLineAttributePricing {
+	if o == nil {
+		return nil
+	}
+	return o.Pricing
+}
+
+func (o *OrderLineAttributeCreate) GetExtraProperties() map[string]interface{} {
+	return o.extraProperties
+}
+
+func (o *OrderLineAttributeCreate) UnmarshalJSON(data []byte) error {
+	type unmarshaler OrderLineAttributeCreate
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*o = OrderLineAttributeCreate(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *o)
+	if err != nil {
+		return err
+	}
+	o.extraProperties = extraProperties
+	o.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (o *OrderLineAttributeCreate) String() string {
+	if len(o.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(o.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(o); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", o)
+}
+
 type OrderLineAttributePricing struct {
 	EventName        *string           `json:"eventName,omitempty" url:"eventName,omitempty"`
 	ChargeType       *ChargeType       `json:"chargeType,omitempty" url:"chargeType,omitempty"`
@@ -1203,10 +1326,16 @@ func (o *OrderLineAttributePricing) String() string {
 }
 
 type OrderLineCreate struct {
-	AgentId         *string `json:"agentId,omitempty" url:"agentId,omitempty"`
+	// Paid's internal ID for the agent/product
+	AgentId *string `json:"agentId,omitempty" url:"agentId,omitempty"`
+	// The external ID of the agent/product i.e. the id within your system
 	AgentExternalId *string `json:"agentExternalId,omitempty" url:"agentExternalId,omitempty"`
-	Name            *string `json:"name,omitempty" url:"name,omitempty"`
-	Description     *string `json:"description,omitempty" url:"description,omitempty"`
+	// Name of the order line
+	Name *string `json:"name,omitempty" url:"name,omitempty"`
+	// Description of the order line
+	Description *string `json:"description,omitempty" url:"description,omitempty"`
+	// Optional array of custom agent attributes to override default pricing, allowing per customer pricing. If not provided, attributes will be auto-generated from the product definition.
+	AgentAttributes []*OrderLineAttributeCreate `json:"agentAttributes,omitempty" url:"agentAttributes,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -1240,6 +1369,13 @@ func (o *OrderLineCreate) GetDescription() *string {
 	return o.Description
 }
 
+func (o *OrderLineCreate) GetAgentAttributes() []*OrderLineAttributeCreate {
+	if o == nil {
+		return nil
+	}
+	return o.AgentAttributes
+}
+
 func (o *OrderLineCreate) GetExtraProperties() map[string]interface{} {
 	return o.extraProperties
 }
@@ -1270,6 +1406,148 @@ func (o *OrderLineCreate) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", o)
+}
+
+// Pagination metadata for cost traces
+type PaginationMeta struct {
+	// The requested limit
+	Limit int `json:"limit" url:"limit"`
+	// The requested offset
+	Offset int `json:"offset" url:"offset"`
+	// Number of items returned in this response
+	Count int `json:"count" url:"count"`
+	// Whether there are more results available
+	HasMore bool `json:"hasMore" url:"hasMore"`
+	// The startTime filter that was applied (if any)
+	StartTime *time.Time `json:"startTime,omitempty" url:"startTime,omitempty"`
+	// The endTime filter that was applied (if any)
+	EndTime *time.Time `json:"endTime,omitempty" url:"endTime,omitempty"`
+	// The externalCustomerId filter that was applied (if any)
+	ExternalCustomerId *string `json:"externalCustomerId,omitempty" url:"externalCustomerId,omitempty"`
+	// The externalAgentId filter that was applied (if any)
+	ExternalAgentId *string `json:"externalAgentId,omitempty" url:"externalAgentId,omitempty"`
+	// The metadata filter that was applied (if any)
+	Metadata *string `json:"metadata,omitempty" url:"metadata,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PaginationMeta) GetLimit() int {
+	if p == nil {
+		return 0
+	}
+	return p.Limit
+}
+
+func (p *PaginationMeta) GetOffset() int {
+	if p == nil {
+		return 0
+	}
+	return p.Offset
+}
+
+func (p *PaginationMeta) GetCount() int {
+	if p == nil {
+		return 0
+	}
+	return p.Count
+}
+
+func (p *PaginationMeta) GetHasMore() bool {
+	if p == nil {
+		return false
+	}
+	return p.HasMore
+}
+
+func (p *PaginationMeta) GetStartTime() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.StartTime
+}
+
+func (p *PaginationMeta) GetEndTime() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.EndTime
+}
+
+func (p *PaginationMeta) GetExternalCustomerId() *string {
+	if p == nil {
+		return nil
+	}
+	return p.ExternalCustomerId
+}
+
+func (p *PaginationMeta) GetExternalAgentId() *string {
+	if p == nil {
+		return nil
+	}
+	return p.ExternalAgentId
+}
+
+func (p *PaginationMeta) GetMetadata() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Metadata
+}
+
+func (p *PaginationMeta) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *PaginationMeta) UnmarshalJSON(data []byte) error {
+	type embed PaginationMeta
+	var unmarshaler = struct {
+		embed
+		StartTime *internal.DateTime `json:"startTime,omitempty"`
+		EndTime   *internal.DateTime `json:"endTime,omitempty"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = PaginationMeta(unmarshaler.embed)
+	p.StartTime = unmarshaler.StartTime.TimePtr()
+	p.EndTime = unmarshaler.EndTime.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PaginationMeta) MarshalJSON() ([]byte, error) {
+	type embed PaginationMeta
+	var marshaler = struct {
+		embed
+		StartTime *internal.DateTime `json:"startTime,omitempty"`
+		EndTime   *internal.DateTime `json:"endTime,omitempty"`
+	}{
+		embed:     embed(*p),
+		StartTime: internal.NewOptionalDateTime(p.StartTime),
+		EndTime:   internal.NewOptionalDateTime(p.EndTime),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (p *PaginationMeta) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
 }
 
 type PricePoint struct {
@@ -1345,6 +1623,7 @@ func (p *PricePoint) String() string {
 type Pricing struct {
 	EventName        *string                     `json:"eventName,omitempty" url:"eventName,omitempty"`
 	Taxable          bool                        `json:"taxable" url:"taxable"`
+	CreditCost       *float64                    `json:"creditCost,omitempty" url:"creditCost,omitempty"`
 	ChargeType       ChargeType                  `json:"chargeType" url:"chargeType"`
 	PricingModel     PricingModelType            `json:"pricingModel" url:"pricingModel"`
 	BillingFrequency BillingFrequency            `json:"billingFrequency" url:"billingFrequency"`
@@ -1366,6 +1645,13 @@ func (p *Pricing) GetTaxable() bool {
 		return false
 	}
 	return p.Taxable
+}
+
+func (p *Pricing) GetCreditCost() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.CreditCost
 }
 
 func (p *Pricing) GetChargeType() ChargeType {
@@ -1434,6 +1720,7 @@ const (
 	PricingModelTypePerUnit          PricingModelType = "PerUnit"
 	PricingModelTypeVolumePricing    PricingModelType = "VolumePricing"
 	PricingModelTypeGraduatedPricing PricingModelType = "GraduatedPricing"
+	PricingModelTypePrepaidCredits   PricingModelType = "PrepaidCredits"
 )
 
 func NewPricingModelTypeFromString(s string) (PricingModelType, error) {
@@ -1444,6 +1731,8 @@ func NewPricingModelTypeFromString(s string) (PricingModelType, error) {
 		return PricingModelTypeVolumePricing, nil
 	case "GraduatedPricing":
 		return PricingModelTypeGraduatedPricing, nil
+	case "PrepaidCredits":
+		return PricingModelTypePrepaidCredits, nil
 	}
 	var t PricingModelType
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
