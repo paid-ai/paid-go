@@ -5,7 +5,7 @@ package api
 import (
 	json "encoding/json"
 	fmt "fmt"
-	internal "github.com/paid-ai/paid-go/internal"
+	internal "sdk/internal"
 )
 
 type UsageRecordBulkRequest struct {
@@ -13,10 +13,18 @@ type UsageRecordBulkRequest struct {
 }
 
 type Signal struct {
-	EventName  *string                `json:"event_name,omitempty" url:"event_name,omitempty"`
-	AgentId    *string                `json:"agent_id,omitempty" url:"agent_id,omitempty"`
+	EventName       *string `json:"event_name,omitempty" url:"event_name,omitempty"`
+	AgentId         *string `json:"agent_id,omitempty" url:"agent_id,omitempty"`
+	ExternalAgentId *string `json:"external_agent_id,omitempty" url:"external_agent_id,omitempty"`
+	// Deprecated. The external customer id. Use `external_customer_id` or `internal_customer_id` instead.
 	CustomerId *string                `json:"customer_id,omitempty" url:"customer_id,omitempty"`
 	Data       map[string]interface{} `json:"data,omitempty" url:"data,omitempty"`
+	// A unique key to ensure idempotent signal processing
+	IdempotencyKey *string `json:"idempotency_key,omitempty" url:"idempotency_key,omitempty"`
+	// Paid's internal customer ID
+	InternalCustomerId *string `json:"internal_customer_id,omitempty" url:"internal_customer_id,omitempty"`
+	// Your system's customer ID
+	ExternalCustomerId *string `json:"external_customer_id,omitempty" url:"external_customer_id,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -36,6 +44,13 @@ func (s *Signal) GetAgentId() *string {
 	return s.AgentId
 }
 
+func (s *Signal) GetExternalAgentId() *string {
+	if s == nil {
+		return nil
+	}
+	return s.ExternalAgentId
+}
+
 func (s *Signal) GetCustomerId() *string {
 	if s == nil {
 		return nil
@@ -48,6 +63,27 @@ func (s *Signal) GetData() map[string]interface{} {
 		return nil
 	}
 	return s.Data
+}
+
+func (s *Signal) GetIdempotencyKey() *string {
+	if s == nil {
+		return nil
+	}
+	return s.IdempotencyKey
+}
+
+func (s *Signal) GetInternalCustomerId() *string {
+	if s == nil {
+		return nil
+	}
+	return s.InternalCustomerId
+}
+
+func (s *Signal) GetExternalCustomerId() *string {
+	if s == nil {
+		return nil
+	}
+	return s.ExternalCustomerId
 }
 
 func (s *Signal) GetExtraProperties() map[string]interface{} {

@@ -3,9 +3,9 @@
 package orders
 
 import (
-	paidgo "github.com/paid-ai/paid-go"
+	sdk "sdk"
 )
 
 type LinesUpdateRequest struct {
-	Lines []*paidgo.OrderLineCreate `json:"lines,omitempty" url:"-"`
+	Lines []*sdk.OrderLineCreate `json:"lines,omitempty" url:"-"`
 }
