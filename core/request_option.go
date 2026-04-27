@@ -53,7 +53,12 @@ func (r *RequestOptions) ToHeader() http.Header {
 }
 
 func (r *RequestOptions) cloneHeader() http.Header {
-	return r.HTTPHeader.Clone()
+	headers := r.HTTPHeader.Clone()
+	headers.Set("X-Fern-Language", "Go")
+	headers.Set("X-Fern-SDK-Name", "github.com/paid-ai/paid-go")
+	headers.Set("X-Fern-SDK-Version", "v1.0.0")
+	headers.Set("User-Agent", "github.com/paid-ai/paid-go/1.0.0")
+	return headers
 }
 
 // BaseURLOption implements the RequestOption interface.

@@ -7,14 +7,14 @@ import (
 	core "github.com/paid-ai/paid-go/core"
 )
 
-// Bad request - Invalid query parameters
+// 400
 type BadRequestError struct {
 	*core.APIError
-	Body *Error
+	Body *ErrorResponse
 }
 
 func (b *BadRequestError) UnmarshalJSON(data []byte) error {
-	var body *Error
+	var body *ErrorResponse
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
@@ -31,14 +31,38 @@ func (b *BadRequestError) Unwrap() error {
 	return b.APIError
 }
 
-// Forbidden
+// 409
+type ConflictError struct {
+	*core.APIError
+	Body *ErrorResponse
+}
+
+func (c *ConflictError) UnmarshalJSON(data []byte) error {
+	var body *ErrorResponse
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.StatusCode = 409
+	c.Body = body
+	return nil
+}
+
+func (c *ConflictError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+func (c *ConflictError) Unwrap() error {
+	return c.APIError
+}
+
+// 403
 type ForbiddenError struct {
 	*core.APIError
-	Body *Error
+	Body *ErrorResponse
 }
 
 func (f *ForbiddenError) UnmarshalJSON(data []byte) error {
-	var body *Error
+	var body *ErrorResponse
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
@@ -55,14 +79,38 @@ func (f *ForbiddenError) Unwrap() error {
 	return f.APIError
 }
 
-// Customer not found
+// 500
+type InternalServerError struct {
+	*core.APIError
+	Body *ErrorResponse
+}
+
+func (i *InternalServerError) UnmarshalJSON(data []byte) error {
+	var body *ErrorResponse
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	i.StatusCode = 500
+	i.Body = body
+	return nil
+}
+
+func (i *InternalServerError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.Body)
+}
+
+func (i *InternalServerError) Unwrap() error {
+	return i.APIError
+}
+
+// 404
 type NotFoundError struct {
 	*core.APIError
-	Body *Error
+	Body *ErrorResponse
 }
 
 func (n *NotFoundError) UnmarshalJSON(data []byte) error {
-	var body *Error
+	var body *ErrorResponse
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
