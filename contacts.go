@@ -6,104 +6,89 @@ import (
 	json "encoding/json"
 	fmt "fmt"
 	internal "github.com/paid-ai/paid-go/internal"
+	time "time"
 )
 
-type ContactCreate struct {
-	ExternalId           *string    `json:"externalId,omitempty" url:"-"`
-	CustomerId           *string    `json:"customerId,omitempty" url:"-"`
-	CustomerExternalId   *string    `json:"customerExternalId,omitempty" url:"-"`
-	Salutation           Salutation `json:"salutation" url:"-"`
-	FirstName            string     `json:"firstName" url:"-"`
-	LastName             string     `json:"lastName" url:"-"`
-	Email                string     `json:"email" url:"-"`
-	Phone                *string    `json:"phone,omitempty" url:"-"`
-	BillingStreet        *string    `json:"billingStreet,omitempty" url:"-"`
-	BillingCity          *string    `json:"billingCity,omitempty" url:"-"`
-	BillingStateProvince *string    `json:"billingStateProvince,omitempty" url:"-"`
-	BillingCountry       *string    `json:"billingCountry,omitempty" url:"-"`
-	BillingPostalCode    *string    `json:"billingPostalCode,omitempty" url:"-"`
+type CreateContactRequest struct {
+	CustomerID     string                          `json:"customerId" url:"-"`
+	FirstName      *string                         `json:"firstName,omitempty" url:"-"`
+	LastName       *string                         `json:"lastName,omitempty" url:"-"`
+	Email          string                          `json:"email" url:"-"`
+	Phone          *string                         `json:"phone,omitempty" url:"-"`
+	BillingAddress *ContactBillingAddress          `json:"billingAddress,omitempty" url:"-"`
+	ExternalID     *string                         `json:"externalId,omitempty" url:"-"`
+	Roles          []CreateContactRequestRolesItem `json:"roles,omitempty" url:"-"`
+}
+
+type DeleteContactByExternalIDRequest struct {
+	ExternalID string `json:"-" url:"-"`
+}
+
+type DeleteContactByIDRequest struct {
+	ID string `json:"-" url:"-"`
+}
+
+type GetContactByExternalIDRequest struct {
+	ExternalID string `json:"-" url:"-"`
+}
+
+type GetContactByIDRequest struct {
+	ID string `json:"-" url:"-"`
+}
+
+type ListContactsRequest struct {
+	Limit  *int `json:"-" url:"limit,omitempty"`
+	Offset *int `json:"-" url:"offset,omitempty"`
 }
 
 type Contact struct {
-	Id                   *string     `json:"id,omitempty" url:"id,omitempty"`
-	ExternalId           *string     `json:"externalId,omitempty" url:"externalId,omitempty"`
-	OrganizationId       *string     `json:"organizationId,omitempty" url:"organizationId,omitempty"`
-	CustomerId           *string     `json:"customerId,omitempty" url:"customerId,omitempty"`
-	CustomerExternalId   *string     `json:"customerExternalId,omitempty" url:"customerExternalId,omitempty"`
-	Salutation           *Salutation `json:"salutation,omitempty" url:"salutation,omitempty"`
-	FirstName            *string     `json:"firstName,omitempty" url:"firstName,omitempty"`
-	LastName             *string     `json:"lastName,omitempty" url:"lastName,omitempty"`
-	Email                *string     `json:"email,omitempty" url:"email,omitempty"`
-	Phone                *string     `json:"phone,omitempty" url:"phone,omitempty"`
-	BillingStreet        *string     `json:"billingStreet,omitempty" url:"billingStreet,omitempty"`
-	BillingCity          *string     `json:"billingCity,omitempty" url:"billingCity,omitempty"`
-	BillingStateProvince *string     `json:"billingStateProvince,omitempty" url:"billingStateProvince,omitempty"`
-	BillingCountry       *string     `json:"billingCountry,omitempty" url:"billingCountry,omitempty"`
-	BillingPostalCode    *string     `json:"billingPostalCode,omitempty" url:"billingPostalCode,omitempty"`
+	ID             string                 `json:"id" url:"id"`
+	CustomerID     string                 `json:"customerId" url:"customerId"`
+	FirstName      string                 `json:"firstName" url:"firstName"`
+	LastName       string                 `json:"lastName" url:"lastName"`
+	Email          string                 `json:"email" url:"email"`
+	Phone          *string                `json:"phone,omitempty" url:"phone,omitempty"`
+	BillingAddress *ContactBillingAddress `json:"billingAddress,omitempty" url:"billingAddress,omitempty"`
+	ExternalID     *string                `json:"externalId,omitempty" url:"externalId,omitempty"`
+	Roles          []ContactRolesItem     `json:"roles" url:"roles"`
+	CreatedAt      time.Time              `json:"createdAt" url:"createdAt"`
+	UpdatedAt      time.Time              `json:"updatedAt" url:"updatedAt"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (c *Contact) GetId() *string {
+func (c *Contact) GetID() string {
 	if c == nil {
-		return nil
+		return ""
 	}
-	return c.Id
+	return c.ID
 }
 
-func (c *Contact) GetExternalId() *string {
+func (c *Contact) GetCustomerID() string {
 	if c == nil {
-		return nil
+		return ""
 	}
-	return c.ExternalId
+	return c.CustomerID
 }
 
-func (c *Contact) GetOrganizationId() *string {
+func (c *Contact) GetFirstName() string {
 	if c == nil {
-		return nil
-	}
-	return c.OrganizationId
-}
-
-func (c *Contact) GetCustomerId() *string {
-	if c == nil {
-		return nil
-	}
-	return c.CustomerId
-}
-
-func (c *Contact) GetCustomerExternalId() *string {
-	if c == nil {
-		return nil
-	}
-	return c.CustomerExternalId
-}
-
-func (c *Contact) GetSalutation() *Salutation {
-	if c == nil {
-		return nil
-	}
-	return c.Salutation
-}
-
-func (c *Contact) GetFirstName() *string {
-	if c == nil {
-		return nil
+		return ""
 	}
 	return c.FirstName
 }
 
-func (c *Contact) GetLastName() *string {
+func (c *Contact) GetLastName() string {
 	if c == nil {
-		return nil
+		return ""
 	}
 	return c.LastName
 }
 
-func (c *Contact) GetEmail() *string {
+func (c *Contact) GetEmail() string {
 	if c == nil {
-		return nil
+		return ""
 	}
 	return c.Email
 }
@@ -115,39 +100,39 @@ func (c *Contact) GetPhone() *string {
 	return c.Phone
 }
 
-func (c *Contact) GetBillingStreet() *string {
+func (c *Contact) GetBillingAddress() *ContactBillingAddress {
 	if c == nil {
 		return nil
 	}
-	return c.BillingStreet
+	return c.BillingAddress
 }
 
-func (c *Contact) GetBillingCity() *string {
+func (c *Contact) GetExternalID() *string {
 	if c == nil {
 		return nil
 	}
-	return c.BillingCity
+	return c.ExternalID
 }
 
-func (c *Contact) GetBillingStateProvince() *string {
+func (c *Contact) GetRoles() []ContactRolesItem {
 	if c == nil {
 		return nil
 	}
-	return c.BillingStateProvince
+	return c.Roles
 }
 
-func (c *Contact) GetBillingCountry() *string {
+func (c *Contact) GetCreatedAt() time.Time {
 	if c == nil {
-		return nil
+		return time.Time{}
 	}
-	return c.BillingCountry
+	return c.CreatedAt
 }
 
-func (c *Contact) GetBillingPostalCode() *string {
+func (c *Contact) GetUpdatedAt() time.Time {
 	if c == nil {
-		return nil
+		return time.Time{}
 	}
-	return c.BillingPostalCode
+	return c.UpdatedAt
 }
 
 func (c *Contact) GetExtraProperties() map[string]interface{} {
@@ -155,12 +140,20 @@ func (c *Contact) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *Contact) UnmarshalJSON(data []byte) error {
-	type unmarshaler Contact
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
+	type embed Contact
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
 		return err
 	}
-	*c = Contact(value)
+	*c = Contact(unmarshaler.embed)
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	c.UpdatedAt = unmarshaler.UpdatedAt.Time()
 	extraProperties, err := internal.ExtractExtraProperties(data, *c)
 	if err != nil {
 		return err
@@ -168,6 +161,20 @@ func (c *Contact) UnmarshalJSON(data []byte) error {
 	c.extraProperties = extraProperties
 	c.rawJSON = json.RawMessage(data)
 	return nil
+}
+
+func (c *Contact) MarshalJSON() ([]byte, error) {
+	type embed Contact
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+	}{
+		embed:     embed(*c),
+		CreatedAt: internal.NewDateTime(c.CreatedAt),
+		UpdatedAt: internal.NewDateTime(c.UpdatedAt),
+	}
+	return json.Marshal(marshaler)
 }
 
 func (c *Contact) String() string {
@@ -182,36 +189,338 @@ func (c *Contact) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-type Salutation string
+type ContactBillingAddress struct {
+	Street  *string `json:"street,omitempty" url:"street,omitempty"`
+	City    *string `json:"city,omitempty" url:"city,omitempty"`
+	State   *string `json:"state,omitempty" url:"state,omitempty"`
+	Country *string `json:"country,omitempty" url:"country,omitempty"`
+	ZipCode *string `json:"zipCode,omitempty" url:"zipCode,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *ContactBillingAddress) GetStreet() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Street
+}
+
+func (c *ContactBillingAddress) GetCity() *string {
+	if c == nil {
+		return nil
+	}
+	return c.City
+}
+
+func (c *ContactBillingAddress) GetState() *string {
+	if c == nil {
+		return nil
+	}
+	return c.State
+}
+
+func (c *ContactBillingAddress) GetCountry() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Country
+}
+
+func (c *ContactBillingAddress) GetZipCode() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ZipCode
+}
+
+func (c *ContactBillingAddress) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *ContactBillingAddress) UnmarshalJSON(data []byte) error {
+	type unmarshaler ContactBillingAddress
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = ContactBillingAddress(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *ContactBillingAddress) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type ContactListResponse struct {
+	Data       []*Contact  `json:"data" url:"data"`
+	Pagination *Pagination `json:"pagination" url:"pagination"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *ContactListResponse) GetData() []*Contact {
+	if c == nil {
+		return nil
+	}
+	return c.Data
+}
+
+func (c *ContactListResponse) GetPagination() *Pagination {
+	if c == nil {
+		return nil
+	}
+	return c.Pagination
+}
+
+func (c *ContactListResponse) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *ContactListResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler ContactListResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = ContactListResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *ContactListResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type ContactRolesItem string
 
 const (
-	SalutationMr   Salutation = "Mr."
-	SalutationMrs  Salutation = "Mrs."
-	SalutationMiss Salutation = "Miss"
-	SalutationMs   Salutation = "Ms."
-	SalutationDr   Salutation = "Dr."
-	SalutationProf Salutation = "Prof."
+	ContactRolesItemBilling         ContactRolesItem = "BILLING"
+	ContactRolesItemAccountsPayable ContactRolesItem = "ACCOUNTS_PAYABLE"
 )
 
-func NewSalutationFromString(s string) (Salutation, error) {
+func NewContactRolesItemFromString(s string) (ContactRolesItem, error) {
 	switch s {
-	case "Mr.":
-		return SalutationMr, nil
-	case "Mrs.":
-		return SalutationMrs, nil
-	case "Miss":
-		return SalutationMiss, nil
-	case "Ms.":
-		return SalutationMs, nil
-	case "Dr.":
-		return SalutationDr, nil
-	case "Prof.":
-		return SalutationProf, nil
+	case "BILLING":
+		return ContactRolesItemBilling, nil
+	case "ACCOUNTS_PAYABLE":
+		return ContactRolesItemAccountsPayable, nil
 	}
-	var t Salutation
+	var t ContactRolesItem
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
 }
 
-func (s Salutation) Ptr() *Salutation {
-	return &s
+func (c ContactRolesItem) Ptr() *ContactRolesItem {
+	return &c
+}
+
+type UpdateContactRequest struct {
+	CustomerID     *string                         `json:"customerId,omitempty" url:"customerId,omitempty"`
+	FirstName      *string                         `json:"firstName,omitempty" url:"firstName,omitempty"`
+	LastName       *string                         `json:"lastName,omitempty" url:"lastName,omitempty"`
+	Email          *string                         `json:"email,omitempty" url:"email,omitempty"`
+	Phone          *string                         `json:"phone,omitempty" url:"phone,omitempty"`
+	BillingAddress *ContactBillingAddress          `json:"billingAddress,omitempty" url:"billingAddress,omitempty"`
+	ExternalID     *string                         `json:"externalId,omitempty" url:"externalId,omitempty"`
+	Roles          []UpdateContactRequestRolesItem `json:"roles,omitempty" url:"roles,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (u *UpdateContactRequest) GetCustomerID() *string {
+	if u == nil {
+		return nil
+	}
+	return u.CustomerID
+}
+
+func (u *UpdateContactRequest) GetFirstName() *string {
+	if u == nil {
+		return nil
+	}
+	return u.FirstName
+}
+
+func (u *UpdateContactRequest) GetLastName() *string {
+	if u == nil {
+		return nil
+	}
+	return u.LastName
+}
+
+func (u *UpdateContactRequest) GetEmail() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Email
+}
+
+func (u *UpdateContactRequest) GetPhone() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Phone
+}
+
+func (u *UpdateContactRequest) GetBillingAddress() *ContactBillingAddress {
+	if u == nil {
+		return nil
+	}
+	return u.BillingAddress
+}
+
+func (u *UpdateContactRequest) GetExternalID() *string {
+	if u == nil {
+		return nil
+	}
+	return u.ExternalID
+}
+
+func (u *UpdateContactRequest) GetRoles() []UpdateContactRequestRolesItem {
+	if u == nil {
+		return nil
+	}
+	return u.Roles
+}
+
+func (u *UpdateContactRequest) GetExtraProperties() map[string]interface{} {
+	return u.extraProperties
+}
+
+func (u *UpdateContactRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler UpdateContactRequest
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*u = UpdateContactRequest(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *u)
+	if err != nil {
+		return err
+	}
+	u.extraProperties = extraProperties
+	u.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (u *UpdateContactRequest) String() string {
+	if len(u.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(u); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", u)
+}
+
+type UpdateContactRequestRolesItem string
+
+const (
+	UpdateContactRequestRolesItemBilling         UpdateContactRequestRolesItem = "BILLING"
+	UpdateContactRequestRolesItemAccountsPayable UpdateContactRequestRolesItem = "ACCOUNTS_PAYABLE"
+)
+
+func NewUpdateContactRequestRolesItemFromString(s string) (UpdateContactRequestRolesItem, error) {
+	switch s {
+	case "BILLING":
+		return UpdateContactRequestRolesItemBilling, nil
+	case "ACCOUNTS_PAYABLE":
+		return UpdateContactRequestRolesItemAccountsPayable, nil
+	}
+	var t UpdateContactRequestRolesItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UpdateContactRequestRolesItem) Ptr() *UpdateContactRequestRolesItem {
+	return &u
+}
+
+type CreateContactRequestRolesItem string
+
+const (
+	CreateContactRequestRolesItemBilling         CreateContactRequestRolesItem = "BILLING"
+	CreateContactRequestRolesItemAccountsPayable CreateContactRequestRolesItem = "ACCOUNTS_PAYABLE"
+)
+
+func NewCreateContactRequestRolesItemFromString(s string) (CreateContactRequestRolesItem, error) {
+	switch s {
+	case "BILLING":
+		return CreateContactRequestRolesItemBilling, nil
+	case "ACCOUNTS_PAYABLE":
+		return CreateContactRequestRolesItemAccountsPayable, nil
+	}
+	var t CreateContactRequestRolesItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CreateContactRequestRolesItem) Ptr() *CreateContactRequestRolesItem {
+	return &c
+}
+
+type UpdateContactByExternalIDRequest struct {
+	ExternalID string                `json:"-" url:"-"`
+	Body       *UpdateContactRequest `json:"-" url:"-"`
+}
+
+func (u *UpdateContactByExternalIDRequest) UnmarshalJSON(data []byte) error {
+	body := new(UpdateContactRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	u.Body = body
+	return nil
+}
+
+func (u *UpdateContactByExternalIDRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.Body)
+}
+
+type UpdateContactByIDRequest struct {
+	ID   string                `json:"-" url:"-"`
+	Body *UpdateContactRequest `json:"-" url:"-"`
+}
+
+func (u *UpdateContactByIDRequest) UnmarshalJSON(data []byte) error {
+	body := new(UpdateContactRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	u.Body = body
+	return nil
+}
+
+func (u *UpdateContactByIDRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.Body)
 }
