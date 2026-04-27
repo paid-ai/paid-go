@@ -9,109 +9,156 @@ import (
 	time "time"
 )
 
-type CustomerCreate struct {
-	Name            string           `json:"name" url:"-"`
-	ExternalId      *string          `json:"externalId,omitempty" url:"-"`
-	Phone           *string          `json:"phone,omitempty" url:"-"`
-	EmployeeCount   *float64         `json:"employeeCount,omitempty" url:"-"`
-	AnnualRevenue   *float64         `json:"annualRevenue,omitempty" url:"-"`
-	TaxExemptStatus *TaxExemptStatus `json:"taxExemptStatus,omitempty" url:"-"`
-	CreationSource  *CreationSource  `json:"creationSource,omitempty" url:"-"`
-	Website         *string          `json:"website,omitempty" url:"-"`
-	BillingAddress  *Address         `json:"billingAddress,omitempty" url:"-"`
+type CreateCustomerRequest struct {
+	Name            string                  `json:"name" url:"-"`
+	LegalName       *string                 `json:"legalName,omitempty" url:"-"`
+	Email           *string                 `json:"email,omitempty" url:"-"`
+	Phone           *string                 `json:"phone,omitempty" url:"-"`
+	Website         *string                 `json:"website,omitempty" url:"-"`
+	ExternalID      *string                 `json:"externalId,omitempty" url:"-"`
+	BillingAddress  *CustomerBillingAddress `json:"billingAddress,omitempty" url:"-"`
+	CreationState   *CustomerCreationState  `json:"creationState,omitempty" url:"-"`
+	VatNumber       *string                 `json:"vatNumber,omitempty" url:"-"`
+	Metadata        map[string]interface{}  `json:"metadata,omitempty" url:"-"`
+	DefaultCurrency *string                 `json:"defaultCurrency,omitempty" url:"-"`
 }
 
-type CustomersGetCostsByExternalIdRequest struct {
-	// Maximum number of traces to return (1-1000)
-	Limit *int `json:"-" url:"limit,omitempty"`
-	// Number of traces to skip for pagination
+type DeleteCustomerByExternalIDRequest struct {
+	ExternalID string `json:"-" url:"-"`
+}
+
+type DeleteCustomerByIDRequest struct {
+	ID string `json:"-" url:"-"`
+}
+
+type GetCustomerByExternalIDRequest struct {
+	ExternalID string `json:"-" url:"-"`
+}
+
+type GetCustomerByIDRequest struct {
+	ID string `json:"-" url:"-"`
+}
+
+type GetCustomerCreditBalancesRequest struct {
+	ID string `json:"-" url:"-"`
+}
+
+type GetCustomerCreditBalancesByExternalIDRequest struct {
+	ExternalID string `json:"-" url:"-"`
+}
+
+type ListCustomersRequest struct {
+	Limit  *int `json:"-" url:"limit,omitempty"`
 	Offset *int `json:"-" url:"offset,omitempty"`
-	// Filter traces starting from this time (ISO 8601 format)
-	StartTime *time.Time `json:"-" url:"startTime,omitempty"`
-	// Filter traces up to this time (ISO 8601 format)
-	EndTime *time.Time `json:"-" url:"endTime,omitempty"`
 }
 
-// A single cost trace record
-type CostTrace struct {
-	// The name/type of the operation (e.g., "trace.openai.agents.on_agent")
-	Name string `json:"name" url:"name"`
-	// The vendor/provider (e.g., "openai", "anthropic", "mistral")
-	Vendor string `json:"vendor" url:"vendor"`
-	// The model used for the operation (e.g., "gpt-4o-mini", "claude-3-sonnet")
-	Model *string     `json:"model,omitempty" url:"model,omitempty"`
-	Cost  *CostAmount `json:"cost" url:"cost"`
-	// Unix timestamp in nanoseconds when the operation started
-	StartTimeUnixNano string `json:"startTimeUnixNano" url:"startTimeUnixNano"`
-	// Unix timestamp in nanoseconds when the operation completed
-	EndTimeUnixNano string `json:"endTimeUnixNano" url:"endTimeUnixNano"`
-	// Additional metadata about the trace (e.g., tokens, etc.)
-	Attributes map[string]interface{} `json:"attributes" url:"attributes"`
+type CreditBalance struct {
+	CreditsCurrencyID string                 `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	CurrencyName      string                 `json:"currencyName" url:"currencyName"`
+	CurrencyKey       string                 `json:"currencyKey" url:"currencyKey"`
+	Available         float64                `json:"available" url:"available"`
+	Used              float64                `json:"used" url:"used"`
+	Total             float64                `json:"total" url:"total"`
+	PeriodStart       *time.Time             `json:"periodStart,omitempty" url:"periodStart,omitempty"`
+	PeriodEnd         *time.Time             `json:"periodEnd,omitempty" url:"periodEnd,omitempty"`
+	RolloverEndDate   *time.Time             `json:"rolloverEndDate,omitempty" url:"rolloverEndDate,omitempty"`
+	Recipient         CreditBalanceRecipient `json:"recipient" url:"recipient"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (c *CostTrace) GetName() string {
+func (c *CreditBalance) GetCreditsCurrencyID() string {
 	if c == nil {
 		return ""
 	}
-	return c.Name
+	return c.CreditsCurrencyID
 }
 
-func (c *CostTrace) GetVendor() string {
+func (c *CreditBalance) GetCurrencyName() string {
 	if c == nil {
 		return ""
 	}
-	return c.Vendor
+	return c.CurrencyName
 }
 
-func (c *CostTrace) GetModel() *string {
+func (c *CreditBalance) GetCurrencyKey() string {
+	if c == nil {
+		return ""
+	}
+	return c.CurrencyKey
+}
+
+func (c *CreditBalance) GetAvailable() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Available
+}
+
+func (c *CreditBalance) GetUsed() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Used
+}
+
+func (c *CreditBalance) GetTotal() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Total
+}
+
+func (c *CreditBalance) GetPeriodStart() *time.Time {
 	if c == nil {
 		return nil
 	}
-	return c.Model
+	return c.PeriodStart
 }
 
-func (c *CostTrace) GetCost() *CostAmount {
+func (c *CreditBalance) GetPeriodEnd() *time.Time {
 	if c == nil {
 		return nil
 	}
-	return c.Cost
+	return c.PeriodEnd
 }
 
-func (c *CostTrace) GetStartTimeUnixNano() string {
-	if c == nil {
-		return ""
-	}
-	return c.StartTimeUnixNano
-}
-
-func (c *CostTrace) GetEndTimeUnixNano() string {
-	if c == nil {
-		return ""
-	}
-	return c.EndTimeUnixNano
-}
-
-func (c *CostTrace) GetAttributes() map[string]interface{} {
+func (c *CreditBalance) GetRolloverEndDate() *time.Time {
 	if c == nil {
 		return nil
 	}
-	return c.Attributes
+	return c.RolloverEndDate
 }
 
-func (c *CostTrace) GetExtraProperties() map[string]interface{} {
+func (c *CreditBalance) GetRecipient() CreditBalanceRecipient {
+	if c == nil {
+		return ""
+	}
+	return c.Recipient
+}
+
+func (c *CreditBalance) GetExtraProperties() map[string]interface{} {
 	return c.extraProperties
 }
 
-func (c *CostTrace) UnmarshalJSON(data []byte) error {
-	type unmarshaler CostTrace
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
+func (c *CreditBalance) UnmarshalJSON(data []byte) error {
+	type embed CreditBalance
+	var unmarshaler = struct {
+		embed
+		PeriodStart     *internal.DateTime `json:"periodStart,omitempty"`
+		PeriodEnd       *internal.DateTime `json:"periodEnd,omitempty"`
+		RolloverEndDate *internal.DateTime `json:"rolloverEndDate,omitempty"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
 		return err
 	}
-	*c = CostTrace(value)
+	*c = CreditBalance(unmarshaler.embed)
+	c.PeriodStart = unmarshaler.PeriodStart.TimePtr()
+	c.PeriodEnd = unmarshaler.PeriodEnd.TimePtr()
+	c.RolloverEndDate = unmarshaler.RolloverEndDate.TimePtr()
 	extraProperties, err := internal.ExtractExtraProperties(data, *c)
 	if err != nil {
 		return err
@@ -121,7 +168,23 @@ func (c *CostTrace) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (c *CostTrace) String() string {
+func (c *CreditBalance) MarshalJSON() ([]byte, error) {
+	type embed CreditBalance
+	var marshaler = struct {
+		embed
+		PeriodStart     *internal.DateTime `json:"periodStart,omitempty"`
+		PeriodEnd       *internal.DateTime `json:"periodEnd,omitempty"`
+		RolloverEndDate *internal.DateTime `json:"rolloverEndDate,omitempty"`
+	}{
+		embed:           embed(*c),
+		PeriodStart:     internal.NewOptionalDateTime(c.PeriodStart),
+		PeriodEnd:       internal.NewOptionalDateTime(c.PeriodEnd),
+		RolloverEndDate: internal.NewOptionalDateTime(c.RolloverEndDate),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CreditBalance) String() string {
 	if len(c.rawJSON) > 0 {
 		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
 			return value
@@ -133,40 +196,31 @@ func (c *CostTrace) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Response containing cost traces and pagination metadata
-type CostTracesResponse struct {
-	Traces []*CostTrace    `json:"traces" url:"traces"`
-	Meta   *PaginationMeta `json:"meta" url:"meta"`
+type CreditBalanceListResponse struct {
+	Data []*CreditBalance `json:"data" url:"data"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (c *CostTracesResponse) GetTraces() []*CostTrace {
+func (c *CreditBalanceListResponse) GetData() []*CreditBalance {
 	if c == nil {
 		return nil
 	}
-	return c.Traces
+	return c.Data
 }
 
-func (c *CostTracesResponse) GetMeta() *PaginationMeta {
-	if c == nil {
-		return nil
-	}
-	return c.Meta
-}
-
-func (c *CostTracesResponse) GetExtraProperties() map[string]interface{} {
+func (c *CreditBalanceListResponse) GetExtraProperties() map[string]interface{} {
 	return c.extraProperties
 }
 
-func (c *CostTracesResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler CostTracesResponse
+func (c *CreditBalanceListResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler CreditBalanceListResponse
 	var value unmarshaler
 	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	*c = CostTracesResponse(value)
+	*c = CreditBalanceListResponse(value)
 	extraProperties, err := internal.ExtractExtraProperties(data, *c)
 	if err != nil {
 		return err
@@ -176,7 +230,7 @@ func (c *CostTracesResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (c *CostTracesResponse) String() string {
+func (c *CreditBalanceListResponse) String() string {
 	if len(c.rawJSON) > 0 {
 		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
 			return value
@@ -188,95 +242,175 @@ func (c *CostTracesResponse) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-type CustomerUpdate struct {
-	Name            *string          `json:"name,omitempty" url:"name,omitempty"`
-	ExternalId      *string          `json:"externalId,omitempty" url:"externalId,omitempty"`
-	Phone           *string          `json:"phone,omitempty" url:"phone,omitempty"`
-	EmployeeCount   *float64         `json:"employeeCount,omitempty" url:"employeeCount,omitempty"`
-	AnnualRevenue   *float64         `json:"annualRevenue,omitempty" url:"annualRevenue,omitempty"`
-	TaxExemptStatus *TaxExemptStatus `json:"taxExemptStatus,omitempty" url:"taxExemptStatus,omitempty"`
-	CreationSource  *CreationSource  `json:"creationSource,omitempty" url:"creationSource,omitempty"`
-	Website         *string          `json:"website,omitempty" url:"website,omitempty"`
-	BillingAddress  *Address         `json:"billingAddress,omitempty" url:"billingAddress,omitempty"`
+type CreditBalanceRecipient string
+
+const (
+	CreditBalanceRecipientOrganization CreditBalanceRecipient = "organization"
+	CreditBalanceRecipientSeat         CreditBalanceRecipient = "seat"
+)
+
+func NewCreditBalanceRecipientFromString(s string) (CreditBalanceRecipient, error) {
+	switch s {
+	case "organization":
+		return CreditBalanceRecipientOrganization, nil
+	case "seat":
+		return CreditBalanceRecipientSeat, nil
+	}
+	var t CreditBalanceRecipient
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CreditBalanceRecipient) Ptr() *CreditBalanceRecipient {
+	return &c
+}
+
+type Customer struct {
+	ID              string                  `json:"id" url:"id"`
+	Name            string                  `json:"name" url:"name"`
+	LegalName       *string                 `json:"legalName,omitempty" url:"legalName,omitempty"`
+	Email           string                  `json:"email" url:"email"`
+	Phone           string                  `json:"phone" url:"phone"`
+	Website         string                  `json:"website" url:"website"`
+	ExternalID      *string                 `json:"externalId,omitempty" url:"externalId,omitempty"`
+	BillingAddress  *CustomerBillingAddress `json:"billingAddress,omitempty" url:"billingAddress,omitempty"`
+	CreationState   CustomerCreationState   `json:"creationState" url:"creationState"`
+	ChurnDate       *time.Time              `json:"churnDate,omitempty" url:"churnDate,omitempty"`
+	VatNumber       *string                 `json:"vatNumber,omitempty" url:"vatNumber,omitempty"`
+	Metadata        map[string]interface{}  `json:"metadata,omitempty" url:"metadata,omitempty"`
+	DefaultCurrency string                  `json:"defaultCurrency" url:"defaultCurrency"`
+	CreatedAt       time.Time               `json:"createdAt" url:"createdAt"`
+	UpdatedAt       time.Time               `json:"updatedAt" url:"updatedAt"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (c *CustomerUpdate) GetName() *string {
+func (c *Customer) GetID() string {
 	if c == nil {
-		return nil
+		return ""
+	}
+	return c.ID
+}
+
+func (c *Customer) GetName() string {
+	if c == nil {
+		return ""
 	}
 	return c.Name
 }
 
-func (c *CustomerUpdate) GetExternalId() *string {
+func (c *Customer) GetLegalName() *string {
 	if c == nil {
 		return nil
 	}
-	return c.ExternalId
+	return c.LegalName
 }
 
-func (c *CustomerUpdate) GetPhone() *string {
+func (c *Customer) GetEmail() string {
 	if c == nil {
-		return nil
+		return ""
+	}
+	return c.Email
+}
+
+func (c *Customer) GetPhone() string {
+	if c == nil {
+		return ""
 	}
 	return c.Phone
 }
 
-func (c *CustomerUpdate) GetEmployeeCount() *float64 {
+func (c *Customer) GetWebsite() string {
 	if c == nil {
-		return nil
-	}
-	return c.EmployeeCount
-}
-
-func (c *CustomerUpdate) GetAnnualRevenue() *float64 {
-	if c == nil {
-		return nil
-	}
-	return c.AnnualRevenue
-}
-
-func (c *CustomerUpdate) GetTaxExemptStatus() *TaxExemptStatus {
-	if c == nil {
-		return nil
-	}
-	return c.TaxExemptStatus
-}
-
-func (c *CustomerUpdate) GetCreationSource() *CreationSource {
-	if c == nil {
-		return nil
-	}
-	return c.CreationSource
-}
-
-func (c *CustomerUpdate) GetWebsite() *string {
-	if c == nil {
-		return nil
+		return ""
 	}
 	return c.Website
 }
 
-func (c *CustomerUpdate) GetBillingAddress() *Address {
+func (c *Customer) GetExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ExternalID
+}
+
+func (c *Customer) GetBillingAddress() *CustomerBillingAddress {
 	if c == nil {
 		return nil
 	}
 	return c.BillingAddress
 }
 
-func (c *CustomerUpdate) GetExtraProperties() map[string]interface{} {
+func (c *Customer) GetCreationState() CustomerCreationState {
+	if c == nil {
+		return ""
+	}
+	return c.CreationState
+}
+
+func (c *Customer) GetChurnDate() *time.Time {
+	if c == nil {
+		return nil
+	}
+	return c.ChurnDate
+}
+
+func (c *Customer) GetVatNumber() *string {
+	if c == nil {
+		return nil
+	}
+	return c.VatNumber
+}
+
+func (c *Customer) GetMetadata() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.Metadata
+}
+
+func (c *Customer) GetDefaultCurrency() string {
+	if c == nil {
+		return ""
+	}
+	return c.DefaultCurrency
+}
+
+func (c *Customer) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *Customer) GetUpdatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.UpdatedAt
+}
+
+func (c *Customer) GetExtraProperties() map[string]interface{} {
 	return c.extraProperties
 }
 
-func (c *CustomerUpdate) UnmarshalJSON(data []byte) error {
-	type unmarshaler CustomerUpdate
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
+func (c *Customer) UnmarshalJSON(data []byte) error {
+	type embed Customer
+	var unmarshaler = struct {
+		embed
+		ChurnDate *internal.DateTime `json:"churnDate,omitempty"`
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
 		return err
 	}
-	*c = CustomerUpdate(value)
+	*c = Customer(unmarshaler.embed)
+	c.ChurnDate = unmarshaler.ChurnDate.TimePtr()
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	c.UpdatedAt = unmarshaler.UpdatedAt.Time()
 	extraProperties, err := internal.ExtractExtraProperties(data, *c)
 	if err != nil {
 		return err
@@ -286,7 +420,23 @@ func (c *CustomerUpdate) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (c *CustomerUpdate) String() string {
+func (c *Customer) MarshalJSON() ([]byte, error) {
+	type embed Customer
+	var marshaler = struct {
+		embed
+		ChurnDate *internal.DateTime `json:"churnDate,omitempty"`
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+	}{
+		embed:     embed(*c),
+		ChurnDate: internal.NewOptionalDateTime(c.ChurnDate),
+		CreatedAt: internal.NewDateTime(c.CreatedAt),
+		UpdatedAt: internal.NewDateTime(c.UpdatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *Customer) String() string {
 	if len(c.rawJSON) > 0 {
 		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
 			return value
@@ -298,170 +448,515 @@ func (c *CustomerUpdate) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Tracks the usage of an entitlement for a customer
-type EntitlementUsage struct {
-	Id             string     `json:"id" url:"id"`
-	CreatedAt      *time.Time `json:"createdAt,omitempty" url:"createdAt,omitempty"`
-	UpdatedAt      *time.Time `json:"updatedAt,omitempty" url:"updatedAt,omitempty"`
-	OrganizationId string     `json:"organizationId" url:"organizationId"`
-	ProductId      string     `json:"productId" url:"productId"`
-	EntitlementId  string     `json:"entitlementId" url:"entitlementId"`
-	CustomerId     string     `json:"customerId" url:"customerId"`
-	StartDate      time.Time  `json:"startDate" url:"startDate"`
-	EndDate        *time.Time `json:"endDate,omitempty" url:"endDate,omitempty"`
-	// Total entitlement amount
-	Total int64 `json:"total" url:"total"`
-	// Available entitlement amount
-	Available int64 `json:"available" url:"available"`
-	// Used entitlement amount
-	Used int64 `json:"used" url:"used"`
+type CustomerBillingAddress struct {
+	Line1   *string `json:"line1,omitempty" url:"line1,omitempty"`
+	Line2   *string `json:"line2,omitempty" url:"line2,omitempty"`
+	City    *string `json:"city,omitempty" url:"city,omitempty"`
+	State   *string `json:"state,omitempty" url:"state,omitempty"`
+	ZipCode *string `json:"zipCode,omitempty" url:"zipCode,omitempty"`
+	Country *string `json:"country,omitempty" url:"country,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (e *EntitlementUsage) GetId() string {
-	if e == nil {
-		return ""
-	}
-	return e.Id
-}
-
-func (e *EntitlementUsage) GetCreatedAt() *time.Time {
-	if e == nil {
+func (c *CustomerBillingAddress) GetLine1() *string {
+	if c == nil {
 		return nil
 	}
-	return e.CreatedAt
+	return c.Line1
 }
 
-func (e *EntitlementUsage) GetUpdatedAt() *time.Time {
-	if e == nil {
+func (c *CustomerBillingAddress) GetLine2() *string {
+	if c == nil {
 		return nil
 	}
-	return e.UpdatedAt
+	return c.Line2
 }
 
-func (e *EntitlementUsage) GetOrganizationId() string {
-	if e == nil {
+func (c *CustomerBillingAddress) GetCity() *string {
+	if c == nil {
+		return nil
+	}
+	return c.City
+}
+
+func (c *CustomerBillingAddress) GetState() *string {
+	if c == nil {
+		return nil
+	}
+	return c.State
+}
+
+func (c *CustomerBillingAddress) GetZipCode() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ZipCode
+}
+
+func (c *CustomerBillingAddress) GetCountry() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Country
+}
+
+func (c *CustomerBillingAddress) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerBillingAddress) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerBillingAddress
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerBillingAddress(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerBillingAddress) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerCreationState string
+
+const (
+	CustomerCreationStateDraft  CustomerCreationState = "draft"
+	CustomerCreationStateActive CustomerCreationState = "active"
+)
+
+func NewCustomerCreationStateFromString(s string) (CustomerCreationState, error) {
+	switch s {
+	case "draft":
+		return CustomerCreationStateDraft, nil
+	case "active":
+		return CustomerCreationStateActive, nil
+	}
+	var t CustomerCreationState
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerCreationState) Ptr() *CustomerCreationState {
+	return &c
+}
+
+type CustomerListResponse struct {
+	Data       []*Customer `json:"data" url:"data"`
+	Pagination *Pagination `json:"pagination" url:"pagination"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerListResponse) GetData() []*Customer {
+	if c == nil {
+		return nil
+	}
+	return c.Data
+}
+
+func (c *CustomerListResponse) GetPagination() *Pagination {
+	if c == nil {
+		return nil
+	}
+	return c.Pagination
+}
+
+func (c *CustomerListResponse) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerListResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerListResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerListResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerListResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerUser struct {
+	ID                 string                 `json:"id" url:"id"`
+	ExternalID         string                 `json:"externalId" url:"externalId"`
+	CustomerExternalID string                 `json:"customerExternalId" url:"customerExternalId"`
+	Name               *string                `json:"name,omitempty" url:"name,omitempty"`
+	Email              *string                `json:"email,omitempty" url:"email,omitempty"`
+	Metadata           map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
+	Status             CustomerUserStatus     `json:"status" url:"status"`
+	Created            bool                   `json:"created" url:"created"`
+	CreatedAt          time.Time              `json:"createdAt" url:"createdAt"`
+	UpdatedAt          time.Time              `json:"updatedAt" url:"updatedAt"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUser) GetID() string {
+	if c == nil {
 		return ""
 	}
-	return e.OrganizationId
+	return c.ID
 }
 
-func (e *EntitlementUsage) GetProductId() string {
-	if e == nil {
+func (c *CustomerUser) GetExternalID() string {
+	if c == nil {
 		return ""
 	}
-	return e.ProductId
+	return c.ExternalID
 }
 
-func (e *EntitlementUsage) GetEntitlementId() string {
-	if e == nil {
+func (c *CustomerUser) GetCustomerExternalID() string {
+	if c == nil {
 		return ""
 	}
-	return e.EntitlementId
+	return c.CustomerExternalID
 }
 
-func (e *EntitlementUsage) GetCustomerId() string {
-	if e == nil {
+func (c *CustomerUser) GetName() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Name
+}
+
+func (c *CustomerUser) GetEmail() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Email
+}
+
+func (c *CustomerUser) GetMetadata() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.Metadata
+}
+
+func (c *CustomerUser) GetStatus() CustomerUserStatus {
+	if c == nil {
 		return ""
 	}
-	return e.CustomerId
+	return c.Status
 }
 
-func (e *EntitlementUsage) GetStartDate() time.Time {
-	if e == nil {
+func (c *CustomerUser) GetCreated() bool {
+	if c == nil {
+		return false
+	}
+	return c.Created
+}
+
+func (c *CustomerUser) GetCreatedAt() time.Time {
+	if c == nil {
 		return time.Time{}
 	}
-	return e.StartDate
+	return c.CreatedAt
 }
 
-func (e *EntitlementUsage) GetEndDate() *time.Time {
-	if e == nil {
-		return nil
+func (c *CustomerUser) GetUpdatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
 	}
-	return e.EndDate
+	return c.UpdatedAt
 }
 
-func (e *EntitlementUsage) GetTotal() int64 {
-	if e == nil {
-		return 0
-	}
-	return e.Total
+func (c *CustomerUser) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
 }
 
-func (e *EntitlementUsage) GetAvailable() int64 {
-	if e == nil {
-		return 0
-	}
-	return e.Available
-}
-
-func (e *EntitlementUsage) GetUsed() int64 {
-	if e == nil {
-		return 0
-	}
-	return e.Used
-}
-
-func (e *EntitlementUsage) GetExtraProperties() map[string]interface{} {
-	return e.extraProperties
-}
-
-func (e *EntitlementUsage) UnmarshalJSON(data []byte) error {
-	type embed EntitlementUsage
+func (c *CustomerUser) UnmarshalJSON(data []byte) error {
+	type embed CustomerUser
 	var unmarshaler = struct {
 		embed
-		CreatedAt *internal.DateTime `json:"createdAt,omitempty"`
-		UpdatedAt *internal.DateTime `json:"updatedAt,omitempty"`
-		StartDate *internal.DateTime `json:"startDate"`
-		EndDate   *internal.DateTime `json:"endDate,omitempty"`
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
 	}{
-		embed: embed(*e),
+		embed: embed(*c),
 	}
 	if err := json.Unmarshal(data, &unmarshaler); err != nil {
 		return err
 	}
-	*e = EntitlementUsage(unmarshaler.embed)
-	e.CreatedAt = unmarshaler.CreatedAt.TimePtr()
-	e.UpdatedAt = unmarshaler.UpdatedAt.TimePtr()
-	e.StartDate = unmarshaler.StartDate.Time()
-	e.EndDate = unmarshaler.EndDate.TimePtr()
-	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	*c = CustomerUser(unmarshaler.embed)
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	c.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
 	if err != nil {
 		return err
 	}
-	e.extraProperties = extraProperties
-	e.rawJSON = json.RawMessage(data)
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
 	return nil
 }
 
-func (e *EntitlementUsage) MarshalJSON() ([]byte, error) {
-	type embed EntitlementUsage
+func (c *CustomerUser) MarshalJSON() ([]byte, error) {
+	type embed CustomerUser
 	var marshaler = struct {
 		embed
-		CreatedAt *internal.DateTime `json:"createdAt,omitempty"`
-		UpdatedAt *internal.DateTime `json:"updatedAt,omitempty"`
-		StartDate *internal.DateTime `json:"startDate"`
-		EndDate   *internal.DateTime `json:"endDate,omitempty"`
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
 	}{
-		embed:     embed(*e),
-		CreatedAt: internal.NewOptionalDateTime(e.CreatedAt),
-		UpdatedAt: internal.NewOptionalDateTime(e.UpdatedAt),
-		StartDate: internal.NewDateTime(e.StartDate),
-		EndDate:   internal.NewOptionalDateTime(e.EndDate),
+		embed:     embed(*c),
+		CreatedAt: internal.NewDateTime(c.CreatedAt),
+		UpdatedAt: internal.NewDateTime(c.UpdatedAt),
 	}
 	return json.Marshal(marshaler)
 }
 
-func (e *EntitlementUsage) String() string {
-	if len(e.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+func (c *CustomerUser) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
 			return value
 		}
 	}
-	if value, err := internal.StringifyJSON(e); err == nil {
+	if value, err := internal.StringifyJSON(c); err == nil {
 		return value
 	}
-	return fmt.Sprintf("%#v", e)
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerUserStatus string
+
+const (
+	CustomerUserStatusActive      CustomerUserStatus = "active"
+	CustomerUserStatusDeactivated CustomerUserStatus = "deactivated"
+)
+
+func NewCustomerUserStatusFromString(s string) (CustomerUserStatus, error) {
+	switch s {
+	case "active":
+		return CustomerUserStatusActive, nil
+	case "deactivated":
+		return CustomerUserStatusDeactivated, nil
+	}
+	var t CustomerUserStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUserStatus) Ptr() *CustomerUserStatus {
+	return &c
+}
+
+type UpdateCustomerRequest struct {
+	Name           *string                 `json:"name,omitempty" url:"name,omitempty"`
+	LegalName      *string                 `json:"legalName,omitempty" url:"legalName,omitempty"`
+	Email          *string                 `json:"email,omitempty" url:"email,omitempty"`
+	Phone          *string                 `json:"phone,omitempty" url:"phone,omitempty"`
+	Website        *string                 `json:"website,omitempty" url:"website,omitempty"`
+	ExternalID     *string                 `json:"externalId,omitempty" url:"externalId,omitempty"`
+	BillingAddress *CustomerBillingAddress `json:"billingAddress,omitempty" url:"billingAddress,omitempty"`
+	CreationState  *CustomerCreationState  `json:"creationState,omitempty" url:"creationState,omitempty"`
+	ChurnDate      *time.Time              `json:"churnDate,omitempty" url:"churnDate,omitempty"`
+	VatNumber      *string                 `json:"vatNumber,omitempty" url:"vatNumber,omitempty"`
+	Metadata       map[string]interface{}  `json:"metadata,omitempty" url:"metadata,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (u *UpdateCustomerRequest) GetName() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Name
+}
+
+func (u *UpdateCustomerRequest) GetLegalName() *string {
+	if u == nil {
+		return nil
+	}
+	return u.LegalName
+}
+
+func (u *UpdateCustomerRequest) GetEmail() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Email
+}
+
+func (u *UpdateCustomerRequest) GetPhone() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Phone
+}
+
+func (u *UpdateCustomerRequest) GetWebsite() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Website
+}
+
+func (u *UpdateCustomerRequest) GetExternalID() *string {
+	if u == nil {
+		return nil
+	}
+	return u.ExternalID
+}
+
+func (u *UpdateCustomerRequest) GetBillingAddress() *CustomerBillingAddress {
+	if u == nil {
+		return nil
+	}
+	return u.BillingAddress
+}
+
+func (u *UpdateCustomerRequest) GetCreationState() *CustomerCreationState {
+	if u == nil {
+		return nil
+	}
+	return u.CreationState
+}
+
+func (u *UpdateCustomerRequest) GetChurnDate() *time.Time {
+	if u == nil {
+		return nil
+	}
+	return u.ChurnDate
+}
+
+func (u *UpdateCustomerRequest) GetVatNumber() *string {
+	if u == nil {
+		return nil
+	}
+	return u.VatNumber
+}
+
+func (u *UpdateCustomerRequest) GetMetadata() map[string]interface{} {
+	if u == nil {
+		return nil
+	}
+	return u.Metadata
+}
+
+func (u *UpdateCustomerRequest) GetExtraProperties() map[string]interface{} {
+	return u.extraProperties
+}
+
+func (u *UpdateCustomerRequest) UnmarshalJSON(data []byte) error {
+	type embed UpdateCustomerRequest
+	var unmarshaler = struct {
+		embed
+		ChurnDate *internal.DateTime `json:"churnDate,omitempty"`
+	}{
+		embed: embed(*u),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*u = UpdateCustomerRequest(unmarshaler.embed)
+	u.ChurnDate = unmarshaler.ChurnDate.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *u)
+	if err != nil {
+		return err
+	}
+	u.extraProperties = extraProperties
+	u.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (u *UpdateCustomerRequest) MarshalJSON() ([]byte, error) {
+	type embed UpdateCustomerRequest
+	var marshaler = struct {
+		embed
+		ChurnDate *internal.DateTime `json:"churnDate,omitempty"`
+	}{
+		embed:     embed(*u),
+		ChurnDate: internal.NewOptionalDateTime(u.ChurnDate),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (u *UpdateCustomerRequest) String() string {
+	if len(u.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(u); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", u)
+}
+
+type UpdateCustomerByExternalIDRequest struct {
+	ExternalID string                 `json:"-" url:"-"`
+	Body       *UpdateCustomerRequest `json:"-" url:"-"`
+}
+
+func (u *UpdateCustomerByExternalIDRequest) UnmarshalJSON(data []byte) error {
+	body := new(UpdateCustomerRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	u.Body = body
+	return nil
+}
+
+func (u *UpdateCustomerByExternalIDRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.Body)
+}
+
+type UpdateCustomerByIDRequest struct {
+	ID   string                 `json:"-" url:"-"`
+	Body *UpdateCustomerRequest `json:"-" url:"-"`
+}
+
+func (u *UpdateCustomerByIDRequest) UnmarshalJSON(data []byte) error {
+	body := new(UpdateCustomerRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	u.Body = body
+	return nil
+}
+
+func (u *UpdateCustomerByIDRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.Body)
+}
+
+type UpsertCustomerUserRequest struct {
+	CustomerExternalID string                 `json:"-" url:"-"`
+	UserExternalID     string                 `json:"-" url:"-"`
+	Name               *string                `json:"name,omitempty" url:"-"`
+	Email              *string                `json:"email,omitempty" url:"-"`
+	Metadata           map[string]interface{} `json:"metadata,omitempty" url:"-"`
+	Status             *CustomerUserStatus    `json:"status,omitempty" url:"-"`
 }

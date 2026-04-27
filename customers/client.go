@@ -31,380 +31,19 @@ func NewClient(opts ...option.RequestOption) *Client {
 	}
 }
 
-func (c *Client) List(
+// Get a list of customers for the organization
+func (c *Client) ListCustomers(
 	ctx context.Context,
+	request *paidgo.ListCustomersRequest,
 	opts ...option.RequestOption,
-) ([]*paidgo.Customer, error) {
+) (*paidgo.CustomerListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
 		c.baseURL,
-		"https://api.agentpaid.io/api/v1",
+		"https://api.agentpaid.io/api/v2",
 	)
-	endpointURL := baseURL + "/customers"
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-
-	var response []*paidgo.Customer
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodGet,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Response:        &response,
-		},
-	); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-func (c *Client) Create(
-	ctx context.Context,
-	request *paidgo.CustomerCreate,
-	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v1",
-	)
-	endpointURL := baseURL + "/customers"
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-	headers.Set("Content-Type", "application/json")
-
-	var response *paidgo.Customer
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodPost,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Request:         request,
-			Response:        &response,
-		},
-	); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-func (c *Client) Get(
-	ctx context.Context,
-	customerId string,
-	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/customers/%v",
-		customerId,
-	)
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-
-	var response *paidgo.Customer
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodGet,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Response:        &response,
-		},
-	); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-func (c *Client) Update(
-	ctx context.Context,
-	customerId string,
-	request *paidgo.CustomerUpdate,
-	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/customers/%v",
-		customerId,
-	)
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-	headers.Set("Content-Type", "application/json")
-
-	var response *paidgo.Customer
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodPut,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Request:         request,
-			Response:        &response,
-		},
-	); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-func (c *Client) Delete(
-	ctx context.Context,
-	customerId string,
-	opts ...option.RequestOption,
-) error {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/customers/%v",
-		customerId,
-	)
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodDelete,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-		},
-	); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Client) GetEntitlements(
-	ctx context.Context,
-	// The customer ID
-	customerId string,
-	opts ...option.RequestOption,
-) ([]*paidgo.EntitlementUsage, error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/customers/%v/credit-bundles",
-		customerId,
-	)
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-	errorCodes := internal.ErrorCodes{
-		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
-				APIError: apiError,
-			}
-		},
-	}
-
-	var response []*paidgo.EntitlementUsage
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodGet,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Response:        &response,
-			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
-		},
-	); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-func (c *Client) GetByExternalId(
-	ctx context.Context,
-	externalId string,
-	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/customers/external/%v",
-		externalId,
-	)
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-
-	var response *paidgo.Customer
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodGet,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Response:        &response,
-		},
-	); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-func (c *Client) UpdateByExternalId(
-	ctx context.Context,
-	externalId string,
-	request *paidgo.CustomerUpdate,
-	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/customers/external/%v",
-		externalId,
-	)
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-	headers.Set("Content-Type", "application/json")
-
-	var response *paidgo.Customer
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodPut,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Request:         request,
-			Response:        &response,
-		},
-	); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-func (c *Client) DeleteByExternalId(
-	ctx context.Context,
-	externalId string,
-	opts ...option.RequestOption,
-) error {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/customers/external/%v",
-		externalId,
-	)
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodDelete,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-		},
-	); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Client) GetCostsByExternalId(
-	ctx context.Context,
-	// The external ID of the customer
-	externalId string,
-	request *paidgo.CustomersGetCostsByExternalIdRequest,
-	opts ...option.RequestOption,
-) (*paidgo.CostTracesResponse, error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v1",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/customers/external/%v/costs",
-		externalId,
-	)
+	endpointURL := baseURL + "/customers/"
 	queryParams, err := internal.QueryValues(request)
 	if err != nil {
 		return nil, err
@@ -427,14 +66,14 @@ func (c *Client) GetCostsByExternalId(
 				APIError: apiError,
 			}
 		},
-		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CostTracesResponse
+	var response *paidgo.CustomerListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -445,6 +84,617 @@ func (c *Client) GetCostsByExternalId(
 			BodyProperties:  options.BodyProperties,
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Creates a new customer for the organization
+func (c *Client) CreateCustomer(
+	ctx context.Context,
+	request *paidgo.CreateCustomerRequest,
+	opts ...option.RequestOption,
+) (*paidgo.Customer, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := baseURL + "/customers/"
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	headers.Set("Content-Type", "application/json")
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.Customer
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Get a customer by ID
+func (c *Client) GetCustomerByID(
+	ctx context.Context,
+	request *paidgo.GetCustomerByIDRequest,
+	opts ...option.RequestOption,
+) (*paidgo.Customer, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/%v",
+		request.ID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.Customer
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Update a customer by ID
+func (c *Client) UpdateCustomerByID(
+	ctx context.Context,
+	request *paidgo.UpdateCustomerByIDRequest,
+	opts ...option.RequestOption,
+) (*paidgo.Customer, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/%v",
+		request.ID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	headers.Set("Content-Type", "application/json")
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.Customer
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPut,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Delete a customer by ID
+func (c *Client) DeleteCustomerByID(
+	ctx context.Context,
+	request *paidgo.DeleteCustomerByIDRequest,
+	opts ...option.RequestOption,
+) (*paidgo.EmptyResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/%v",
+		request.ID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.EmptyResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodDelete,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Get a customer by external ID
+func (c *Client) GetCustomerByExternalID(
+	ctx context.Context,
+	request *paidgo.GetCustomerByExternalIDRequest,
+	opts ...option.RequestOption,
+) (*paidgo.Customer, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/external/%v",
+		request.ExternalID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.Customer
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Update a customer by external ID
+func (c *Client) UpdateCustomerByExternalID(
+	ctx context.Context,
+	request *paidgo.UpdateCustomerByExternalIDRequest,
+	opts ...option.RequestOption,
+) (*paidgo.Customer, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/external/%v",
+		request.ExternalID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	headers.Set("Content-Type", "application/json")
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.Customer
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPut,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Delete a customer by external ID
+func (c *Client) DeleteCustomerByExternalID(
+	ctx context.Context,
+	request *paidgo.DeleteCustomerByExternalIDRequest,
+	opts ...option.RequestOption,
+) (*paidgo.EmptyResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/external/%v",
+		request.ExternalID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.EmptyResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodDelete,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Get current customer credit balances grouped by currency
+func (c *Client) GetCustomerCreditBalances(
+	ctx context.Context,
+	request *paidgo.GetCustomerCreditBalancesRequest,
+	opts ...option.RequestOption,
+) (*paidgo.CreditBalanceListResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/%v/credits/balances",
+		request.ID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.CreditBalanceListResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Get current customer credit balances grouped by currency, looked up by external ID
+func (c *Client) GetCustomerCreditBalancesByExternalID(
+	ctx context.Context,
+	request *paidgo.GetCustomerCreditBalancesByExternalIDRequest,
+	opts ...option.RequestOption,
+) (*paidgo.CreditBalanceListResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/external/%v/credits/balances",
+		request.ExternalID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.CreditBalanceListResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Create or update a customer user using customer and user external IDs
+func (c *Client) UpsertCustomerUserByExternalID(
+	ctx context.Context,
+	request *paidgo.UpsertCustomerUserRequest,
+	opts ...option.RequestOption,
+) (*paidgo.CustomerUser, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/customers/%v/users/%v",
+		request.CustomerExternalID,
+		request.UserExternalID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	headers.Set("Content-Type", "application/json")
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.CustomerUser
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPut,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
 			Response:        &response,
 			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
 		},
