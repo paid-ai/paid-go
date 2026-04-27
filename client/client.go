@@ -3,15 +3,20 @@
 package client
 
 import (
-	agents "github.com/paid-ai/paid-go/agents"
+	checkouts "github.com/paid-ai/paid-go/checkouts"
 	contacts "github.com/paid-ai/paid-go/contacts"
 	core "github.com/paid-ai/paid-go/core"
+	credits "github.com/paid-ai/paid-go/credits"
+	customerportals "github.com/paid-ai/paid-go/customerportals"
 	customers "github.com/paid-ai/paid-go/customers"
 	internal "github.com/paid-ai/paid-go/internal"
+	invoices "github.com/paid-ai/paid-go/invoices"
 	option "github.com/paid-ai/paid-go/option"
-	ordersclient "github.com/paid-ai/paid-go/orders/client"
-	traces "github.com/paid-ai/paid-go/traces"
-	usage "github.com/paid-ai/paid-go/usage"
+	orders "github.com/paid-ai/paid-go/orders"
+	products "github.com/paid-ai/paid-go/products"
+	signals "github.com/paid-ai/paid-go/signals"
+	valuereceipts "github.com/paid-ai/paid-go/valuereceipts"
+	webhooks "github.com/paid-ai/paid-go/webhooks"
 	http "net/http"
 )
 
@@ -20,12 +25,17 @@ type Client struct {
 	caller  *internal.Caller
 	header  http.Header
 
-	Customers *customers.Client
-	Agents    *agents.Client
-	Contacts  *contacts.Client
-	Orders    *ordersclient.Client
-	Usage     *usage.Client
-	Traces    *traces.Client
+	Products        *products.Client
+	Customers       *customers.Client
+	Contacts        *contacts.Client
+	Orders          *orders.Client
+	Invoices        *invoices.Client
+	Signals         *signals.Client
+	Credits         *credits.Client
+	Checkouts       *checkouts.Client
+	CustomerPortals *customerportals.Client
+	ValueReceipts   *valuereceipts.Client
+	Webhooks        *webhooks.Client
 }
 
 func NewClient(opts ...option.RequestOption) *Client {
@@ -38,12 +48,17 @@ func NewClient(opts ...option.RequestOption) *Client {
 				MaxAttempts: options.MaxAttempts,
 			},
 		),
-		header:    options.ToHeader(),
-		Customers: customers.NewClient(opts...),
-		Agents:    agents.NewClient(opts...),
-		Contacts:  contacts.NewClient(opts...),
-		Orders:    ordersclient.NewClient(opts...),
-		Usage:     usage.NewClient(opts...),
-		Traces:    traces.NewClient(opts...),
+		header:          options.ToHeader(),
+		Products:        products.NewClient(opts...),
+		Customers:       customers.NewClient(opts...),
+		Contacts:        contacts.NewClient(opts...),
+		Orders:          orders.NewClient(opts...),
+		Invoices:        invoices.NewClient(opts...),
+		Signals:         signals.NewClient(opts...),
+		Credits:         credits.NewClient(opts...),
+		Checkouts:       checkouts.NewClient(opts...),
+		CustomerPortals: customerportals.NewClient(opts...),
+		ValueReceipts:   valuereceipts.NewClient(opts...),
+		Webhooks:        webhooks.NewClient(opts...),
 	}
 }

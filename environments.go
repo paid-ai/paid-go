@@ -7,7 +7,7 @@ package api
 // RequestOption to override the client's default environment,
 // if any.
 var Environments = struct {
-	Production string
+	Default string
 }{
-	Production: "https://api.agentpaid.io/api/v1",
+	Default: "https://api.agentpaid.io/api/v2",
 }
