@@ -8,6 +8,162 @@ import (
 	internal "github.com/paid-ai/paid-go/internal"
 )
 
+type CustomerAttribution struct {
+	CustomerByID         *CustomerByID
+	CustomerByExternalID *CustomerByExternalID
+
+	typ string
+}
+
+func (c *CustomerAttribution) GetCustomerByID() *CustomerByID {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerByID
+}
+
+func (c *CustomerAttribution) GetCustomerByExternalID() *CustomerByExternalID {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerByExternalID
+}
+
+func (c *CustomerAttribution) UnmarshalJSON(data []byte) error {
+	valueCustomerByID := new(CustomerByID)
+	if err := json.Unmarshal(data, &valueCustomerByID); err == nil {
+		c.typ = "CustomerByID"
+		c.CustomerByID = valueCustomerByID
+		return nil
+	}
+	valueCustomerByExternalID := new(CustomerByExternalID)
+	if err := json.Unmarshal(data, &valueCustomerByExternalID); err == nil {
+		c.typ = "CustomerByExternalID"
+		c.CustomerByExternalID = valueCustomerByExternalID
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, c)
+}
+
+func (c CustomerAttribution) MarshalJSON() ([]byte, error) {
+	if c.typ == "CustomerByID" || c.CustomerByID != nil {
+		return json.Marshal(c.CustomerByID)
+	}
+	if c.typ == "CustomerByExternalID" || c.CustomerByExternalID != nil {
+		return json.Marshal(c.CustomerByExternalID)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", c)
+}
+
+type CustomerAttributionVisitor interface {
+	VisitCustomerByID(*CustomerByID) error
+	VisitCustomerByExternalID(*CustomerByExternalID) error
+}
+
+func (c *CustomerAttribution) Accept(visitor CustomerAttributionVisitor) error {
+	if c.typ == "CustomerByID" || c.CustomerByID != nil {
+		return visitor.VisitCustomerByID(c.CustomerByID)
+	}
+	if c.typ == "CustomerByExternalID" || c.CustomerByExternalID != nil {
+		return visitor.VisitCustomerByExternalID(c.CustomerByExternalID)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", c)
+}
+
+type CustomerByExternalID struct {
+	// Your external customer ID
+	ExternalCustomerID string `json:"externalCustomerId" url:"externalCustomerId"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerByExternalID) GetExternalCustomerID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalCustomerID
+}
+
+func (c *CustomerByExternalID) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerByExternalID) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerByExternalID
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerByExternalID(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerByExternalID) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerByID struct {
+	// The Paid customer ID
+	CustomerID string `json:"customerId" url:"customerId"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerByID) GetCustomerID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CustomerID
+}
+
+func (c *CustomerByID) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerByID) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerByID
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerByID(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerByID) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
 type EmptyResponse struct {
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -175,4 +331,3406 @@ func (p *Pagination) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", p)
+}
+
+type ProductByExternalID struct {
+	// Your external product ID
+	ExternalProductID string `json:"externalProductId" url:"externalProductId"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductByExternalID) GetExternalProductID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ExternalProductID
+}
+
+func (p *ProductByExternalID) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductByExternalID) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductByExternalID
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductByExternalID(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductByExternalID) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductByID struct {
+	// The Paid product ID
+	ProductID string `json:"productId" url:"productId"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductByID) GetProductID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ProductID
+}
+
+func (p *ProductByID) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductByID) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductByID
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductByID(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductByID) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductCreditBenefitInput struct {
+	CreditsCurrencyID    string                                      `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	Amount               float64                                     `json:"amount" url:"amount"`
+	Recipient            *ProductCreditBenefitInputRecipient         `json:"recipient,omitempty" url:"recipient,omitempty"`
+	IsInfiniteTotal      *bool                                       `json:"isInfiniteTotal,omitempty" url:"isInfiniteTotal,omitempty"`
+	AllocationCadence    *ProductCreditBenefitInputAllocationCadence `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
+	CreditGrantTiming    *ProductCreditBenefitInputCreditGrantTiming `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
+	OverageUnitPrice     *float64                                    `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	RolloverAmount       *float64                                    `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	RolloverDuration     *float64                                    `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDurationUnit *string                                     `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductCreditBenefitInput) GetCreditsCurrencyID() string {
+	if p == nil {
+		return ""
+	}
+	return p.CreditsCurrencyID
+}
+
+func (p *ProductCreditBenefitInput) GetAmount() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.Amount
+}
+
+func (p *ProductCreditBenefitInput) GetRecipient() *ProductCreditBenefitInputRecipient {
+	if p == nil {
+		return nil
+	}
+	return p.Recipient
+}
+
+func (p *ProductCreditBenefitInput) GetIsInfiniteTotal() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.IsInfiniteTotal
+}
+
+func (p *ProductCreditBenefitInput) GetAllocationCadence() *ProductCreditBenefitInputAllocationCadence {
+	if p == nil {
+		return nil
+	}
+	return p.AllocationCadence
+}
+
+func (p *ProductCreditBenefitInput) GetCreditGrantTiming() *ProductCreditBenefitInputCreditGrantTiming {
+	if p == nil {
+		return nil
+	}
+	return p.CreditGrantTiming
+}
+
+func (p *ProductCreditBenefitInput) GetOverageUnitPrice() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrice
+}
+
+func (p *ProductCreditBenefitInput) GetRolloverAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverAmount
+}
+
+func (p *ProductCreditBenefitInput) GetRolloverDuration() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverDuration
+}
+
+func (p *ProductCreditBenefitInput) GetRolloverDurationUnit() *string {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverDurationUnit
+}
+
+func (p *ProductCreditBenefitInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductCreditBenefitInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductCreditBenefitInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductCreditBenefitInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductCreditBenefitInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductCreditBenefitInputAllocationCadence string
+
+const (
+	ProductCreditBenefitInputAllocationCadenceUpfront ProductCreditBenefitInputAllocationCadence = "upfront"
+	ProductCreditBenefitInputAllocationCadenceMonthly ProductCreditBenefitInputAllocationCadence = "monthly"
+)
+
+func NewProductCreditBenefitInputAllocationCadenceFromString(s string) (ProductCreditBenefitInputAllocationCadence, error) {
+	switch s {
+	case "upfront":
+		return ProductCreditBenefitInputAllocationCadenceUpfront, nil
+	case "monthly":
+		return ProductCreditBenefitInputAllocationCadenceMonthly, nil
+	}
+	var t ProductCreditBenefitInputAllocationCadence
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductCreditBenefitInputAllocationCadence) Ptr() *ProductCreditBenefitInputAllocationCadence {
+	return &p
+}
+
+type ProductCreditBenefitInputCreditGrantTiming string
+
+const (
+	ProductCreditBenefitInputCreditGrantTimingOnOrderActivation ProductCreditBenefitInputCreditGrantTiming = "on_order_activation"
+	ProductCreditBenefitInputCreditGrantTimingOnPayment         ProductCreditBenefitInputCreditGrantTiming = "on_payment"
+	ProductCreditBenefitInputCreditGrantTimingOnInvoicePosted   ProductCreditBenefitInputCreditGrantTiming = "on_invoice_posted"
+)
+
+func NewProductCreditBenefitInputCreditGrantTimingFromString(s string) (ProductCreditBenefitInputCreditGrantTiming, error) {
+	switch s {
+	case "on_order_activation":
+		return ProductCreditBenefitInputCreditGrantTimingOnOrderActivation, nil
+	case "on_payment":
+		return ProductCreditBenefitInputCreditGrantTimingOnPayment, nil
+	case "on_invoice_posted":
+		return ProductCreditBenefitInputCreditGrantTimingOnInvoicePosted, nil
+	}
+	var t ProductCreditBenefitInputCreditGrantTiming
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductCreditBenefitInputCreditGrantTiming) Ptr() *ProductCreditBenefitInputCreditGrantTiming {
+	return &p
+}
+
+type ProductCreditBenefitInputRecipient string
+
+const (
+	ProductCreditBenefitInputRecipientOrganization ProductCreditBenefitInputRecipient = "organization"
+	ProductCreditBenefitInputRecipientSeat         ProductCreditBenefitInputRecipient = "seat"
+)
+
+func NewProductCreditBenefitInputRecipientFromString(s string) (ProductCreditBenefitInputRecipient, error) {
+	switch s {
+	case "organization":
+		return ProductCreditBenefitInputRecipientOrganization, nil
+	case "seat":
+		return ProductCreditBenefitInputRecipientSeat, nil
+	}
+	var t ProductCreditBenefitInputRecipient
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductCreditBenefitInputRecipient) Ptr() *ProductCreditBenefitInputRecipient {
+	return &p
+}
+
+type ProductOneTimePerUnitInput struct {
+	FeeType     *ProductOneTimePerUnitInputFeeType     `json:"feeType,omitempty" url:"feeType,omitempty"`
+	BillingType *ProductOneTimePerUnitInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*ProductSimplePricePoint             `json:"pricePoints" url:"pricePoints"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductOneTimePerUnitInput) GetFeeType() *ProductOneTimePerUnitInputFeeType {
+	if p == nil {
+		return nil
+	}
+	return p.FeeType
+}
+
+func (p *ProductOneTimePerUnitInput) GetBillingType() *ProductOneTimePerUnitInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductOneTimePerUnitInput) GetPricePoints() []*ProductSimplePricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductOneTimePerUnitInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductOneTimePerUnitInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductOneTimePerUnitInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductOneTimePerUnitInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductOneTimePerUnitInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductOneTimePerUnitInputBillingType string
+
+const (
+	ProductOneTimePerUnitInputBillingTypeAdvance ProductOneTimePerUnitInputBillingType = "Advance"
+	ProductOneTimePerUnitInputBillingTypeArrears ProductOneTimePerUnitInputBillingType = "Arrears"
+)
+
+func NewProductOneTimePerUnitInputBillingTypeFromString(s string) (ProductOneTimePerUnitInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductOneTimePerUnitInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductOneTimePerUnitInputBillingTypeArrears, nil
+	}
+	var t ProductOneTimePerUnitInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductOneTimePerUnitInputBillingType) Ptr() *ProductOneTimePerUnitInputBillingType {
+	return &p
+}
+
+type ProductOneTimePerUnitInputFeeType string
+
+const (
+	ProductOneTimePerUnitInputFeeTypeSetup          ProductOneTimePerUnitInputFeeType = "setup"
+	ProductOneTimePerUnitInputFeeTypeOnboarding     ProductOneTimePerUnitInputFeeType = "onboarding"
+	ProductOneTimePerUnitInputFeeTypeImplementation ProductOneTimePerUnitInputFeeType = "implementation"
+	ProductOneTimePerUnitInputFeeTypeMigration      ProductOneTimePerUnitInputFeeType = "migration"
+	ProductOneTimePerUnitInputFeeTypeCustom         ProductOneTimePerUnitInputFeeType = "custom"
+)
+
+func NewProductOneTimePerUnitInputFeeTypeFromString(s string) (ProductOneTimePerUnitInputFeeType, error) {
+	switch s {
+	case "setup":
+		return ProductOneTimePerUnitInputFeeTypeSetup, nil
+	case "onboarding":
+		return ProductOneTimePerUnitInputFeeTypeOnboarding, nil
+	case "implementation":
+		return ProductOneTimePerUnitInputFeeTypeImplementation, nil
+	case "migration":
+		return ProductOneTimePerUnitInputFeeTypeMigration, nil
+	case "custom":
+		return ProductOneTimePerUnitInputFeeTypeCustom, nil
+	}
+	var t ProductOneTimePerUnitInputFeeType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductOneTimePerUnitInputFeeType) Ptr() *ProductOneTimePerUnitInputFeeType {
+	return &p
+}
+
+type ProductPricingInput struct {
+	PricingType                  string
+	RecurringPerUnit             *ProductRecurringPerUnitInput
+	RecurringGraduated           *ProductRecurringGraduatedInput
+	RecurringVolume              *ProductRecurringVolumeInput
+	RecurringPercentOfTotal      *ProductRecurringPercentOfTotalInput
+	UsagePerUnit                 *ProductUsagePerUnitInput
+	UsageGraduated               *ProductUsageGraduatedInput
+	UsageVolume                  *ProductUsageVolumeInput
+	UsagePrepaidCredits          *ProductUsagePrepaidCreditsInput
+	UsageBracketedPrepaidCredits *ProductUsageBracketedPrepaidCreditsInput
+	UsageCostPlus                *ProductUsageCostPlusInput
+	OneTimePerUnit               *ProductOneTimePerUnitInput
+	SeatBasedPerUnit             *ProductSeatBasedPerUnitInput
+	SeatBasedGraduated           *ProductSeatBasedGraduatedInput
+	SeatBasedVolume              *ProductSeatBasedVolumeInput
+	SeatBasedPrepaidCredits      *ProductSeatBasedPrepaidCreditsInput
+}
+
+func (p *ProductPricingInput) GetPricingType() string {
+	if p == nil {
+		return ""
+	}
+	return p.PricingType
+}
+
+func (p *ProductPricingInput) GetRecurringPerUnit() *ProductRecurringPerUnitInput {
+	if p == nil {
+		return nil
+	}
+	return p.RecurringPerUnit
+}
+
+func (p *ProductPricingInput) GetRecurringGraduated() *ProductRecurringGraduatedInput {
+	if p == nil {
+		return nil
+	}
+	return p.RecurringGraduated
+}
+
+func (p *ProductPricingInput) GetRecurringVolume() *ProductRecurringVolumeInput {
+	if p == nil {
+		return nil
+	}
+	return p.RecurringVolume
+}
+
+func (p *ProductPricingInput) GetRecurringPercentOfTotal() *ProductRecurringPercentOfTotalInput {
+	if p == nil {
+		return nil
+	}
+	return p.RecurringPercentOfTotal
+}
+
+func (p *ProductPricingInput) GetUsagePerUnit() *ProductUsagePerUnitInput {
+	if p == nil {
+		return nil
+	}
+	return p.UsagePerUnit
+}
+
+func (p *ProductPricingInput) GetUsageGraduated() *ProductUsageGraduatedInput {
+	if p == nil {
+		return nil
+	}
+	return p.UsageGraduated
+}
+
+func (p *ProductPricingInput) GetUsageVolume() *ProductUsageVolumeInput {
+	if p == nil {
+		return nil
+	}
+	return p.UsageVolume
+}
+
+func (p *ProductPricingInput) GetUsagePrepaidCredits() *ProductUsagePrepaidCreditsInput {
+	if p == nil {
+		return nil
+	}
+	return p.UsagePrepaidCredits
+}
+
+func (p *ProductPricingInput) GetUsageBracketedPrepaidCredits() *ProductUsageBracketedPrepaidCreditsInput {
+	if p == nil {
+		return nil
+	}
+	return p.UsageBracketedPrepaidCredits
+}
+
+func (p *ProductPricingInput) GetUsageCostPlus() *ProductUsageCostPlusInput {
+	if p == nil {
+		return nil
+	}
+	return p.UsageCostPlus
+}
+
+func (p *ProductPricingInput) GetOneTimePerUnit() *ProductOneTimePerUnitInput {
+	if p == nil {
+		return nil
+	}
+	return p.OneTimePerUnit
+}
+
+func (p *ProductPricingInput) GetSeatBasedPerUnit() *ProductSeatBasedPerUnitInput {
+	if p == nil {
+		return nil
+	}
+	return p.SeatBasedPerUnit
+}
+
+func (p *ProductPricingInput) GetSeatBasedGraduated() *ProductSeatBasedGraduatedInput {
+	if p == nil {
+		return nil
+	}
+	return p.SeatBasedGraduated
+}
+
+func (p *ProductPricingInput) GetSeatBasedVolume() *ProductSeatBasedVolumeInput {
+	if p == nil {
+		return nil
+	}
+	return p.SeatBasedVolume
+}
+
+func (p *ProductPricingInput) GetSeatBasedPrepaidCredits() *ProductSeatBasedPrepaidCreditsInput {
+	if p == nil {
+		return nil
+	}
+	return p.SeatBasedPrepaidCredits
+}
+
+func (p *ProductPricingInput) UnmarshalJSON(data []byte) error {
+	var unmarshaler struct {
+		PricingType string `json:"pricingType"`
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	p.PricingType = unmarshaler.PricingType
+	if unmarshaler.PricingType == "" {
+		return fmt.Errorf("%T did not include discriminant pricingType", p)
+	}
+	switch unmarshaler.PricingType {
+	case "RecurringPerUnit":
+		value := new(ProductRecurringPerUnitInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.RecurringPerUnit = value
+	case "RecurringGraduated":
+		value := new(ProductRecurringGraduatedInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.RecurringGraduated = value
+	case "RecurringVolume":
+		value := new(ProductRecurringVolumeInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.RecurringVolume = value
+	case "RecurringPercentOfTotal":
+		value := new(ProductRecurringPercentOfTotalInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.RecurringPercentOfTotal = value
+	case "UsagePerUnit":
+		value := new(ProductUsagePerUnitInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.UsagePerUnit = value
+	case "UsageGraduated":
+		value := new(ProductUsageGraduatedInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.UsageGraduated = value
+	case "UsageVolume":
+		value := new(ProductUsageVolumeInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.UsageVolume = value
+	case "UsagePrepaidCredits":
+		value := new(ProductUsagePrepaidCreditsInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.UsagePrepaidCredits = value
+	case "UsageBracketedPrepaidCredits":
+		value := new(ProductUsageBracketedPrepaidCreditsInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.UsageBracketedPrepaidCredits = value
+	case "UsageCostPlus":
+		value := new(ProductUsageCostPlusInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.UsageCostPlus = value
+	case "OneTimePerUnit":
+		value := new(ProductOneTimePerUnitInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.OneTimePerUnit = value
+	case "SeatBasedPerUnit":
+		value := new(ProductSeatBasedPerUnitInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.SeatBasedPerUnit = value
+	case "SeatBasedGraduated":
+		value := new(ProductSeatBasedGraduatedInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.SeatBasedGraduated = value
+	case "SeatBasedVolume":
+		value := new(ProductSeatBasedVolumeInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.SeatBasedVolume = value
+	case "SeatBasedPrepaidCredits":
+		value := new(ProductSeatBasedPrepaidCreditsInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		p.SeatBasedPrepaidCredits = value
+	}
+	return nil
+}
+
+func (p ProductPricingInput) MarshalJSON() ([]byte, error) {
+	if err := p.validate(); err != nil {
+		return nil, err
+	}
+	if p.RecurringPerUnit != nil {
+		return internal.MarshalJSONWithExtraProperty(p.RecurringPerUnit, "pricingType", "RecurringPerUnit")
+	}
+	if p.RecurringGraduated != nil {
+		return internal.MarshalJSONWithExtraProperty(p.RecurringGraduated, "pricingType", "RecurringGraduated")
+	}
+	if p.RecurringVolume != nil {
+		return internal.MarshalJSONWithExtraProperty(p.RecurringVolume, "pricingType", "RecurringVolume")
+	}
+	if p.RecurringPercentOfTotal != nil {
+		return internal.MarshalJSONWithExtraProperty(p.RecurringPercentOfTotal, "pricingType", "RecurringPercentOfTotal")
+	}
+	if p.UsagePerUnit != nil {
+		return internal.MarshalJSONWithExtraProperty(p.UsagePerUnit, "pricingType", "UsagePerUnit")
+	}
+	if p.UsageGraduated != nil {
+		return internal.MarshalJSONWithExtraProperty(p.UsageGraduated, "pricingType", "UsageGraduated")
+	}
+	if p.UsageVolume != nil {
+		return internal.MarshalJSONWithExtraProperty(p.UsageVolume, "pricingType", "UsageVolume")
+	}
+	if p.UsagePrepaidCredits != nil {
+		return internal.MarshalJSONWithExtraProperty(p.UsagePrepaidCredits, "pricingType", "UsagePrepaidCredits")
+	}
+	if p.UsageBracketedPrepaidCredits != nil {
+		return internal.MarshalJSONWithExtraProperty(p.UsageBracketedPrepaidCredits, "pricingType", "UsageBracketedPrepaidCredits")
+	}
+	if p.UsageCostPlus != nil {
+		return internal.MarshalJSONWithExtraProperty(p.UsageCostPlus, "pricingType", "UsageCostPlus")
+	}
+	if p.OneTimePerUnit != nil {
+		return internal.MarshalJSONWithExtraProperty(p.OneTimePerUnit, "pricingType", "OneTimePerUnit")
+	}
+	if p.SeatBasedPerUnit != nil {
+		return internal.MarshalJSONWithExtraProperty(p.SeatBasedPerUnit, "pricingType", "SeatBasedPerUnit")
+	}
+	if p.SeatBasedGraduated != nil {
+		return internal.MarshalJSONWithExtraProperty(p.SeatBasedGraduated, "pricingType", "SeatBasedGraduated")
+	}
+	if p.SeatBasedVolume != nil {
+		return internal.MarshalJSONWithExtraProperty(p.SeatBasedVolume, "pricingType", "SeatBasedVolume")
+	}
+	if p.SeatBasedPrepaidCredits != nil {
+		return internal.MarshalJSONWithExtraProperty(p.SeatBasedPrepaidCredits, "pricingType", "SeatBasedPrepaidCredits")
+	}
+	return nil, fmt.Errorf("type %T does not define a non-empty union type", p)
+}
+
+type ProductPricingInputVisitor interface {
+	VisitRecurringPerUnit(*ProductRecurringPerUnitInput) error
+	VisitRecurringGraduated(*ProductRecurringGraduatedInput) error
+	VisitRecurringVolume(*ProductRecurringVolumeInput) error
+	VisitRecurringPercentOfTotal(*ProductRecurringPercentOfTotalInput) error
+	VisitUsagePerUnit(*ProductUsagePerUnitInput) error
+	VisitUsageGraduated(*ProductUsageGraduatedInput) error
+	VisitUsageVolume(*ProductUsageVolumeInput) error
+	VisitUsagePrepaidCredits(*ProductUsagePrepaidCreditsInput) error
+	VisitUsageBracketedPrepaidCredits(*ProductUsageBracketedPrepaidCreditsInput) error
+	VisitUsageCostPlus(*ProductUsageCostPlusInput) error
+	VisitOneTimePerUnit(*ProductOneTimePerUnitInput) error
+	VisitSeatBasedPerUnit(*ProductSeatBasedPerUnitInput) error
+	VisitSeatBasedGraduated(*ProductSeatBasedGraduatedInput) error
+	VisitSeatBasedVolume(*ProductSeatBasedVolumeInput) error
+	VisitSeatBasedPrepaidCredits(*ProductSeatBasedPrepaidCreditsInput) error
+}
+
+func (p *ProductPricingInput) Accept(visitor ProductPricingInputVisitor) error {
+	if p.RecurringPerUnit != nil {
+		return visitor.VisitRecurringPerUnit(p.RecurringPerUnit)
+	}
+	if p.RecurringGraduated != nil {
+		return visitor.VisitRecurringGraduated(p.RecurringGraduated)
+	}
+	if p.RecurringVolume != nil {
+		return visitor.VisitRecurringVolume(p.RecurringVolume)
+	}
+	if p.RecurringPercentOfTotal != nil {
+		return visitor.VisitRecurringPercentOfTotal(p.RecurringPercentOfTotal)
+	}
+	if p.UsagePerUnit != nil {
+		return visitor.VisitUsagePerUnit(p.UsagePerUnit)
+	}
+	if p.UsageGraduated != nil {
+		return visitor.VisitUsageGraduated(p.UsageGraduated)
+	}
+	if p.UsageVolume != nil {
+		return visitor.VisitUsageVolume(p.UsageVolume)
+	}
+	if p.UsagePrepaidCredits != nil {
+		return visitor.VisitUsagePrepaidCredits(p.UsagePrepaidCredits)
+	}
+	if p.UsageBracketedPrepaidCredits != nil {
+		return visitor.VisitUsageBracketedPrepaidCredits(p.UsageBracketedPrepaidCredits)
+	}
+	if p.UsageCostPlus != nil {
+		return visitor.VisitUsageCostPlus(p.UsageCostPlus)
+	}
+	if p.OneTimePerUnit != nil {
+		return visitor.VisitOneTimePerUnit(p.OneTimePerUnit)
+	}
+	if p.SeatBasedPerUnit != nil {
+		return visitor.VisitSeatBasedPerUnit(p.SeatBasedPerUnit)
+	}
+	if p.SeatBasedGraduated != nil {
+		return visitor.VisitSeatBasedGraduated(p.SeatBasedGraduated)
+	}
+	if p.SeatBasedVolume != nil {
+		return visitor.VisitSeatBasedVolume(p.SeatBasedVolume)
+	}
+	if p.SeatBasedPrepaidCredits != nil {
+		return visitor.VisitSeatBasedPrepaidCredits(p.SeatBasedPrepaidCredits)
+	}
+	return fmt.Errorf("type %T does not define a non-empty union type", p)
+}
+
+func (p *ProductPricingInput) validate() error {
+	if p == nil {
+		return fmt.Errorf("type %T is nil", p)
+	}
+	var fields []string
+	if p.RecurringPerUnit != nil {
+		fields = append(fields, "RecurringPerUnit")
+	}
+	if p.RecurringGraduated != nil {
+		fields = append(fields, "RecurringGraduated")
+	}
+	if p.RecurringVolume != nil {
+		fields = append(fields, "RecurringVolume")
+	}
+	if p.RecurringPercentOfTotal != nil {
+		fields = append(fields, "RecurringPercentOfTotal")
+	}
+	if p.UsagePerUnit != nil {
+		fields = append(fields, "UsagePerUnit")
+	}
+	if p.UsageGraduated != nil {
+		fields = append(fields, "UsageGraduated")
+	}
+	if p.UsageVolume != nil {
+		fields = append(fields, "UsageVolume")
+	}
+	if p.UsagePrepaidCredits != nil {
+		fields = append(fields, "UsagePrepaidCredits")
+	}
+	if p.UsageBracketedPrepaidCredits != nil {
+		fields = append(fields, "UsageBracketedPrepaidCredits")
+	}
+	if p.UsageCostPlus != nil {
+		fields = append(fields, "UsageCostPlus")
+	}
+	if p.OneTimePerUnit != nil {
+		fields = append(fields, "OneTimePerUnit")
+	}
+	if p.SeatBasedPerUnit != nil {
+		fields = append(fields, "SeatBasedPerUnit")
+	}
+	if p.SeatBasedGraduated != nil {
+		fields = append(fields, "SeatBasedGraduated")
+	}
+	if p.SeatBasedVolume != nil {
+		fields = append(fields, "SeatBasedVolume")
+	}
+	if p.SeatBasedPrepaidCredits != nil {
+		fields = append(fields, "SeatBasedPrepaidCredits")
+	}
+	if len(fields) == 0 {
+		if p.PricingType != "" {
+			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", p, p.PricingType)
+		}
+		return fmt.Errorf("type %T is empty", p)
+	}
+	if len(fields) > 1 {
+		return fmt.Errorf("type %T defines values for %s, but only one value is allowed", p, fields)
+	}
+	if p.PricingType != "" {
+		field := fields[0]
+		if p.PricingType != field {
+			return fmt.Errorf(
+				"type %T defines a discriminant set to %q, but it does not match the %T field; either remove or update the discriminant to match",
+				p,
+				p.PricingType,
+				p,
+			)
+		}
+	}
+	return nil
+}
+
+type ProductRecurringGraduatedInput struct {
+	BillingFrequency             ProductRecurringGraduatedInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
+	BillingFrequencyCustomMonths *int                                           `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductRecurringGraduatedInputBillingType     `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductTieredPricePoint                     `json:"pricePoints" url:"pricePoints"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductRecurringGraduatedInput) GetBillingFrequency() ProductRecurringGraduatedInputBillingFrequency {
+	if p == nil {
+		return ""
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductRecurringGraduatedInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductRecurringGraduatedInput) GetBillingType() *ProductRecurringGraduatedInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductRecurringGraduatedInput) GetPricePoints() []*ProductTieredPricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductRecurringGraduatedInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductRecurringGraduatedInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductRecurringGraduatedInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductRecurringGraduatedInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductRecurringGraduatedInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductRecurringGraduatedInputBillingFrequency string
+
+const (
+	ProductRecurringGraduatedInputBillingFrequencyMonthly      ProductRecurringGraduatedInputBillingFrequency = "Monthly"
+	ProductRecurringGraduatedInputBillingFrequencyQuarterly    ProductRecurringGraduatedInputBillingFrequency = "Quarterly"
+	ProductRecurringGraduatedInputBillingFrequencySemiAnnually ProductRecurringGraduatedInputBillingFrequency = "Semi-Annually"
+	ProductRecurringGraduatedInputBillingFrequencyAnnual       ProductRecurringGraduatedInputBillingFrequency = "Annual"
+	ProductRecurringGraduatedInputBillingFrequencyCustom       ProductRecurringGraduatedInputBillingFrequency = "Custom"
+)
+
+func NewProductRecurringGraduatedInputBillingFrequencyFromString(s string) (ProductRecurringGraduatedInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductRecurringGraduatedInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductRecurringGraduatedInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductRecurringGraduatedInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductRecurringGraduatedInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductRecurringGraduatedInputBillingFrequencyCustom, nil
+	}
+	var t ProductRecurringGraduatedInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductRecurringGraduatedInputBillingFrequency) Ptr() *ProductRecurringGraduatedInputBillingFrequency {
+	return &p
+}
+
+type ProductRecurringGraduatedInputBillingType string
+
+const (
+	ProductRecurringGraduatedInputBillingTypeAdvance ProductRecurringGraduatedInputBillingType = "Advance"
+	ProductRecurringGraduatedInputBillingTypeArrears ProductRecurringGraduatedInputBillingType = "Arrears"
+)
+
+func NewProductRecurringGraduatedInputBillingTypeFromString(s string) (ProductRecurringGraduatedInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductRecurringGraduatedInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductRecurringGraduatedInputBillingTypeArrears, nil
+	}
+	var t ProductRecurringGraduatedInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductRecurringGraduatedInputBillingType) Ptr() *ProductRecurringGraduatedInputBillingType {
+	return &p
+}
+
+type ProductRecurringPerUnitInput struct {
+	BillingFrequency             ProductRecurringPerUnitInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
+	BillingFrequencyCustomMonths *int                                         `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductRecurringPerUnitInputBillingType     `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductSimplePricePoint                   `json:"pricePoints" url:"pricePoints"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductRecurringPerUnitInput) GetBillingFrequency() ProductRecurringPerUnitInputBillingFrequency {
+	if p == nil {
+		return ""
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductRecurringPerUnitInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductRecurringPerUnitInput) GetBillingType() *ProductRecurringPerUnitInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductRecurringPerUnitInput) GetPricePoints() []*ProductSimplePricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductRecurringPerUnitInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductRecurringPerUnitInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductRecurringPerUnitInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductRecurringPerUnitInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductRecurringPerUnitInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductRecurringPerUnitInputBillingFrequency string
+
+const (
+	ProductRecurringPerUnitInputBillingFrequencyMonthly      ProductRecurringPerUnitInputBillingFrequency = "Monthly"
+	ProductRecurringPerUnitInputBillingFrequencyQuarterly    ProductRecurringPerUnitInputBillingFrequency = "Quarterly"
+	ProductRecurringPerUnitInputBillingFrequencySemiAnnually ProductRecurringPerUnitInputBillingFrequency = "Semi-Annually"
+	ProductRecurringPerUnitInputBillingFrequencyAnnual       ProductRecurringPerUnitInputBillingFrequency = "Annual"
+	ProductRecurringPerUnitInputBillingFrequencyCustom       ProductRecurringPerUnitInputBillingFrequency = "Custom"
+)
+
+func NewProductRecurringPerUnitInputBillingFrequencyFromString(s string) (ProductRecurringPerUnitInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductRecurringPerUnitInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductRecurringPerUnitInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductRecurringPerUnitInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductRecurringPerUnitInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductRecurringPerUnitInputBillingFrequencyCustom, nil
+	}
+	var t ProductRecurringPerUnitInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductRecurringPerUnitInputBillingFrequency) Ptr() *ProductRecurringPerUnitInputBillingFrequency {
+	return &p
+}
+
+type ProductRecurringPerUnitInputBillingType string
+
+const (
+	ProductRecurringPerUnitInputBillingTypeAdvance ProductRecurringPerUnitInputBillingType = "Advance"
+	ProductRecurringPerUnitInputBillingTypeArrears ProductRecurringPerUnitInputBillingType = "Arrears"
+)
+
+func NewProductRecurringPerUnitInputBillingTypeFromString(s string) (ProductRecurringPerUnitInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductRecurringPerUnitInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductRecurringPerUnitInputBillingTypeArrears, nil
+	}
+	var t ProductRecurringPerUnitInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductRecurringPerUnitInputBillingType) Ptr() *ProductRecurringPerUnitInputBillingType {
+	return &p
+}
+
+type ProductRecurringPercentOfTotalInput struct {
+	PercentageValue              float64                                             `json:"percentageValue" url:"percentageValue"`
+	BillingFrequency             ProductRecurringPercentOfTotalInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
+	BillingFrequencyCustomMonths *int                                                `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductRecurringPercentOfTotalInputBillingType     `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductSimplePricePoint                          `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductRecurringPercentOfTotalInput) GetPercentageValue() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.PercentageValue
+}
+
+func (p *ProductRecurringPercentOfTotalInput) GetBillingFrequency() ProductRecurringPercentOfTotalInputBillingFrequency {
+	if p == nil {
+		return ""
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductRecurringPercentOfTotalInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductRecurringPercentOfTotalInput) GetBillingType() *ProductRecurringPercentOfTotalInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductRecurringPercentOfTotalInput) GetPricePoints() []*ProductSimplePricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductRecurringPercentOfTotalInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductRecurringPercentOfTotalInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductRecurringPercentOfTotalInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductRecurringPercentOfTotalInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductRecurringPercentOfTotalInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductRecurringPercentOfTotalInputBillingFrequency string
+
+const (
+	ProductRecurringPercentOfTotalInputBillingFrequencyMonthly      ProductRecurringPercentOfTotalInputBillingFrequency = "Monthly"
+	ProductRecurringPercentOfTotalInputBillingFrequencyQuarterly    ProductRecurringPercentOfTotalInputBillingFrequency = "Quarterly"
+	ProductRecurringPercentOfTotalInputBillingFrequencySemiAnnually ProductRecurringPercentOfTotalInputBillingFrequency = "Semi-Annually"
+	ProductRecurringPercentOfTotalInputBillingFrequencyAnnual       ProductRecurringPercentOfTotalInputBillingFrequency = "Annual"
+	ProductRecurringPercentOfTotalInputBillingFrequencyCustom       ProductRecurringPercentOfTotalInputBillingFrequency = "Custom"
+)
+
+func NewProductRecurringPercentOfTotalInputBillingFrequencyFromString(s string) (ProductRecurringPercentOfTotalInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductRecurringPercentOfTotalInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductRecurringPercentOfTotalInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductRecurringPercentOfTotalInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductRecurringPercentOfTotalInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductRecurringPercentOfTotalInputBillingFrequencyCustom, nil
+	}
+	var t ProductRecurringPercentOfTotalInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductRecurringPercentOfTotalInputBillingFrequency) Ptr() *ProductRecurringPercentOfTotalInputBillingFrequency {
+	return &p
+}
+
+type ProductRecurringPercentOfTotalInputBillingType string
+
+const (
+	ProductRecurringPercentOfTotalInputBillingTypeAdvance ProductRecurringPercentOfTotalInputBillingType = "Advance"
+	ProductRecurringPercentOfTotalInputBillingTypeArrears ProductRecurringPercentOfTotalInputBillingType = "Arrears"
+)
+
+func NewProductRecurringPercentOfTotalInputBillingTypeFromString(s string) (ProductRecurringPercentOfTotalInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductRecurringPercentOfTotalInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductRecurringPercentOfTotalInputBillingTypeArrears, nil
+	}
+	var t ProductRecurringPercentOfTotalInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductRecurringPercentOfTotalInputBillingType) Ptr() *ProductRecurringPercentOfTotalInputBillingType {
+	return &p
+}
+
+type ProductRecurringVolumeInput struct {
+	BillingFrequency             ProductRecurringVolumeInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
+	BillingFrequencyCustomMonths *int                                        `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductRecurringVolumeInputBillingType     `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductTieredPricePoint                  `json:"pricePoints" url:"pricePoints"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductRecurringVolumeInput) GetBillingFrequency() ProductRecurringVolumeInputBillingFrequency {
+	if p == nil {
+		return ""
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductRecurringVolumeInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductRecurringVolumeInput) GetBillingType() *ProductRecurringVolumeInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductRecurringVolumeInput) GetPricePoints() []*ProductTieredPricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductRecurringVolumeInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductRecurringVolumeInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductRecurringVolumeInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductRecurringVolumeInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductRecurringVolumeInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductRecurringVolumeInputBillingFrequency string
+
+const (
+	ProductRecurringVolumeInputBillingFrequencyMonthly      ProductRecurringVolumeInputBillingFrequency = "Monthly"
+	ProductRecurringVolumeInputBillingFrequencyQuarterly    ProductRecurringVolumeInputBillingFrequency = "Quarterly"
+	ProductRecurringVolumeInputBillingFrequencySemiAnnually ProductRecurringVolumeInputBillingFrequency = "Semi-Annually"
+	ProductRecurringVolumeInputBillingFrequencyAnnual       ProductRecurringVolumeInputBillingFrequency = "Annual"
+	ProductRecurringVolumeInputBillingFrequencyCustom       ProductRecurringVolumeInputBillingFrequency = "Custom"
+)
+
+func NewProductRecurringVolumeInputBillingFrequencyFromString(s string) (ProductRecurringVolumeInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductRecurringVolumeInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductRecurringVolumeInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductRecurringVolumeInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductRecurringVolumeInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductRecurringVolumeInputBillingFrequencyCustom, nil
+	}
+	var t ProductRecurringVolumeInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductRecurringVolumeInputBillingFrequency) Ptr() *ProductRecurringVolumeInputBillingFrequency {
+	return &p
+}
+
+type ProductRecurringVolumeInputBillingType string
+
+const (
+	ProductRecurringVolumeInputBillingTypeAdvance ProductRecurringVolumeInputBillingType = "Advance"
+	ProductRecurringVolumeInputBillingTypeArrears ProductRecurringVolumeInputBillingType = "Arrears"
+)
+
+func NewProductRecurringVolumeInputBillingTypeFromString(s string) (ProductRecurringVolumeInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductRecurringVolumeInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductRecurringVolumeInputBillingTypeArrears, nil
+	}
+	var t ProductRecurringVolumeInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductRecurringVolumeInputBillingType) Ptr() *ProductRecurringVolumeInputBillingType {
+	return &p
+}
+
+type ProductSeatBasedGraduatedInput struct {
+	BillingFrequency             ProductSeatBasedGraduatedInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
+	BillingFrequencyCustomMonths *int                                           `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductSeatBasedGraduatedInputBillingType     `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductTieredPricePoint                     `json:"pricePoints" url:"pricePoints"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductSeatBasedGraduatedInput) GetBillingFrequency() ProductSeatBasedGraduatedInputBillingFrequency {
+	if p == nil {
+		return ""
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductSeatBasedGraduatedInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductSeatBasedGraduatedInput) GetBillingType() *ProductSeatBasedGraduatedInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductSeatBasedGraduatedInput) GetPricePoints() []*ProductTieredPricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductSeatBasedGraduatedInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductSeatBasedGraduatedInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductSeatBasedGraduatedInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductSeatBasedGraduatedInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductSeatBasedGraduatedInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductSeatBasedGraduatedInputBillingFrequency string
+
+const (
+	ProductSeatBasedGraduatedInputBillingFrequencyMonthly      ProductSeatBasedGraduatedInputBillingFrequency = "Monthly"
+	ProductSeatBasedGraduatedInputBillingFrequencyQuarterly    ProductSeatBasedGraduatedInputBillingFrequency = "Quarterly"
+	ProductSeatBasedGraduatedInputBillingFrequencySemiAnnually ProductSeatBasedGraduatedInputBillingFrequency = "Semi-Annually"
+	ProductSeatBasedGraduatedInputBillingFrequencyAnnual       ProductSeatBasedGraduatedInputBillingFrequency = "Annual"
+	ProductSeatBasedGraduatedInputBillingFrequencyCustom       ProductSeatBasedGraduatedInputBillingFrequency = "Custom"
+)
+
+func NewProductSeatBasedGraduatedInputBillingFrequencyFromString(s string) (ProductSeatBasedGraduatedInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductSeatBasedGraduatedInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductSeatBasedGraduatedInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductSeatBasedGraduatedInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductSeatBasedGraduatedInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductSeatBasedGraduatedInputBillingFrequencyCustom, nil
+	}
+	var t ProductSeatBasedGraduatedInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductSeatBasedGraduatedInputBillingFrequency) Ptr() *ProductSeatBasedGraduatedInputBillingFrequency {
+	return &p
+}
+
+type ProductSeatBasedGraduatedInputBillingType string
+
+const (
+	ProductSeatBasedGraduatedInputBillingTypeAdvance ProductSeatBasedGraduatedInputBillingType = "Advance"
+	ProductSeatBasedGraduatedInputBillingTypeArrears ProductSeatBasedGraduatedInputBillingType = "Arrears"
+)
+
+func NewProductSeatBasedGraduatedInputBillingTypeFromString(s string) (ProductSeatBasedGraduatedInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductSeatBasedGraduatedInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductSeatBasedGraduatedInputBillingTypeArrears, nil
+	}
+	var t ProductSeatBasedGraduatedInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductSeatBasedGraduatedInputBillingType) Ptr() *ProductSeatBasedGraduatedInputBillingType {
+	return &p
+}
+
+type ProductSeatBasedPerUnitInput struct {
+	BillingFrequency             ProductSeatBasedPerUnitInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
+	BillingFrequencyCustomMonths *int                                         `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductSeatBasedPerUnitInputBillingType     `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductSimplePricePoint                   `json:"pricePoints" url:"pricePoints"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductSeatBasedPerUnitInput) GetBillingFrequency() ProductSeatBasedPerUnitInputBillingFrequency {
+	if p == nil {
+		return ""
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductSeatBasedPerUnitInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductSeatBasedPerUnitInput) GetBillingType() *ProductSeatBasedPerUnitInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductSeatBasedPerUnitInput) GetPricePoints() []*ProductSimplePricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductSeatBasedPerUnitInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductSeatBasedPerUnitInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductSeatBasedPerUnitInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductSeatBasedPerUnitInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductSeatBasedPerUnitInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductSeatBasedPerUnitInputBillingFrequency string
+
+const (
+	ProductSeatBasedPerUnitInputBillingFrequencyMonthly      ProductSeatBasedPerUnitInputBillingFrequency = "Monthly"
+	ProductSeatBasedPerUnitInputBillingFrequencyQuarterly    ProductSeatBasedPerUnitInputBillingFrequency = "Quarterly"
+	ProductSeatBasedPerUnitInputBillingFrequencySemiAnnually ProductSeatBasedPerUnitInputBillingFrequency = "Semi-Annually"
+	ProductSeatBasedPerUnitInputBillingFrequencyAnnual       ProductSeatBasedPerUnitInputBillingFrequency = "Annual"
+	ProductSeatBasedPerUnitInputBillingFrequencyCustom       ProductSeatBasedPerUnitInputBillingFrequency = "Custom"
+)
+
+func NewProductSeatBasedPerUnitInputBillingFrequencyFromString(s string) (ProductSeatBasedPerUnitInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductSeatBasedPerUnitInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductSeatBasedPerUnitInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductSeatBasedPerUnitInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductSeatBasedPerUnitInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductSeatBasedPerUnitInputBillingFrequencyCustom, nil
+	}
+	var t ProductSeatBasedPerUnitInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductSeatBasedPerUnitInputBillingFrequency) Ptr() *ProductSeatBasedPerUnitInputBillingFrequency {
+	return &p
+}
+
+type ProductSeatBasedPerUnitInputBillingType string
+
+const (
+	ProductSeatBasedPerUnitInputBillingTypeAdvance ProductSeatBasedPerUnitInputBillingType = "Advance"
+	ProductSeatBasedPerUnitInputBillingTypeArrears ProductSeatBasedPerUnitInputBillingType = "Arrears"
+)
+
+func NewProductSeatBasedPerUnitInputBillingTypeFromString(s string) (ProductSeatBasedPerUnitInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductSeatBasedPerUnitInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductSeatBasedPerUnitInputBillingTypeArrears, nil
+	}
+	var t ProductSeatBasedPerUnitInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductSeatBasedPerUnitInputBillingType) Ptr() *ProductSeatBasedPerUnitInputBillingType {
+	return &p
+}
+
+type ProductSeatBasedPrepaidCreditsInput struct {
+	CreditsCurrencyID            string                                              `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	CreditCost                   float64                                             `json:"creditCost" url:"creditCost"`
+	UnitValue                    *float64                                            `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	BillingFrequency             ProductSeatBasedPrepaidCreditsInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
+	BillingFrequencyCustomMonths *int                                                `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductSeatBasedPrepaidCreditsInputBillingType     `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductSimplePricePoint                          `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetCreditsCurrencyID() string {
+	if p == nil {
+		return ""
+	}
+	return p.CreditsCurrencyID
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetCreditCost() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.CreditCost
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetUnitValue() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UnitValue
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetBillingFrequency() ProductSeatBasedPrepaidCreditsInputBillingFrequency {
+	if p == nil {
+		return ""
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetBillingType() *ProductSeatBasedPrepaidCreditsInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetPricePoints() []*ProductSimplePricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductSeatBasedPrepaidCreditsInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductSeatBasedPrepaidCreditsInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductSeatBasedPrepaidCreditsInputBillingFrequency string
+
+const (
+	ProductSeatBasedPrepaidCreditsInputBillingFrequencyMonthly      ProductSeatBasedPrepaidCreditsInputBillingFrequency = "Monthly"
+	ProductSeatBasedPrepaidCreditsInputBillingFrequencyQuarterly    ProductSeatBasedPrepaidCreditsInputBillingFrequency = "Quarterly"
+	ProductSeatBasedPrepaidCreditsInputBillingFrequencySemiAnnually ProductSeatBasedPrepaidCreditsInputBillingFrequency = "Semi-Annually"
+	ProductSeatBasedPrepaidCreditsInputBillingFrequencyAnnual       ProductSeatBasedPrepaidCreditsInputBillingFrequency = "Annual"
+	ProductSeatBasedPrepaidCreditsInputBillingFrequencyCustom       ProductSeatBasedPrepaidCreditsInputBillingFrequency = "Custom"
+)
+
+func NewProductSeatBasedPrepaidCreditsInputBillingFrequencyFromString(s string) (ProductSeatBasedPrepaidCreditsInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductSeatBasedPrepaidCreditsInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductSeatBasedPrepaidCreditsInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductSeatBasedPrepaidCreditsInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductSeatBasedPrepaidCreditsInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductSeatBasedPrepaidCreditsInputBillingFrequencyCustom, nil
+	}
+	var t ProductSeatBasedPrepaidCreditsInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductSeatBasedPrepaidCreditsInputBillingFrequency) Ptr() *ProductSeatBasedPrepaidCreditsInputBillingFrequency {
+	return &p
+}
+
+type ProductSeatBasedPrepaidCreditsInputBillingType string
+
+const (
+	ProductSeatBasedPrepaidCreditsInputBillingTypeAdvance ProductSeatBasedPrepaidCreditsInputBillingType = "Advance"
+	ProductSeatBasedPrepaidCreditsInputBillingTypeArrears ProductSeatBasedPrepaidCreditsInputBillingType = "Arrears"
+)
+
+func NewProductSeatBasedPrepaidCreditsInputBillingTypeFromString(s string) (ProductSeatBasedPrepaidCreditsInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductSeatBasedPrepaidCreditsInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductSeatBasedPrepaidCreditsInputBillingTypeArrears, nil
+	}
+	var t ProductSeatBasedPrepaidCreditsInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductSeatBasedPrepaidCreditsInputBillingType) Ptr() *ProductSeatBasedPrepaidCreditsInputBillingType {
+	return &p
+}
+
+type ProductSeatBasedVolumeInput struct {
+	BillingFrequency             ProductSeatBasedVolumeInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
+	BillingFrequencyCustomMonths *int                                        `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductSeatBasedVolumeInputBillingType     `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductTieredPricePoint                  `json:"pricePoints" url:"pricePoints"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductSeatBasedVolumeInput) GetBillingFrequency() ProductSeatBasedVolumeInputBillingFrequency {
+	if p == nil {
+		return ""
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductSeatBasedVolumeInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductSeatBasedVolumeInput) GetBillingType() *ProductSeatBasedVolumeInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductSeatBasedVolumeInput) GetPricePoints() []*ProductTieredPricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductSeatBasedVolumeInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductSeatBasedVolumeInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductSeatBasedVolumeInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductSeatBasedVolumeInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductSeatBasedVolumeInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductSeatBasedVolumeInputBillingFrequency string
+
+const (
+	ProductSeatBasedVolumeInputBillingFrequencyMonthly      ProductSeatBasedVolumeInputBillingFrequency = "Monthly"
+	ProductSeatBasedVolumeInputBillingFrequencyQuarterly    ProductSeatBasedVolumeInputBillingFrequency = "Quarterly"
+	ProductSeatBasedVolumeInputBillingFrequencySemiAnnually ProductSeatBasedVolumeInputBillingFrequency = "Semi-Annually"
+	ProductSeatBasedVolumeInputBillingFrequencyAnnual       ProductSeatBasedVolumeInputBillingFrequency = "Annual"
+	ProductSeatBasedVolumeInputBillingFrequencyCustom       ProductSeatBasedVolumeInputBillingFrequency = "Custom"
+)
+
+func NewProductSeatBasedVolumeInputBillingFrequencyFromString(s string) (ProductSeatBasedVolumeInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductSeatBasedVolumeInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductSeatBasedVolumeInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductSeatBasedVolumeInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductSeatBasedVolumeInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductSeatBasedVolumeInputBillingFrequencyCustom, nil
+	}
+	var t ProductSeatBasedVolumeInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductSeatBasedVolumeInputBillingFrequency) Ptr() *ProductSeatBasedVolumeInputBillingFrequency {
+	return &p
+}
+
+type ProductSeatBasedVolumeInputBillingType string
+
+const (
+	ProductSeatBasedVolumeInputBillingTypeAdvance ProductSeatBasedVolumeInputBillingType = "Advance"
+	ProductSeatBasedVolumeInputBillingTypeArrears ProductSeatBasedVolumeInputBillingType = "Arrears"
+)
+
+func NewProductSeatBasedVolumeInputBillingTypeFromString(s string) (ProductSeatBasedVolumeInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductSeatBasedVolumeInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductSeatBasedVolumeInputBillingTypeArrears, nil
+	}
+	var t ProductSeatBasedVolumeInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductSeatBasedVolumeInputBillingType) Ptr() *ProductSeatBasedVolumeInputBillingType {
+	return &p
+}
+
+type ProductSimplePricePoint struct {
+	Currency         string                              `json:"currency" url:"currency"`
+	UnitPrice        float64                             `json:"unitPrice" url:"unitPrice"`
+	Tiers            []*ProductSimplePricePointTiersItem `json:"tiers,omitempty" url:"tiers,omitempty"`
+	MinQuantity      *float64                            `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	MaxQuantity      *float64                            `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
+	IncludedQuantity *float64                            `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductSimplePricePoint) GetCurrency() string {
+	if p == nil {
+		return ""
+	}
+	return p.Currency
+}
+
+func (p *ProductSimplePricePoint) GetUnitPrice() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.UnitPrice
+}
+
+func (p *ProductSimplePricePoint) GetTiers() []*ProductSimplePricePointTiersItem {
+	if p == nil {
+		return nil
+	}
+	return p.Tiers
+}
+
+func (p *ProductSimplePricePoint) GetMinQuantity() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.MinQuantity
+}
+
+func (p *ProductSimplePricePoint) GetMaxQuantity() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.MaxQuantity
+}
+
+func (p *ProductSimplePricePoint) GetIncludedQuantity() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.IncludedQuantity
+}
+
+func (p *ProductSimplePricePoint) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductSimplePricePoint) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductSimplePricePoint
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductSimplePricePoint(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductSimplePricePoint) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductSimplePricePointTiersItem struct {
+	FlatAmount      *float64                                         `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	Index           *float64                                         `json:"index,omitempty" url:"index,omitempty"`
+	LowerBound      float64                                          `json:"lowerBound" url:"lowerBound"`
+	Number          *float64                                         `json:"number,omitempty" url:"number,omitempty"`
+	TierBillingType *ProductSimplePricePointTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
+	UnitAmount      *float64                                         `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound      *float64                                         `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductSimplePricePointTiersItem) GetFlatAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.FlatAmount
+}
+
+func (p *ProductSimplePricePointTiersItem) GetIndex() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Index
+}
+
+func (p *ProductSimplePricePointTiersItem) GetLowerBound() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.LowerBound
+}
+
+func (p *ProductSimplePricePointTiersItem) GetNumber() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Number
+}
+
+func (p *ProductSimplePricePointTiersItem) GetTierBillingType() *ProductSimplePricePointTiersItemTierBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.TierBillingType
+}
+
+func (p *ProductSimplePricePointTiersItem) GetUnitAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UnitAmount
+}
+
+func (p *ProductSimplePricePointTiersItem) GetUpperBound() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UpperBound
+}
+
+func (p *ProductSimplePricePointTiersItem) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductSimplePricePointTiersItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductSimplePricePointTiersItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductSimplePricePointTiersItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductSimplePricePointTiersItem) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductSimplePricePointTiersItemTierBillingType string
+
+const (
+	ProductSimplePricePointTiersItemTierBillingTypeFlat    ProductSimplePricePointTiersItemTierBillingType = "flat"
+	ProductSimplePricePointTiersItemTierBillingTypePerUnit ProductSimplePricePointTiersItemTierBillingType = "perUnit"
+)
+
+func NewProductSimplePricePointTiersItemTierBillingTypeFromString(s string) (ProductSimplePricePointTiersItemTierBillingType, error) {
+	switch s {
+	case "flat":
+		return ProductSimplePricePointTiersItemTierBillingTypeFlat, nil
+	case "perUnit":
+		return ProductSimplePricePointTiersItemTierBillingTypePerUnit, nil
+	}
+	var t ProductSimplePricePointTiersItemTierBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductSimplePricePointTiersItemTierBillingType) Ptr() *ProductSimplePricePointTiersItemTierBillingType {
+	return &p
+}
+
+type ProductTieredPricePoint struct {
+	Currency         string                              `json:"currency" url:"currency"`
+	UnitPrice        float64                             `json:"unitPrice" url:"unitPrice"`
+	Tiers            []*ProductTieredPricePointTiersItem `json:"tiers" url:"tiers"`
+	MinQuantity      *float64                            `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	MaxQuantity      *float64                            `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
+	IncludedQuantity *float64                            `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductTieredPricePoint) GetCurrency() string {
+	if p == nil {
+		return ""
+	}
+	return p.Currency
+}
+
+func (p *ProductTieredPricePoint) GetUnitPrice() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.UnitPrice
+}
+
+func (p *ProductTieredPricePoint) GetTiers() []*ProductTieredPricePointTiersItem {
+	if p == nil {
+		return nil
+	}
+	return p.Tiers
+}
+
+func (p *ProductTieredPricePoint) GetMinQuantity() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.MinQuantity
+}
+
+func (p *ProductTieredPricePoint) GetMaxQuantity() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.MaxQuantity
+}
+
+func (p *ProductTieredPricePoint) GetIncludedQuantity() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.IncludedQuantity
+}
+
+func (p *ProductTieredPricePoint) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductTieredPricePoint) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductTieredPricePoint
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductTieredPricePoint(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductTieredPricePoint) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductTieredPricePointTiersItem struct {
+	FlatAmount      *float64                                         `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	Index           *float64                                         `json:"index,omitempty" url:"index,omitempty"`
+	LowerBound      float64                                          `json:"lowerBound" url:"lowerBound"`
+	Number          *float64                                         `json:"number,omitempty" url:"number,omitempty"`
+	TierBillingType *ProductTieredPricePointTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
+	UnitAmount      *float64                                         `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound      *float64                                         `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductTieredPricePointTiersItem) GetFlatAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.FlatAmount
+}
+
+func (p *ProductTieredPricePointTiersItem) GetIndex() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Index
+}
+
+func (p *ProductTieredPricePointTiersItem) GetLowerBound() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.LowerBound
+}
+
+func (p *ProductTieredPricePointTiersItem) GetNumber() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Number
+}
+
+func (p *ProductTieredPricePointTiersItem) GetTierBillingType() *ProductTieredPricePointTiersItemTierBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.TierBillingType
+}
+
+func (p *ProductTieredPricePointTiersItem) GetUnitAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UnitAmount
+}
+
+func (p *ProductTieredPricePointTiersItem) GetUpperBound() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UpperBound
+}
+
+func (p *ProductTieredPricePointTiersItem) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductTieredPricePointTiersItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductTieredPricePointTiersItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductTieredPricePointTiersItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductTieredPricePointTiersItem) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductTieredPricePointTiersItemTierBillingType string
+
+const (
+	ProductTieredPricePointTiersItemTierBillingTypeFlat    ProductTieredPricePointTiersItemTierBillingType = "flat"
+	ProductTieredPricePointTiersItemTierBillingTypePerUnit ProductTieredPricePointTiersItemTierBillingType = "perUnit"
+)
+
+func NewProductTieredPricePointTiersItemTierBillingTypeFromString(s string) (ProductTieredPricePointTiersItemTierBillingType, error) {
+	switch s {
+	case "flat":
+		return ProductTieredPricePointTiersItemTierBillingTypeFlat, nil
+	case "perUnit":
+		return ProductTieredPricePointTiersItemTierBillingTypePerUnit, nil
+	}
+	var t ProductTieredPricePointTiersItemTierBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductTieredPricePointTiersItemTierBillingType) Ptr() *ProductTieredPricePointTiersItemTierBillingType {
+	return &p
+}
+
+type ProductUsageBracketedPrepaidCreditsInput struct {
+	EventName                    string                                                            `json:"eventName" url:"eventName"`
+	SignalType                   *ProductUsageBracketedPrepaidCreditsInputSignalType               `json:"signalType,omitempty" url:"signalType,omitempty"`
+	CreditsCurrencyID            *string                                                           `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	UnitValue                    *float64                                                          `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	OverageUnitPrice             *float64                                                          `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	CreditRolloverAmount         *float64                                                          `json:"creditRolloverAmount,omitempty" url:"creditRolloverAmount,omitempty"`
+	PricingInput                 *ProductUsageBracketedPrepaidCreditsInputPricingInput             `json:"pricingInput" url:"pricingInput"`
+	CreditUnitBrackets           []*ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem `json:"creditUnitBrackets" url:"creditUnitBrackets"`
+	BillingFrequency             *ProductUsageBracketedPrepaidCreditsInputBillingFrequency         `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingFrequencyCustomMonths *int                                                              `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductUsageBracketedPrepaidCreditsInputBillingType              `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductSimplePricePoint                                        `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetEventName() string {
+	if p == nil {
+		return ""
+	}
+	return p.EventName
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetSignalType() *ProductUsageBracketedPrepaidCreditsInputSignalType {
+	if p == nil {
+		return nil
+	}
+	return p.SignalType
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetCreditsCurrencyID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CreditsCurrencyID
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetUnitValue() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UnitValue
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetOverageUnitPrice() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrice
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetCreditRolloverAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.CreditRolloverAmount
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetPricingInput() *ProductUsageBracketedPrepaidCreditsInputPricingInput {
+	if p == nil {
+		return nil
+	}
+	return p.PricingInput
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetCreditUnitBrackets() []*ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem {
+	if p == nil {
+		return nil
+	}
+	return p.CreditUnitBrackets
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetBillingFrequency() *ProductUsageBracketedPrepaidCreditsInputBillingFrequency {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetBillingType() *ProductUsageBracketedPrepaidCreditsInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetPricePoints() []*ProductSimplePricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductUsageBracketedPrepaidCreditsInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductUsageBracketedPrepaidCreditsInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductUsageBracketedPrepaidCreditsInputBillingFrequency string
+
+const (
+	ProductUsageBracketedPrepaidCreditsInputBillingFrequencyMonthly      ProductUsageBracketedPrepaidCreditsInputBillingFrequency = "Monthly"
+	ProductUsageBracketedPrepaidCreditsInputBillingFrequencyQuarterly    ProductUsageBracketedPrepaidCreditsInputBillingFrequency = "Quarterly"
+	ProductUsageBracketedPrepaidCreditsInputBillingFrequencySemiAnnually ProductUsageBracketedPrepaidCreditsInputBillingFrequency = "Semi-Annually"
+	ProductUsageBracketedPrepaidCreditsInputBillingFrequencyAnnual       ProductUsageBracketedPrepaidCreditsInputBillingFrequency = "Annual"
+	ProductUsageBracketedPrepaidCreditsInputBillingFrequencyCustom       ProductUsageBracketedPrepaidCreditsInputBillingFrequency = "Custom"
+)
+
+func NewProductUsageBracketedPrepaidCreditsInputBillingFrequencyFromString(s string) (ProductUsageBracketedPrepaidCreditsInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductUsageBracketedPrepaidCreditsInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductUsageBracketedPrepaidCreditsInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductUsageBracketedPrepaidCreditsInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductUsageBracketedPrepaidCreditsInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductUsageBracketedPrepaidCreditsInputBillingFrequencyCustom, nil
+	}
+	var t ProductUsageBracketedPrepaidCreditsInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageBracketedPrepaidCreditsInputBillingFrequency) Ptr() *ProductUsageBracketedPrepaidCreditsInputBillingFrequency {
+	return &p
+}
+
+type ProductUsageBracketedPrepaidCreditsInputBillingType string
+
+const (
+	ProductUsageBracketedPrepaidCreditsInputBillingTypeAdvance ProductUsageBracketedPrepaidCreditsInputBillingType = "Advance"
+	ProductUsageBracketedPrepaidCreditsInputBillingTypeArrears ProductUsageBracketedPrepaidCreditsInputBillingType = "Arrears"
+)
+
+func NewProductUsageBracketedPrepaidCreditsInputBillingTypeFromString(s string) (ProductUsageBracketedPrepaidCreditsInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductUsageBracketedPrepaidCreditsInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductUsageBracketedPrepaidCreditsInputBillingTypeArrears, nil
+	}
+	var t ProductUsageBracketedPrepaidCreditsInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageBracketedPrepaidCreditsInputBillingType) Ptr() *ProductUsageBracketedPrepaidCreditsInputBillingType {
+	return &p
+}
+
+type ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem struct {
+	UpTo        *int `json:"upTo,omitempty" url:"upTo,omitempty"`
+	CreditUnits int  `json:"creditUnits" url:"creditUnits"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetUpTo() *int {
+	if p == nil {
+		return nil
+	}
+	return p.UpTo
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnits() int {
+	if p == nil {
+		return 0
+	}
+	return p.CreditUnits
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductUsageBracketedPrepaidCreditsInputPricingInput struct {
+	Kind ProductUsageBracketedPrepaidCreditsInputPricingInputKind `json:"kind" url:"kind"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputPricingInput) GetKind() ProductUsageBracketedPrepaidCreditsInputPricingInputKind {
+	if p == nil {
+		return ""
+	}
+	return p.Kind
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputPricingInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputPricingInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductUsageBracketedPrepaidCreditsInputPricingInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductUsageBracketedPrepaidCreditsInputPricingInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputPricingInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductUsageBracketedPrepaidCreditsInputPricingInputKind string
+
+const (
+	ProductUsageBracketedPrepaidCreditsInputPricingInputKindSignalQuantity ProductUsageBracketedPrepaidCreditsInputPricingInputKind = "signalQuantity"
+)
+
+func NewProductUsageBracketedPrepaidCreditsInputPricingInputKindFromString(s string) (ProductUsageBracketedPrepaidCreditsInputPricingInputKind, error) {
+	switch s {
+	case "signalQuantity":
+		return ProductUsageBracketedPrepaidCreditsInputPricingInputKindSignalQuantity, nil
+	}
+	var t ProductUsageBracketedPrepaidCreditsInputPricingInputKind
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageBracketedPrepaidCreditsInputPricingInputKind) Ptr() *ProductUsageBracketedPrepaidCreditsInputPricingInputKind {
+	return &p
+}
+
+type ProductUsageBracketedPrepaidCreditsInputSignalType string
+
+const (
+	ProductUsageBracketedPrepaidCreditsInputSignalTypeActivity ProductUsageBracketedPrepaidCreditsInputSignalType = "activity"
+	ProductUsageBracketedPrepaidCreditsInputSignalTypeOutcome  ProductUsageBracketedPrepaidCreditsInputSignalType = "outcome"
+)
+
+func NewProductUsageBracketedPrepaidCreditsInputSignalTypeFromString(s string) (ProductUsageBracketedPrepaidCreditsInputSignalType, error) {
+	switch s {
+	case "activity":
+		return ProductUsageBracketedPrepaidCreditsInputSignalTypeActivity, nil
+	case "outcome":
+		return ProductUsageBracketedPrepaidCreditsInputSignalTypeOutcome, nil
+	}
+	var t ProductUsageBracketedPrepaidCreditsInputSignalType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageBracketedPrepaidCreditsInputSignalType) Ptr() *ProductUsageBracketedPrepaidCreditsInputSignalType {
+	return &p
+}
+
+type ProductUsageCostPlusInput struct {
+	CostPlusMultiplier           float64                                    `json:"costPlusMultiplier" url:"costPlusMultiplier"`
+	SignalType                   *ProductUsageCostPlusInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
+	BillingFrequency             *ProductUsageCostPlusInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingFrequencyCustomMonths *int                                       `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductUsageCostPlusInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductSimplePricePoint                 `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductUsageCostPlusInput) GetCostPlusMultiplier() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.CostPlusMultiplier
+}
+
+func (p *ProductUsageCostPlusInput) GetSignalType() *ProductUsageCostPlusInputSignalType {
+	if p == nil {
+		return nil
+	}
+	return p.SignalType
+}
+
+func (p *ProductUsageCostPlusInput) GetBillingFrequency() *ProductUsageCostPlusInputBillingFrequency {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductUsageCostPlusInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductUsageCostPlusInput) GetBillingType() *ProductUsageCostPlusInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductUsageCostPlusInput) GetPricePoints() []*ProductSimplePricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductUsageCostPlusInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductUsageCostPlusInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductUsageCostPlusInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductUsageCostPlusInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductUsageCostPlusInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductUsageCostPlusInputBillingFrequency string
+
+const (
+	ProductUsageCostPlusInputBillingFrequencyMonthly      ProductUsageCostPlusInputBillingFrequency = "Monthly"
+	ProductUsageCostPlusInputBillingFrequencyQuarterly    ProductUsageCostPlusInputBillingFrequency = "Quarterly"
+	ProductUsageCostPlusInputBillingFrequencySemiAnnually ProductUsageCostPlusInputBillingFrequency = "Semi-Annually"
+	ProductUsageCostPlusInputBillingFrequencyAnnual       ProductUsageCostPlusInputBillingFrequency = "Annual"
+	ProductUsageCostPlusInputBillingFrequencyCustom       ProductUsageCostPlusInputBillingFrequency = "Custom"
+)
+
+func NewProductUsageCostPlusInputBillingFrequencyFromString(s string) (ProductUsageCostPlusInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductUsageCostPlusInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductUsageCostPlusInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductUsageCostPlusInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductUsageCostPlusInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductUsageCostPlusInputBillingFrequencyCustom, nil
+	}
+	var t ProductUsageCostPlusInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageCostPlusInputBillingFrequency) Ptr() *ProductUsageCostPlusInputBillingFrequency {
+	return &p
+}
+
+type ProductUsageCostPlusInputBillingType string
+
+const (
+	ProductUsageCostPlusInputBillingTypeAdvance ProductUsageCostPlusInputBillingType = "Advance"
+	ProductUsageCostPlusInputBillingTypeArrears ProductUsageCostPlusInputBillingType = "Arrears"
+)
+
+func NewProductUsageCostPlusInputBillingTypeFromString(s string) (ProductUsageCostPlusInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductUsageCostPlusInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductUsageCostPlusInputBillingTypeArrears, nil
+	}
+	var t ProductUsageCostPlusInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageCostPlusInputBillingType) Ptr() *ProductUsageCostPlusInputBillingType {
+	return &p
+}
+
+type ProductUsageCostPlusInputSignalType string
+
+const (
+	ProductUsageCostPlusInputSignalTypeActivity ProductUsageCostPlusInputSignalType = "activity"
+	ProductUsageCostPlusInputSignalTypeOutcome  ProductUsageCostPlusInputSignalType = "outcome"
+)
+
+func NewProductUsageCostPlusInputSignalTypeFromString(s string) (ProductUsageCostPlusInputSignalType, error) {
+	switch s {
+	case "activity":
+		return ProductUsageCostPlusInputSignalTypeActivity, nil
+	case "outcome":
+		return ProductUsageCostPlusInputSignalTypeOutcome, nil
+	}
+	var t ProductUsageCostPlusInputSignalType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageCostPlusInputSignalType) Ptr() *ProductUsageCostPlusInputSignalType {
+	return &p
+}
+
+type ProductUsageGraduatedInput struct {
+	EventName                    string                                      `json:"eventName" url:"eventName"`
+	SignalType                   *ProductUsageGraduatedInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
+	BillingFrequency             *ProductUsageGraduatedInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingFrequencyCustomMonths *int                                        `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductUsageGraduatedInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductTieredPricePoint                  `json:"pricePoints" url:"pricePoints"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductUsageGraduatedInput) GetEventName() string {
+	if p == nil {
+		return ""
+	}
+	return p.EventName
+}
+
+func (p *ProductUsageGraduatedInput) GetSignalType() *ProductUsageGraduatedInputSignalType {
+	if p == nil {
+		return nil
+	}
+	return p.SignalType
+}
+
+func (p *ProductUsageGraduatedInput) GetBillingFrequency() *ProductUsageGraduatedInputBillingFrequency {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductUsageGraduatedInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductUsageGraduatedInput) GetBillingType() *ProductUsageGraduatedInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductUsageGraduatedInput) GetPricePoints() []*ProductTieredPricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductUsageGraduatedInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductUsageGraduatedInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductUsageGraduatedInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductUsageGraduatedInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductUsageGraduatedInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductUsageGraduatedInputBillingFrequency string
+
+const (
+	ProductUsageGraduatedInputBillingFrequencyMonthly      ProductUsageGraduatedInputBillingFrequency = "Monthly"
+	ProductUsageGraduatedInputBillingFrequencyQuarterly    ProductUsageGraduatedInputBillingFrequency = "Quarterly"
+	ProductUsageGraduatedInputBillingFrequencySemiAnnually ProductUsageGraduatedInputBillingFrequency = "Semi-Annually"
+	ProductUsageGraduatedInputBillingFrequencyAnnual       ProductUsageGraduatedInputBillingFrequency = "Annual"
+	ProductUsageGraduatedInputBillingFrequencyCustom       ProductUsageGraduatedInputBillingFrequency = "Custom"
+)
+
+func NewProductUsageGraduatedInputBillingFrequencyFromString(s string) (ProductUsageGraduatedInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductUsageGraduatedInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductUsageGraduatedInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductUsageGraduatedInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductUsageGraduatedInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductUsageGraduatedInputBillingFrequencyCustom, nil
+	}
+	var t ProductUsageGraduatedInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageGraduatedInputBillingFrequency) Ptr() *ProductUsageGraduatedInputBillingFrequency {
+	return &p
+}
+
+type ProductUsageGraduatedInputBillingType string
+
+const (
+	ProductUsageGraduatedInputBillingTypeAdvance ProductUsageGraduatedInputBillingType = "Advance"
+	ProductUsageGraduatedInputBillingTypeArrears ProductUsageGraduatedInputBillingType = "Arrears"
+)
+
+func NewProductUsageGraduatedInputBillingTypeFromString(s string) (ProductUsageGraduatedInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductUsageGraduatedInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductUsageGraduatedInputBillingTypeArrears, nil
+	}
+	var t ProductUsageGraduatedInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageGraduatedInputBillingType) Ptr() *ProductUsageGraduatedInputBillingType {
+	return &p
+}
+
+type ProductUsageGraduatedInputSignalType string
+
+const (
+	ProductUsageGraduatedInputSignalTypeActivity ProductUsageGraduatedInputSignalType = "activity"
+	ProductUsageGraduatedInputSignalTypeOutcome  ProductUsageGraduatedInputSignalType = "outcome"
+)
+
+func NewProductUsageGraduatedInputSignalTypeFromString(s string) (ProductUsageGraduatedInputSignalType, error) {
+	switch s {
+	case "activity":
+		return ProductUsageGraduatedInputSignalTypeActivity, nil
+	case "outcome":
+		return ProductUsageGraduatedInputSignalTypeOutcome, nil
+	}
+	var t ProductUsageGraduatedInputSignalType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageGraduatedInputSignalType) Ptr() *ProductUsageGraduatedInputSignalType {
+	return &p
+}
+
+type ProductUsagePerUnitInput struct {
+	EventName                    string                                    `json:"eventName" url:"eventName"`
+	SignalType                   *ProductUsagePerUnitInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
+	BillingFrequency             *ProductUsagePerUnitInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingFrequencyCustomMonths *int                                      `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductUsagePerUnitInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductSimplePricePoint                `json:"pricePoints" url:"pricePoints"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductUsagePerUnitInput) GetEventName() string {
+	if p == nil {
+		return ""
+	}
+	return p.EventName
+}
+
+func (p *ProductUsagePerUnitInput) GetSignalType() *ProductUsagePerUnitInputSignalType {
+	if p == nil {
+		return nil
+	}
+	return p.SignalType
+}
+
+func (p *ProductUsagePerUnitInput) GetBillingFrequency() *ProductUsagePerUnitInputBillingFrequency {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductUsagePerUnitInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductUsagePerUnitInput) GetBillingType() *ProductUsagePerUnitInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductUsagePerUnitInput) GetPricePoints() []*ProductSimplePricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductUsagePerUnitInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductUsagePerUnitInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductUsagePerUnitInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductUsagePerUnitInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductUsagePerUnitInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductUsagePerUnitInputBillingFrequency string
+
+const (
+	ProductUsagePerUnitInputBillingFrequencyMonthly      ProductUsagePerUnitInputBillingFrequency = "Monthly"
+	ProductUsagePerUnitInputBillingFrequencyQuarterly    ProductUsagePerUnitInputBillingFrequency = "Quarterly"
+	ProductUsagePerUnitInputBillingFrequencySemiAnnually ProductUsagePerUnitInputBillingFrequency = "Semi-Annually"
+	ProductUsagePerUnitInputBillingFrequencyAnnual       ProductUsagePerUnitInputBillingFrequency = "Annual"
+	ProductUsagePerUnitInputBillingFrequencyCustom       ProductUsagePerUnitInputBillingFrequency = "Custom"
+)
+
+func NewProductUsagePerUnitInputBillingFrequencyFromString(s string) (ProductUsagePerUnitInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductUsagePerUnitInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductUsagePerUnitInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductUsagePerUnitInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductUsagePerUnitInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductUsagePerUnitInputBillingFrequencyCustom, nil
+	}
+	var t ProductUsagePerUnitInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsagePerUnitInputBillingFrequency) Ptr() *ProductUsagePerUnitInputBillingFrequency {
+	return &p
+}
+
+type ProductUsagePerUnitInputBillingType string
+
+const (
+	ProductUsagePerUnitInputBillingTypeAdvance ProductUsagePerUnitInputBillingType = "Advance"
+	ProductUsagePerUnitInputBillingTypeArrears ProductUsagePerUnitInputBillingType = "Arrears"
+)
+
+func NewProductUsagePerUnitInputBillingTypeFromString(s string) (ProductUsagePerUnitInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductUsagePerUnitInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductUsagePerUnitInputBillingTypeArrears, nil
+	}
+	var t ProductUsagePerUnitInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsagePerUnitInputBillingType) Ptr() *ProductUsagePerUnitInputBillingType {
+	return &p
+}
+
+type ProductUsagePerUnitInputSignalType string
+
+const (
+	ProductUsagePerUnitInputSignalTypeActivity ProductUsagePerUnitInputSignalType = "activity"
+	ProductUsagePerUnitInputSignalTypeOutcome  ProductUsagePerUnitInputSignalType = "outcome"
+)
+
+func NewProductUsagePerUnitInputSignalTypeFromString(s string) (ProductUsagePerUnitInputSignalType, error) {
+	switch s {
+	case "activity":
+		return ProductUsagePerUnitInputSignalTypeActivity, nil
+	case "outcome":
+		return ProductUsagePerUnitInputSignalTypeOutcome, nil
+	}
+	var t ProductUsagePerUnitInputSignalType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsagePerUnitInputSignalType) Ptr() *ProductUsagePerUnitInputSignalType {
+	return &p
+}
+
+type ProductUsagePrepaidCreditsInput struct {
+	EventName                    string                                           `json:"eventName" url:"eventName"`
+	SignalType                   *ProductUsagePrepaidCreditsInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
+	CreditsCurrencyID            string                                           `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	CreditCost                   float64                                          `json:"creditCost" url:"creditCost"`
+	UnitValue                    *float64                                         `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	BillingFrequency             *ProductUsagePrepaidCreditsInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingFrequencyCustomMonths *int                                             `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductUsagePrepaidCreditsInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductSimplePricePoint                       `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetEventName() string {
+	if p == nil {
+		return ""
+	}
+	return p.EventName
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetSignalType() *ProductUsagePrepaidCreditsInputSignalType {
+	if p == nil {
+		return nil
+	}
+	return p.SignalType
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetCreditsCurrencyID() string {
+	if p == nil {
+		return ""
+	}
+	return p.CreditsCurrencyID
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetCreditCost() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.CreditCost
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetUnitValue() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UnitValue
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetBillingFrequency() *ProductUsagePrepaidCreditsInputBillingFrequency {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetBillingType() *ProductUsagePrepaidCreditsInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetPricePoints() []*ProductSimplePricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductUsagePrepaidCreditsInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductUsagePrepaidCreditsInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductUsagePrepaidCreditsInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductUsagePrepaidCreditsInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductUsagePrepaidCreditsInputBillingFrequency string
+
+const (
+	ProductUsagePrepaidCreditsInputBillingFrequencyMonthly      ProductUsagePrepaidCreditsInputBillingFrequency = "Monthly"
+	ProductUsagePrepaidCreditsInputBillingFrequencyQuarterly    ProductUsagePrepaidCreditsInputBillingFrequency = "Quarterly"
+	ProductUsagePrepaidCreditsInputBillingFrequencySemiAnnually ProductUsagePrepaidCreditsInputBillingFrequency = "Semi-Annually"
+	ProductUsagePrepaidCreditsInputBillingFrequencyAnnual       ProductUsagePrepaidCreditsInputBillingFrequency = "Annual"
+	ProductUsagePrepaidCreditsInputBillingFrequencyCustom       ProductUsagePrepaidCreditsInputBillingFrequency = "Custom"
+)
+
+func NewProductUsagePrepaidCreditsInputBillingFrequencyFromString(s string) (ProductUsagePrepaidCreditsInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductUsagePrepaidCreditsInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductUsagePrepaidCreditsInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductUsagePrepaidCreditsInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductUsagePrepaidCreditsInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductUsagePrepaidCreditsInputBillingFrequencyCustom, nil
+	}
+	var t ProductUsagePrepaidCreditsInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsagePrepaidCreditsInputBillingFrequency) Ptr() *ProductUsagePrepaidCreditsInputBillingFrequency {
+	return &p
+}
+
+type ProductUsagePrepaidCreditsInputBillingType string
+
+const (
+	ProductUsagePrepaidCreditsInputBillingTypeAdvance ProductUsagePrepaidCreditsInputBillingType = "Advance"
+	ProductUsagePrepaidCreditsInputBillingTypeArrears ProductUsagePrepaidCreditsInputBillingType = "Arrears"
+)
+
+func NewProductUsagePrepaidCreditsInputBillingTypeFromString(s string) (ProductUsagePrepaidCreditsInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductUsagePrepaidCreditsInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductUsagePrepaidCreditsInputBillingTypeArrears, nil
+	}
+	var t ProductUsagePrepaidCreditsInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsagePrepaidCreditsInputBillingType) Ptr() *ProductUsagePrepaidCreditsInputBillingType {
+	return &p
+}
+
+type ProductUsagePrepaidCreditsInputSignalType string
+
+const (
+	ProductUsagePrepaidCreditsInputSignalTypeActivity ProductUsagePrepaidCreditsInputSignalType = "activity"
+	ProductUsagePrepaidCreditsInputSignalTypeOutcome  ProductUsagePrepaidCreditsInputSignalType = "outcome"
+)
+
+func NewProductUsagePrepaidCreditsInputSignalTypeFromString(s string) (ProductUsagePrepaidCreditsInputSignalType, error) {
+	switch s {
+	case "activity":
+		return ProductUsagePrepaidCreditsInputSignalTypeActivity, nil
+	case "outcome":
+		return ProductUsagePrepaidCreditsInputSignalTypeOutcome, nil
+	}
+	var t ProductUsagePrepaidCreditsInputSignalType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsagePrepaidCreditsInputSignalType) Ptr() *ProductUsagePrepaidCreditsInputSignalType {
+	return &p
+}
+
+type ProductUsageVolumeInput struct {
+	EventName                    string                                   `json:"eventName" url:"eventName"`
+	SignalType                   *ProductUsageVolumeInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
+	BillingFrequency             *ProductUsageVolumeInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingFrequencyCustomMonths *int                                     `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	BillingType                  *ProductUsageVolumeInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints                  []*ProductTieredPricePoint               `json:"pricePoints" url:"pricePoints"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductUsageVolumeInput) GetEventName() string {
+	if p == nil {
+		return ""
+	}
+	return p.EventName
+}
+
+func (p *ProductUsageVolumeInput) GetSignalType() *ProductUsageVolumeInputSignalType {
+	if p == nil {
+		return nil
+	}
+	return p.SignalType
+}
+
+func (p *ProductUsageVolumeInput) GetBillingFrequency() *ProductUsageVolumeInputBillingFrequency {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductUsageVolumeInput) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProductUsageVolumeInput) GetBillingType() *ProductUsageVolumeInputBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductUsageVolumeInput) GetPricePoints() []*ProductTieredPricePoint {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductUsageVolumeInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductUsageVolumeInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductUsageVolumeInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductUsageVolumeInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductUsageVolumeInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductUsageVolumeInputBillingFrequency string
+
+const (
+	ProductUsageVolumeInputBillingFrequencyMonthly      ProductUsageVolumeInputBillingFrequency = "Monthly"
+	ProductUsageVolumeInputBillingFrequencyQuarterly    ProductUsageVolumeInputBillingFrequency = "Quarterly"
+	ProductUsageVolumeInputBillingFrequencySemiAnnually ProductUsageVolumeInputBillingFrequency = "Semi-Annually"
+	ProductUsageVolumeInputBillingFrequencyAnnual       ProductUsageVolumeInputBillingFrequency = "Annual"
+	ProductUsageVolumeInputBillingFrequencyCustom       ProductUsageVolumeInputBillingFrequency = "Custom"
+)
+
+func NewProductUsageVolumeInputBillingFrequencyFromString(s string) (ProductUsageVolumeInputBillingFrequency, error) {
+	switch s {
+	case "Monthly":
+		return ProductUsageVolumeInputBillingFrequencyMonthly, nil
+	case "Quarterly":
+		return ProductUsageVolumeInputBillingFrequencyQuarterly, nil
+	case "Semi-Annually":
+		return ProductUsageVolumeInputBillingFrequencySemiAnnually, nil
+	case "Annual":
+		return ProductUsageVolumeInputBillingFrequencyAnnual, nil
+	case "Custom":
+		return ProductUsageVolumeInputBillingFrequencyCustom, nil
+	}
+	var t ProductUsageVolumeInputBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageVolumeInputBillingFrequency) Ptr() *ProductUsageVolumeInputBillingFrequency {
+	return &p
+}
+
+type ProductUsageVolumeInputBillingType string
+
+const (
+	ProductUsageVolumeInputBillingTypeAdvance ProductUsageVolumeInputBillingType = "Advance"
+	ProductUsageVolumeInputBillingTypeArrears ProductUsageVolumeInputBillingType = "Arrears"
+)
+
+func NewProductUsageVolumeInputBillingTypeFromString(s string) (ProductUsageVolumeInputBillingType, error) {
+	switch s {
+	case "Advance":
+		return ProductUsageVolumeInputBillingTypeAdvance, nil
+	case "Arrears":
+		return ProductUsageVolumeInputBillingTypeArrears, nil
+	}
+	var t ProductUsageVolumeInputBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageVolumeInputBillingType) Ptr() *ProductUsageVolumeInputBillingType {
+	return &p
+}
+
+type ProductUsageVolumeInputSignalType string
+
+const (
+	ProductUsageVolumeInputSignalTypeActivity ProductUsageVolumeInputSignalType = "activity"
+	ProductUsageVolumeInputSignalTypeOutcome  ProductUsageVolumeInputSignalType = "outcome"
+)
+
+func NewProductUsageVolumeInputSignalTypeFromString(s string) (ProductUsageVolumeInputSignalType, error) {
+	switch s {
+	case "activity":
+		return ProductUsageVolumeInputSignalTypeActivity, nil
+	case "outcome":
+		return ProductUsageVolumeInputSignalTypeOutcome, nil
+	}
+	var t ProductUsageVolumeInputSignalType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsageVolumeInputSignalType) Ptr() *ProductUsageVolumeInputSignalType {
+	return &p
 }

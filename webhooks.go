@@ -9,8 +9,58 @@ import (
 	time "time"
 )
 
+type RotateWebhookSecretRequest struct {
+}
+
 type TestWebhookRequest struct {
 	WebhookName TestWebhookRequestWebhookName `json:"-" url:"-"`
+}
+
+type RotateWebhookSecretResponse struct {
+	// The newly minted org-scoped signing secret. Returned exactly once — store it now; subsequent reads will not return it.
+	SigningSecret string `json:"signingSecret" url:"signingSecret"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RotateWebhookSecretResponse) GetSigningSecret() string {
+	if r == nil {
+		return ""
+	}
+	return r.SigningSecret
+}
+
+func (r *RotateWebhookSecretResponse) GetExtraProperties() map[string]interface{} {
+	return r.extraProperties
+}
+
+func (r *RotateWebhookSecretResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler RotateWebhookSecretResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RotateWebhookSecretResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RotateWebhookSecretResponse) String() string {
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
 }
 
 type Webhook struct {
@@ -149,6 +199,8 @@ func (w WebhookDeliveryStatus) Ptr() *WebhookDeliveryStatus {
 
 type WebhookListResponse struct {
 	Data []*Webhook `json:"data" url:"data"`
+	// True when the organization has generated a webhook signing secret at least once.
+	SigningSecretConfigured bool `json:"signingSecretConfigured" url:"signingSecretConfigured"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -159,6 +211,13 @@ func (w *WebhookListResponse) GetData() []*Webhook {
 		return nil
 	}
 	return w.Data
+}
+
+func (w *WebhookListResponse) GetSigningSecretConfigured() bool {
+	if w == nil {
+		return false
+	}
+	return w.SigningSecretConfigured
 }
 
 func (w *WebhookListResponse) GetExtraProperties() map[string]interface{} {
@@ -280,6 +339,170 @@ func (w *WebhookTestResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", w)
+}
+
+type WebhookUpdateResponse struct {
+	ID          string                    `json:"id" url:"id"`
+	Name        WebhookUpdateResponseName `json:"name" url:"name"`
+	Description string                    `json:"description" url:"description"`
+	Enabled     bool                      `json:"enabled" url:"enabled"`
+	URL         *string                   `json:"url,omitempty" url:"url,omitempty"`
+	LastSentAt  *time.Time                `json:"lastSentAt,omitempty" url:"lastSentAt,omitempty"`
+	LastStatus  *WebhookDeliveryStatus    `json:"lastStatus,omitempty" url:"lastStatus,omitempty"`
+	// Included on the response of the first save that produced a signing key for this organization (when no webhook had a key yet). Store it now — subsequent reads will not return it; rotate to mint a new one if you lose it.
+	SigningSecret *string `json:"signingSecret,omitempty" url:"signingSecret,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (w *WebhookUpdateResponse) GetID() string {
+	if w == nil {
+		return ""
+	}
+	return w.ID
+}
+
+func (w *WebhookUpdateResponse) GetName() WebhookUpdateResponseName {
+	if w == nil {
+		return ""
+	}
+	return w.Name
+}
+
+func (w *WebhookUpdateResponse) GetDescription() string {
+	if w == nil {
+		return ""
+	}
+	return w.Description
+}
+
+func (w *WebhookUpdateResponse) GetEnabled() bool {
+	if w == nil {
+		return false
+	}
+	return w.Enabled
+}
+
+func (w *WebhookUpdateResponse) GetURL() *string {
+	if w == nil {
+		return nil
+	}
+	return w.URL
+}
+
+func (w *WebhookUpdateResponse) GetLastSentAt() *time.Time {
+	if w == nil {
+		return nil
+	}
+	return w.LastSentAt
+}
+
+func (w *WebhookUpdateResponse) GetLastStatus() *WebhookDeliveryStatus {
+	if w == nil {
+		return nil
+	}
+	return w.LastStatus
+}
+
+func (w *WebhookUpdateResponse) GetSigningSecret() *string {
+	if w == nil {
+		return nil
+	}
+	return w.SigningSecret
+}
+
+func (w *WebhookUpdateResponse) GetExtraProperties() map[string]interface{} {
+	return w.extraProperties
+}
+
+func (w *WebhookUpdateResponse) UnmarshalJSON(data []byte) error {
+	type embed WebhookUpdateResponse
+	var unmarshaler = struct {
+		embed
+		LastSentAt *internal.DateTime `json:"lastSentAt,omitempty"`
+	}{
+		embed: embed(*w),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*w = WebhookUpdateResponse(unmarshaler.embed)
+	w.LastSentAt = unmarshaler.LastSentAt.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *w)
+	if err != nil {
+		return err
+	}
+	w.extraProperties = extraProperties
+	w.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (w *WebhookUpdateResponse) MarshalJSON() ([]byte, error) {
+	type embed WebhookUpdateResponse
+	var marshaler = struct {
+		embed
+		LastSentAt *internal.DateTime `json:"lastSentAt,omitempty"`
+	}{
+		embed:      embed(*w),
+		LastSentAt: internal.NewOptionalDateTime(w.LastSentAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (w *WebhookUpdateResponse) String() string {
+	if len(w.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(w.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(w); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", w)
+}
+
+type WebhookUpdateResponseName string
+
+const (
+	WebhookUpdateResponseNameBillingInvoiceCreated    WebhookUpdateResponseName = "billing-invoice-created"
+	WebhookUpdateResponseNameBillingInvoicePaid       WebhookUpdateResponseName = "billing-invoice-paid"
+	WebhookUpdateResponseNameBillingCheckoutCreated   WebhookUpdateResponseName = "billing-checkout-created"
+	WebhookUpdateResponseNameBillingCheckoutCompleted WebhookUpdateResponseName = "billing-checkout-completed"
+	WebhookUpdateResponseNameBillingCheckoutExpired   WebhookUpdateResponseName = "billing-checkout-expired"
+	WebhookUpdateResponseNameBillingPaymentSucceeded  WebhookUpdateResponseName = "billing-payment-succeeded"
+	WebhookUpdateResponseNameBillingPaymentFailed     WebhookUpdateResponseName = "billing-payment-failed"
+	WebhookUpdateResponseNameBillingCreditsDepleted   WebhookUpdateResponseName = "billing-credits-depleted"
+	WebhookUpdateResponseNameBillingOverageIncurred   WebhookUpdateResponseName = "billing-overage-incurred"
+)
+
+func NewWebhookUpdateResponseNameFromString(s string) (WebhookUpdateResponseName, error) {
+	switch s {
+	case "billing-invoice-created":
+		return WebhookUpdateResponseNameBillingInvoiceCreated, nil
+	case "billing-invoice-paid":
+		return WebhookUpdateResponseNameBillingInvoicePaid, nil
+	case "billing-checkout-created":
+		return WebhookUpdateResponseNameBillingCheckoutCreated, nil
+	case "billing-checkout-completed":
+		return WebhookUpdateResponseNameBillingCheckoutCompleted, nil
+	case "billing-checkout-expired":
+		return WebhookUpdateResponseNameBillingCheckoutExpired, nil
+	case "billing-payment-succeeded":
+		return WebhookUpdateResponseNameBillingPaymentSucceeded, nil
+	case "billing-payment-failed":
+		return WebhookUpdateResponseNameBillingPaymentFailed, nil
+	case "billing-credits-depleted":
+		return WebhookUpdateResponseNameBillingCreditsDepleted, nil
+	case "billing-overage-incurred":
+		return WebhookUpdateResponseNameBillingOverageIncurred, nil
+	}
+	var t WebhookUpdateResponseName
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (w WebhookUpdateResponseName) Ptr() *WebhookUpdateResponseName {
+	return &w
 }
 
 type TestWebhookRequestWebhookName string

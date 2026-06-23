@@ -27,6 +27,8 @@ type CreateCheckoutRequest struct {
 	SingleUse          *bool                  `json:"singleUse,omitempty" url:"-"`
 	// Lock checkout to a specific currency. Omit to allow all currencies supported by the selected plans.
 	Currency *string `json:"currency,omitempty" url:"-"`
+	// Additional informational pricing cards rendered alongside the plans.
+	CustomCards []*CheckoutCustomCardInput `json:"customCards,omitempty" url:"-"`
 }
 
 func (c *CreateCheckoutRequest) UnmarshalJSON(data []byte) error {
@@ -76,8 +78,10 @@ type Checkout struct {
 	CollectPhone       bool                   `json:"collectPhone" url:"collectPhone"`
 	SingleUse          bool                   `json:"singleUse" url:"singleUse"`
 	AllowedCurrencies  []string               `json:"allowedCurrencies" url:"allowedCurrencies"`
-	CreatedAt          time.Time              `json:"createdAt" url:"createdAt"`
-	UpdatedAt          time.Time              `json:"updatedAt" url:"updatedAt"`
+	// Additional informational pricing cards rendered alongside the plans.
+	CustomCards []*CheckoutCustomCard `json:"customCards,omitempty" url:"customCards,omitempty"`
+	CreatedAt   time.Time             `json:"createdAt" url:"createdAt"`
+	UpdatedAt   time.Time             `json:"updatedAt" url:"updatedAt"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -181,6 +185,13 @@ func (c *Checkout) GetAllowedCurrencies() []string {
 	return c.AllowedCurrencies
 }
 
+func (c *Checkout) GetCustomCards() []*CheckoutCustomCard {
+	if c == nil {
+		return nil
+	}
+	return c.CustomCards
+}
+
 func (c *Checkout) GetCreatedAt() time.Time {
 	if c == nil {
 		return time.Time{}
@@ -253,6 +264,154 @@ func (c *Checkout) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
+type CheckoutCustomCard struct {
+	// Card title.
+	Label string `json:"label" url:"label"`
+	// Headline price text, e.g. "$99/mo".
+	PriceText *string `json:"priceText,omitempty" url:"priceText,omitempty"`
+	// Call-to-action button label.
+	ButtonText *string `json:"buttonText,omitempty" url:"buttonText,omitempty"`
+	// Call-to-action button URL.
+	ButtonURL *string `json:"buttonUrl,omitempty" url:"buttonUrl,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CheckoutCustomCard) GetLabel() string {
+	if c == nil {
+		return ""
+	}
+	return c.Label
+}
+
+func (c *CheckoutCustomCard) GetPriceText() *string {
+	if c == nil {
+		return nil
+	}
+	return c.PriceText
+}
+
+func (c *CheckoutCustomCard) GetButtonText() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ButtonText
+}
+
+func (c *CheckoutCustomCard) GetButtonURL() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ButtonURL
+}
+
+func (c *CheckoutCustomCard) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CheckoutCustomCard) UnmarshalJSON(data []byte) error {
+	type unmarshaler CheckoutCustomCard
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CheckoutCustomCard(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CheckoutCustomCard) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CheckoutCustomCardInput struct {
+	// Card title.
+	Label string `json:"label" url:"label"`
+	// Headline price text, e.g. "$99/mo".
+	PriceText *string `json:"priceText,omitempty" url:"priceText,omitempty"`
+	// Call-to-action button label.
+	ButtonText *string `json:"buttonText,omitempty" url:"buttonText,omitempty"`
+	// Call-to-action button URL.
+	ButtonURL *string `json:"buttonUrl,omitempty" url:"buttonUrl,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CheckoutCustomCardInput) GetLabel() string {
+	if c == nil {
+		return ""
+	}
+	return c.Label
+}
+
+func (c *CheckoutCustomCardInput) GetPriceText() *string {
+	if c == nil {
+		return nil
+	}
+	return c.PriceText
+}
+
+func (c *CheckoutCustomCardInput) GetButtonText() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ButtonText
+}
+
+func (c *CheckoutCustomCardInput) GetButtonURL() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ButtonURL
+}
+
+func (c *CheckoutCustomCardInput) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CheckoutCustomCardInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler CheckoutCustomCardInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CheckoutCustomCardInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CheckoutCustomCardInput) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
 type CheckoutDetails struct {
 	ID                 string                 `json:"id" url:"id"`
 	URL                string                 `json:"url" url:"url"`
@@ -268,8 +427,10 @@ type CheckoutDetails struct {
 	CollectPhone       bool                   `json:"collectPhone" url:"collectPhone"`
 	SingleUse          bool                   `json:"singleUse" url:"singleUse"`
 	AllowedCurrencies  []string               `json:"allowedCurrencies" url:"allowedCurrencies"`
-	CreatedAt          time.Time              `json:"createdAt" url:"createdAt"`
-	UpdatedAt          time.Time              `json:"updatedAt" url:"updatedAt"`
+	// Additional informational pricing cards rendered alongside the plans.
+	CustomCards []*CheckoutCustomCard `json:"customCards,omitempty" url:"customCards,omitempty"`
+	CreatedAt   time.Time             `json:"createdAt" url:"createdAt"`
+	UpdatedAt   time.Time             `json:"updatedAt" url:"updatedAt"`
 	// The resulting order ID once checkout has completed. Null until an order is created.
 	OrderID *string `json:"orderId,omitempty" url:"orderId,omitempty"`
 
@@ -373,6 +534,13 @@ func (c *CheckoutDetails) GetAllowedCurrencies() []string {
 		return nil
 	}
 	return c.AllowedCurrencies
+}
+
+func (c *CheckoutDetails) GetCustomCards() []*CheckoutCustomCard {
+	if c == nil {
+		return nil
+	}
+	return c.CustomCards
 }
 
 func (c *CheckoutDetails) GetCreatedAt() time.Time {
@@ -508,8 +676,120 @@ func (c *CheckoutListResponse) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
+type CheckoutPlan struct {
+	ID       string   `json:"id" url:"id"`
+	Features []string `json:"features,omitempty" url:"features,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CheckoutPlan) GetID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ID
+}
+
+func (c *CheckoutPlan) GetFeatures() []string {
+	if c == nil {
+		return nil
+	}
+	return c.Features
+}
+
+func (c *CheckoutPlan) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CheckoutPlan) UnmarshalJSON(data []byte) error {
+	type unmarshaler CheckoutPlan
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CheckoutPlan(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CheckoutPlan) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CheckoutPlanInput struct {
+	// Plan identifier, as returned by the list plans endpoint. Selects a specific plan within the product.
+	ID string `json:"id" url:"id"`
+	// Override the feature bullet points shown for this plan on the hosted checkout page.
+	Features []string `json:"features,omitempty" url:"features,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CheckoutPlanInput) GetID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ID
+}
+
+func (c *CheckoutPlanInput) GetFeatures() []string {
+	if c == nil {
+		return nil
+	}
+	return c.Features
+}
+
+func (c *CheckoutPlanInput) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CheckoutPlanInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler CheckoutPlanInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CheckoutPlanInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CheckoutPlanInput) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
 type CheckoutProduct struct {
 	ID string `json:"id" url:"id"`
+	// Plans selected within this product. Absent when the product is offered with all of its plans and none are individually configured.
+	Plans []*CheckoutPlan `json:"plans,omitempty" url:"plans,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -520,6 +800,13 @@ func (c *CheckoutProduct) GetID() string {
 		return ""
 	}
 	return c.ID
+}
+
+func (c *CheckoutProduct) GetPlans() []*CheckoutPlan {
+	if c == nil {
+		return nil
+	}
+	return c.Plans
 }
 
 func (c *CheckoutProduct) GetExtraProperties() map[string]interface{} {
@@ -556,6 +843,8 @@ func (c *CheckoutProduct) String() string {
 
 type CheckoutProductInput struct {
 	ID string `json:"id" url:"id"`
+	// Select specific plans within this product. Omit to offer all of the product's plans.
+	Plans []*CheckoutPlanInput `json:"plans,omitempty" url:"plans,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -566,6 +855,13 @@ func (c *CheckoutProductInput) GetID() string {
 		return ""
 	}
 	return c.ID
+}
+
+func (c *CheckoutProductInput) GetPlans() []*CheckoutPlanInput {
+	if c == nil {
+		return nil
+	}
+	return c.Plans
 }
 
 func (c *CheckoutProductInput) GetExtraProperties() map[string]interface{} {

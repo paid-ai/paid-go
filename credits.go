@@ -9,14 +9,37 @@ import (
 	time "time"
 )
 
+type CreateCreditCurrencyRequest struct {
+	// Human-readable name shown for this credit currency.
+	Name string `json:"name" url:"-"`
+	// Stable machine-readable key for this credit currency. Use lowercase letters, numbers, underscores, and hyphens. Keys are unique within an organization.
+	Key string `json:"key" url:"-"`
+	// Optional description for this credit currency.
+	Description *string `json:"description,omitempty" url:"-"`
+}
+
+type ListCreditCurrenciesRequest struct {
+	// Filter credit currencies by status. Defaults to `all` so archived currencies remain readable after they are archived.
+	Status *ListCreditCurrenciesRequestStatus `json:"-" url:"status,omitempty"`
+}
+
 type CreditCurrency struct {
-	ID          string     `json:"id" url:"id"`
-	Name        string     `json:"name" url:"name"`
-	Key         string     `json:"key" url:"key"`
-	Description *string    `json:"description,omitempty" url:"description,omitempty"`
-	ArchivedAt  *time.Time `json:"archivedAt,omitempty" url:"archivedAt,omitempty"`
-	CreatedAt   time.Time  `json:"createdAt" url:"createdAt"`
-	UpdatedAt   time.Time  `json:"updatedAt" url:"updatedAt"`
+	// Unique identifier for this credit currency.
+	ID string `json:"id" url:"id"`
+	// Human-readable name shown for this credit currency.
+	Name string `json:"name" url:"name"`
+	// Stable machine-readable key for this credit currency. Keys are unique within an organization.
+	Key string `json:"key" url:"key"`
+	// Whether this credit currency is active or archived.
+	Status CreditCurrencyStatus `json:"status" url:"status"`
+	// Optional description for this credit currency.
+	Description *string `json:"description,omitempty" url:"description,omitempty"`
+	// When this credit currency was archived. Null means the currency is active.
+	ArchivedAt *time.Time `json:"archivedAt,omitempty" url:"archivedAt,omitempty"`
+	// When this credit currency was created.
+	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
+	// When this credit currency was last updated.
+	UpdatedAt time.Time `json:"updatedAt" url:"updatedAt"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -41,6 +64,13 @@ func (c *CreditCurrency) GetKey() string {
 		return ""
 	}
 	return c.Key
+}
+
+func (c *CreditCurrency) GetStatus() CreditCurrencyStatus {
+	if c == nil {
+		return ""
+	}
+	return c.Status
 }
 
 func (c *CreditCurrency) GetDescription() *string {
@@ -173,4 +203,84 @@ func (c *CreditCurrencyListResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", c)
+}
+
+// Whether this credit currency is active or archived.
+type CreditCurrencyStatus string
+
+const (
+	CreditCurrencyStatusActive   CreditCurrencyStatus = "active"
+	CreditCurrencyStatusArchived CreditCurrencyStatus = "archived"
+)
+
+func NewCreditCurrencyStatusFromString(s string) (CreditCurrencyStatus, error) {
+	switch s {
+	case "active":
+		return CreditCurrencyStatusActive, nil
+	case "archived":
+		return CreditCurrencyStatusArchived, nil
+	}
+	var t CreditCurrencyStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CreditCurrencyStatus) Ptr() *CreditCurrencyStatus {
+	return &c
+}
+
+type ListCreditCurrenciesRequestStatus string
+
+const (
+	ListCreditCurrenciesRequestStatusActive   ListCreditCurrenciesRequestStatus = "active"
+	ListCreditCurrenciesRequestStatusArchived ListCreditCurrenciesRequestStatus = "archived"
+	ListCreditCurrenciesRequestStatusAll      ListCreditCurrenciesRequestStatus = "all"
+)
+
+func NewListCreditCurrenciesRequestStatusFromString(s string) (ListCreditCurrenciesRequestStatus, error) {
+	switch s {
+	case "active":
+		return ListCreditCurrenciesRequestStatusActive, nil
+	case "archived":
+		return ListCreditCurrenciesRequestStatusArchived, nil
+	case "all":
+		return ListCreditCurrenciesRequestStatusAll, nil
+	}
+	var t ListCreditCurrenciesRequestStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListCreditCurrenciesRequestStatus) Ptr() *ListCreditCurrenciesRequestStatus {
+	return &l
+}
+
+// Set to `archived` to archive this credit currency, or `active` to restore it.
+type UpdateCreditCurrencyRequestStatus string
+
+const (
+	UpdateCreditCurrencyRequestStatusActive   UpdateCreditCurrencyRequestStatus = "active"
+	UpdateCreditCurrencyRequestStatusArchived UpdateCreditCurrencyRequestStatus = "archived"
+)
+
+func NewUpdateCreditCurrencyRequestStatusFromString(s string) (UpdateCreditCurrencyRequestStatus, error) {
+	switch s {
+	case "active":
+		return UpdateCreditCurrencyRequestStatusActive, nil
+	case "archived":
+		return UpdateCreditCurrencyRequestStatusArchived, nil
+	}
+	var t UpdateCreditCurrencyRequestStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UpdateCreditCurrencyRequestStatus) Ptr() *UpdateCreditCurrencyRequestStatus {
+	return &u
+}
+
+type UpdateCreditCurrencyRequest struct {
+	// Credit currency ID.
+	ID string `json:"-" url:"-"`
+	// Updated description for this credit currency. Use null to clear the description.
+	Description *string `json:"description,omitempty" url:"-"`
+	// Set to `archived` to archive this credit currency, or `active` to restore it.
+	Status *UpdateCreditCurrencyRequestStatus `json:"status,omitempty" url:"-"`
 }

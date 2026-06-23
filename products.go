@@ -175,6 +175,440 @@ func (p *Product) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
+type ProductAttributeOutput struct {
+	ProductAttributeID string                        `json:"productAttributeId" url:"productAttributeId"`
+	Name               string                        `json:"name" url:"name"`
+	Active             bool                          `json:"active" url:"active"`
+	Pricing            *ProductPricingOutput         `json:"pricing,omitempty" url:"pricing,omitempty"`
+	CreditBenefits     []*ProductCreditBenefitOutput `json:"creditBenefits" url:"creditBenefits"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductAttributeOutput) GetProductAttributeID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ProductAttributeID
+}
+
+func (p *ProductAttributeOutput) GetName() string {
+	if p == nil {
+		return ""
+	}
+	return p.Name
+}
+
+func (p *ProductAttributeOutput) GetActive() bool {
+	if p == nil {
+		return false
+	}
+	return p.Active
+}
+
+func (p *ProductAttributeOutput) GetPricing() *ProductPricingOutput {
+	if p == nil {
+		return nil
+	}
+	return p.Pricing
+}
+
+func (p *ProductAttributeOutput) GetCreditBenefits() []*ProductCreditBenefitOutput {
+	if p == nil {
+		return nil
+	}
+	return p.CreditBenefits
+}
+
+func (p *ProductAttributeOutput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductAttributeOutput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductAttributeOutput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductAttributeOutput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductAttributeOutput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductAttributeUpsert struct {
+	ProductAttributeID *string                      `json:"productAttributeId,omitempty" url:"productAttributeId,omitempty"`
+	Name               string                       `json:"name" url:"name"`
+	Active             *bool                        `json:"active,omitempty" url:"active,omitempty"`
+	Pricing            *ProductPricingInput         `json:"pricing" url:"pricing"`
+	CreditBenefits     []*ProductCreditBenefitInput `json:"creditBenefits,omitempty" url:"creditBenefits,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductAttributeUpsert) GetProductAttributeID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.ProductAttributeID
+}
+
+func (p *ProductAttributeUpsert) GetName() string {
+	if p == nil {
+		return ""
+	}
+	return p.Name
+}
+
+func (p *ProductAttributeUpsert) GetActive() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.Active
+}
+
+func (p *ProductAttributeUpsert) GetPricing() *ProductPricingInput {
+	if p == nil {
+		return nil
+	}
+	return p.Pricing
+}
+
+func (p *ProductAttributeUpsert) GetCreditBenefits() []*ProductCreditBenefitInput {
+	if p == nil {
+		return nil
+	}
+	return p.CreditBenefits
+}
+
+func (p *ProductAttributeUpsert) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductAttributeUpsert) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductAttributeUpsert
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductAttributeUpsert(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductAttributeUpsert) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductCreditBenefitOutput struct {
+	ID                   string   `json:"id" url:"id"`
+	CreditsCurrencyID    *string  `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	Amount               float64  `json:"amount" url:"amount"`
+	Recipient            string   `json:"recipient" url:"recipient"`
+	IsInfiniteTotal      bool     `json:"isInfiniteTotal" url:"isInfiniteTotal"`
+	AllocationCadence    string   `json:"allocationCadence" url:"allocationCadence"`
+	CreditGrantTiming    *string  `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
+	OverageUnitPrice     *float64 `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	RolloverAmount       *float64 `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	RolloverDuration     *float64 `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDurationUnit *string  `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductCreditBenefitOutput) GetID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ID
+}
+
+func (p *ProductCreditBenefitOutput) GetCreditsCurrencyID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CreditsCurrencyID
+}
+
+func (p *ProductCreditBenefitOutput) GetAmount() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.Amount
+}
+
+func (p *ProductCreditBenefitOutput) GetRecipient() string {
+	if p == nil {
+		return ""
+	}
+	return p.Recipient
+}
+
+func (p *ProductCreditBenefitOutput) GetIsInfiniteTotal() bool {
+	if p == nil {
+		return false
+	}
+	return p.IsInfiniteTotal
+}
+
+func (p *ProductCreditBenefitOutput) GetAllocationCadence() string {
+	if p == nil {
+		return ""
+	}
+	return p.AllocationCadence
+}
+
+func (p *ProductCreditBenefitOutput) GetCreditGrantTiming() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CreditGrantTiming
+}
+
+func (p *ProductCreditBenefitOutput) GetOverageUnitPrice() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrice
+}
+
+func (p *ProductCreditBenefitOutput) GetRolloverAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverAmount
+}
+
+func (p *ProductCreditBenefitOutput) GetRolloverDuration() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverDuration
+}
+
+func (p *ProductCreditBenefitOutput) GetRolloverDurationUnit() *string {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverDurationUnit
+}
+
+func (p *ProductCreditBenefitOutput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductCreditBenefitOutput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductCreditBenefitOutput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductCreditBenefitOutput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductCreditBenefitOutput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductDetail struct {
+	ID                string                    `json:"id" url:"id"`
+	Name              string                    `json:"name" url:"name"`
+	Description       *string                   `json:"description,omitempty" url:"description,omitempty"`
+	CreatedAt         time.Time                 `json:"createdAt" url:"createdAt"`
+	UpdatedAt         time.Time                 `json:"updatedAt" url:"updatedAt"`
+	Active            bool                      `json:"active" url:"active"`
+	ProductCode       *string                   `json:"productCode,omitempty" url:"productCode,omitempty"`
+	ExternalID        *string                   `json:"externalId,omitempty" url:"externalId,omitempty"`
+	ArchivedAt        *time.Time                `json:"archivedAt,omitempty" url:"archivedAt,omitempty"`
+	Metadata          map[string]interface{}    `json:"metadata,omitempty" url:"metadata,omitempty"`
+	ProductAttributes []*ProductAttributeOutput `json:"productAttributes" url:"productAttributes"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductDetail) GetID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ID
+}
+
+func (p *ProductDetail) GetName() string {
+	if p == nil {
+		return ""
+	}
+	return p.Name
+}
+
+func (p *ProductDetail) GetDescription() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Description
+}
+
+func (p *ProductDetail) GetCreatedAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.CreatedAt
+}
+
+func (p *ProductDetail) GetUpdatedAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.UpdatedAt
+}
+
+func (p *ProductDetail) GetActive() bool {
+	if p == nil {
+		return false
+	}
+	return p.Active
+}
+
+func (p *ProductDetail) GetProductCode() *string {
+	if p == nil {
+		return nil
+	}
+	return p.ProductCode
+}
+
+func (p *ProductDetail) GetExternalID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.ExternalID
+}
+
+func (p *ProductDetail) GetArchivedAt() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.ArchivedAt
+}
+
+func (p *ProductDetail) GetMetadata() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.Metadata
+}
+
+func (p *ProductDetail) GetProductAttributes() []*ProductAttributeOutput {
+	if p == nil {
+		return nil
+	}
+	return p.ProductAttributes
+}
+
+func (p *ProductDetail) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductDetail) UnmarshalJSON(data []byte) error {
+	type embed ProductDetail
+	var unmarshaler = struct {
+		embed
+		CreatedAt  *internal.DateTime `json:"createdAt"`
+		UpdatedAt  *internal.DateTime `json:"updatedAt"`
+		ArchivedAt *internal.DateTime `json:"archivedAt,omitempty"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = ProductDetail(unmarshaler.embed)
+	p.CreatedAt = unmarshaler.CreatedAt.Time()
+	p.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	p.ArchivedAt = unmarshaler.ArchivedAt.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductDetail) MarshalJSON() ([]byte, error) {
+	type embed ProductDetail
+	var marshaler = struct {
+		embed
+		CreatedAt  *internal.DateTime `json:"createdAt"`
+		UpdatedAt  *internal.DateTime `json:"updatedAt"`
+		ArchivedAt *internal.DateTime `json:"archivedAt,omitempty"`
+	}{
+		embed:      embed(*p),
+		CreatedAt:  internal.NewDateTime(p.CreatedAt),
+		UpdatedAt:  internal.NewDateTime(p.UpdatedAt),
+		ArchivedAt: internal.NewOptionalDateTime(p.ArchivedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (p *ProductDetail) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
 type ProductListResponse struct {
 	Data       []*Product  `json:"data" url:"data"`
 	Pagination *Pagination `json:"pagination" url:"pagination"`
@@ -229,13 +663,456 @@ func (p *ProductListResponse) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
+type ProductPricePointOutput struct {
+	Currency         string                              `json:"currency" url:"currency"`
+	UnitPrice        float64                             `json:"unitPrice" url:"unitPrice"`
+	Tiers            []*ProductPricePointOutputTiersItem `json:"tiers,omitempty" url:"tiers,omitempty"`
+	MinQuantity      *float64                            `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	MaxQuantity      *float64                            `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
+	IncludedQuantity *float64                            `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductPricePointOutput) GetCurrency() string {
+	if p == nil {
+		return ""
+	}
+	return p.Currency
+}
+
+func (p *ProductPricePointOutput) GetUnitPrice() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.UnitPrice
+}
+
+func (p *ProductPricePointOutput) GetTiers() []*ProductPricePointOutputTiersItem {
+	if p == nil {
+		return nil
+	}
+	return p.Tiers
+}
+
+func (p *ProductPricePointOutput) GetMinQuantity() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.MinQuantity
+}
+
+func (p *ProductPricePointOutput) GetMaxQuantity() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.MaxQuantity
+}
+
+func (p *ProductPricePointOutput) GetIncludedQuantity() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.IncludedQuantity
+}
+
+func (p *ProductPricePointOutput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductPricePointOutput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductPricePointOutput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductPricePointOutput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductPricePointOutput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductPricePointOutputTiersItem struct {
+	FlatAmount      *float64                                         `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	Index           *float64                                         `json:"index,omitempty" url:"index,omitempty"`
+	LowerBound      float64                                          `json:"lowerBound" url:"lowerBound"`
+	Number          *float64                                         `json:"number,omitempty" url:"number,omitempty"`
+	TierBillingType *ProductPricePointOutputTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
+	UnitAmount      *float64                                         `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound      *float64                                         `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductPricePointOutputTiersItem) GetFlatAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.FlatAmount
+}
+
+func (p *ProductPricePointOutputTiersItem) GetIndex() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Index
+}
+
+func (p *ProductPricePointOutputTiersItem) GetLowerBound() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.LowerBound
+}
+
+func (p *ProductPricePointOutputTiersItem) GetNumber() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Number
+}
+
+func (p *ProductPricePointOutputTiersItem) GetTierBillingType() *ProductPricePointOutputTiersItemTierBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.TierBillingType
+}
+
+func (p *ProductPricePointOutputTiersItem) GetUnitAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UnitAmount
+}
+
+func (p *ProductPricePointOutputTiersItem) GetUpperBound() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UpperBound
+}
+
+func (p *ProductPricePointOutputTiersItem) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductPricePointOutputTiersItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductPricePointOutputTiersItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductPricePointOutputTiersItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductPricePointOutputTiersItem) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductPricePointOutputTiersItemTierBillingType string
+
+const (
+	ProductPricePointOutputTiersItemTierBillingTypeFlat    ProductPricePointOutputTiersItemTierBillingType = "flat"
+	ProductPricePointOutputTiersItemTierBillingTypePerUnit ProductPricePointOutputTiersItemTierBillingType = "perUnit"
+)
+
+func NewProductPricePointOutputTiersItemTierBillingTypeFromString(s string) (ProductPricePointOutputTiersItemTierBillingType, error) {
+	switch s {
+	case "flat":
+		return ProductPricePointOutputTiersItemTierBillingTypeFlat, nil
+	case "perUnit":
+		return ProductPricePointOutputTiersItemTierBillingTypePerUnit, nil
+	}
+	var t ProductPricePointOutputTiersItemTierBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductPricePointOutputTiersItemTierBillingType) Ptr() *ProductPricePointOutputTiersItemTierBillingType {
+	return &p
+}
+
+type ProductPricingOutput struct {
+	PricingType        ProductPricingOutputPricingType `json:"pricingType" url:"pricingType"`
+	ChargeType         string                          `json:"chargeType" url:"chargeType"`
+	PricingModel       *string                         `json:"pricingModel,omitempty" url:"pricingModel,omitempty"`
+	EventName          *string                         `json:"eventName,omitempty" url:"eventName,omitempty"`
+	SignalType         *ProductPricingOutputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
+	BillingFrequency   *string                         `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingType        *string                         `json:"billingType,omitempty" url:"billingType,omitempty"`
+	CreditsCurrencyID  *string                         `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	CreditCost         *float64                        `json:"creditCost,omitempty" url:"creditCost,omitempty"`
+	UnitValue          *float64                        `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	PercentageValue    *float64                        `json:"percentageValue,omitempty" url:"percentageValue,omitempty"`
+	CostPlusMultiplier *float64                        `json:"costPlusMultiplier,omitempty" url:"costPlusMultiplier,omitempty"`
+	PricePoints        []*ProductPricePointOutput      `json:"pricePoints" url:"pricePoints"`
+
+	ExtraProperties map[string]interface{} `json:"-" url:"-"`
+
+	rawJSON json.RawMessage
+}
+
+func (p *ProductPricingOutput) GetPricingType() ProductPricingOutputPricingType {
+	if p == nil {
+		return ""
+	}
+	return p.PricingType
+}
+
+func (p *ProductPricingOutput) GetChargeType() string {
+	if p == nil {
+		return ""
+	}
+	return p.ChargeType
+}
+
+func (p *ProductPricingOutput) GetPricingModel() *string {
+	if p == nil {
+		return nil
+	}
+	return p.PricingModel
+}
+
+func (p *ProductPricingOutput) GetEventName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.EventName
+}
+
+func (p *ProductPricingOutput) GetSignalType() *ProductPricingOutputSignalType {
+	if p == nil {
+		return nil
+	}
+	return p.SignalType
+}
+
+func (p *ProductPricingOutput) GetBillingFrequency() *string {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProductPricingOutput) GetBillingType() *string {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProductPricingOutput) GetCreditsCurrencyID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CreditsCurrencyID
+}
+
+func (p *ProductPricingOutput) GetCreditCost() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.CreditCost
+}
+
+func (p *ProductPricingOutput) GetUnitValue() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UnitValue
+}
+
+func (p *ProductPricingOutput) GetPercentageValue() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.PercentageValue
+}
+
+func (p *ProductPricingOutput) GetCostPlusMultiplier() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.CostPlusMultiplier
+}
+
+func (p *ProductPricingOutput) GetPricePoints() []*ProductPricePointOutput {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProductPricingOutput) GetExtraProperties() map[string]interface{} {
+	return p.ExtraProperties
+}
+
+func (p *ProductPricingOutput) UnmarshalJSON(data []byte) error {
+	type embed ProductPricingOutput
+	var unmarshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = ProductPricingOutput(unmarshaler.embed)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.ExtraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductPricingOutput) MarshalJSON() ([]byte, error) {
+	type embed ProductPricingOutput
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	return internal.MarshalJSONWithExtraProperties(marshaler, p.ExtraProperties)
+}
+
+func (p *ProductPricingOutput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductPricingOutputPricingType string
+
+const (
+	ProductPricingOutputPricingTypeRecurringPerUnit             ProductPricingOutputPricingType = "RecurringPerUnit"
+	ProductPricingOutputPricingTypeRecurringGraduated           ProductPricingOutputPricingType = "RecurringGraduated"
+	ProductPricingOutputPricingTypeRecurringVolume              ProductPricingOutputPricingType = "RecurringVolume"
+	ProductPricingOutputPricingTypeRecurringPercentOfTotal      ProductPricingOutputPricingType = "RecurringPercentOfTotal"
+	ProductPricingOutputPricingTypeUsagePerUnit                 ProductPricingOutputPricingType = "UsagePerUnit"
+	ProductPricingOutputPricingTypeUsageGraduated               ProductPricingOutputPricingType = "UsageGraduated"
+	ProductPricingOutputPricingTypeUsageVolume                  ProductPricingOutputPricingType = "UsageVolume"
+	ProductPricingOutputPricingTypeUsagePrepaidCredits          ProductPricingOutputPricingType = "UsagePrepaidCredits"
+	ProductPricingOutputPricingTypeUsageBracketedPrepaidCredits ProductPricingOutputPricingType = "UsageBracketedPrepaidCredits"
+	ProductPricingOutputPricingTypeUsageCostPlus                ProductPricingOutputPricingType = "UsageCostPlus"
+	ProductPricingOutputPricingTypeOneTimePerUnit               ProductPricingOutputPricingType = "OneTimePerUnit"
+	ProductPricingOutputPricingTypeSeatBasedPerUnit             ProductPricingOutputPricingType = "SeatBasedPerUnit"
+	ProductPricingOutputPricingTypeSeatBasedGraduated           ProductPricingOutputPricingType = "SeatBasedGraduated"
+	ProductPricingOutputPricingTypeSeatBasedVolume              ProductPricingOutputPricingType = "SeatBasedVolume"
+	ProductPricingOutputPricingTypeSeatBasedPrepaidCredits      ProductPricingOutputPricingType = "SeatBasedPrepaidCredits"
+)
+
+func NewProductPricingOutputPricingTypeFromString(s string) (ProductPricingOutputPricingType, error) {
+	switch s {
+	case "RecurringPerUnit":
+		return ProductPricingOutputPricingTypeRecurringPerUnit, nil
+	case "RecurringGraduated":
+		return ProductPricingOutputPricingTypeRecurringGraduated, nil
+	case "RecurringVolume":
+		return ProductPricingOutputPricingTypeRecurringVolume, nil
+	case "RecurringPercentOfTotal":
+		return ProductPricingOutputPricingTypeRecurringPercentOfTotal, nil
+	case "UsagePerUnit":
+		return ProductPricingOutputPricingTypeUsagePerUnit, nil
+	case "UsageGraduated":
+		return ProductPricingOutputPricingTypeUsageGraduated, nil
+	case "UsageVolume":
+		return ProductPricingOutputPricingTypeUsageVolume, nil
+	case "UsagePrepaidCredits":
+		return ProductPricingOutputPricingTypeUsagePrepaidCredits, nil
+	case "UsageBracketedPrepaidCredits":
+		return ProductPricingOutputPricingTypeUsageBracketedPrepaidCredits, nil
+	case "UsageCostPlus":
+		return ProductPricingOutputPricingTypeUsageCostPlus, nil
+	case "OneTimePerUnit":
+		return ProductPricingOutputPricingTypeOneTimePerUnit, nil
+	case "SeatBasedPerUnit":
+		return ProductPricingOutputPricingTypeSeatBasedPerUnit, nil
+	case "SeatBasedGraduated":
+		return ProductPricingOutputPricingTypeSeatBasedGraduated, nil
+	case "SeatBasedVolume":
+		return ProductPricingOutputPricingTypeSeatBasedVolume, nil
+	case "SeatBasedPrepaidCredits":
+		return ProductPricingOutputPricingTypeSeatBasedPrepaidCredits, nil
+	}
+	var t ProductPricingOutputPricingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductPricingOutputPricingType) Ptr() *ProductPricingOutputPricingType {
+	return &p
+}
+
+type ProductPricingOutputSignalType string
+
+const (
+	ProductPricingOutputSignalTypeActivity ProductPricingOutputSignalType = "activity"
+	ProductPricingOutputSignalTypeOutcome  ProductPricingOutputSignalType = "outcome"
+)
+
+func NewProductPricingOutputSignalTypeFromString(s string) (ProductPricingOutputSignalType, error) {
+	switch s {
+	case "activity":
+		return ProductPricingOutputSignalTypeActivity, nil
+	case "outcome":
+		return ProductPricingOutputSignalTypeOutcome, nil
+	}
+	var t ProductPricingOutputSignalType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductPricingOutputSignalType) Ptr() *ProductPricingOutputSignalType {
+	return &p
+}
+
 type UpdateProductRequest struct {
-	Name        *string                `json:"name,omitempty" url:"name,omitempty"`
-	Description *string                `json:"description,omitempty" url:"description,omitempty"`
-	Active      *bool                  `json:"active,omitempty" url:"active,omitempty"`
-	ProductCode *string                `json:"productCode,omitempty" url:"productCode,omitempty"`
-	ExternalID  *string                `json:"externalId,omitempty" url:"externalId,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
+	Name              *string                   `json:"name,omitempty" url:"name,omitempty"`
+	Description       *string                   `json:"description,omitempty" url:"description,omitempty"`
+	Active            *bool                     `json:"active,omitempty" url:"active,omitempty"`
+	ProductCode       *string                   `json:"productCode,omitempty" url:"productCode,omitempty"`
+	ExternalID        *string                   `json:"externalId,omitempty" url:"externalId,omitempty"`
+	Metadata          map[string]interface{}    `json:"metadata,omitempty" url:"metadata,omitempty"`
+	ProductAttributes []*ProductAttributeUpsert `json:"productAttributes,omitempty" url:"productAttributes,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -281,6 +1158,13 @@ func (u *UpdateProductRequest) GetMetadata() map[string]interface{} {
 		return nil
 	}
 	return u.Metadata
+}
+
+func (u *UpdateProductRequest) GetProductAttributes() []*ProductAttributeUpsert {
+	if u == nil {
+		return nil
+	}
+	return u.ProductAttributes
 }
 
 func (u *UpdateProductRequest) GetExtraProperties() map[string]interface{} {
