@@ -9,15 +9,25 @@ import (
 	time "time"
 )
 
+type ArchiveValueReceiptRequest struct {
+	ID string `json:"-" url:"-"`
+}
+
 type GetValueReceiptByIDRequest struct {
 	ID string `json:"-" url:"-"`
 }
 
 type ListValueReceiptsRequest struct {
-	Limit      *int    `json:"-" url:"limit,omitempty"`
-	Offset     *int    `json:"-" url:"offset,omitempty"`
+	Limit  *int `json:"-" url:"limit,omitempty"`
+	Offset *int `json:"-" url:"offset,omitempty"`
+	// Filter by customer display ID.
 	CustomerID *string `json:"-" url:"customerId,omitempty"`
-	OrderID    *string `json:"-" url:"orderId,omitempty"`
+	// Filter by customer external ID.
+	ExternalCustomerID *string `json:"-" url:"externalCustomerId,omitempty"`
+	OrderID            *string `json:"-" url:"orderId,omitempty"`
+	ProductID          *string `json:"-" url:"productId,omitempty"`
+	// Include archived value receipts. Defaults to false.
+	Archived *ListValueReceiptsRequestArchived `json:"-" url:"archived,omitempty"`
 }
 
 type PublishValueReceiptBody struct {
@@ -47,6 +57,97 @@ func (p *PublishValueReceiptBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(marshaler)
 }
 
+type RefreshValueReceiptRequest struct {
+	ID string `json:"-" url:"-"`
+}
+
+type SealValueReceiptRequest struct {
+	ID string `json:"-" url:"-"`
+}
+
+type SyncValueReceiptRequest struct {
+	// Mutually exclusive with externalCustomerId. Exactly one is required.
+	CustomerID *string `json:"customerId,omitempty" url:"-"`
+	// Mutually exclusive with customerId. Exactly one is required.
+	ExternalCustomerID *string   `json:"externalCustomerId,omitempty" url:"-"`
+	StartDate          time.Time `json:"startDate" url:"-"`
+	EndDate            time.Time `json:"endDate" url:"-"`
+	// Mutually exclusive with orderId. Provide at most one.
+	Product *SyncValueReceiptRequestProduct `json:"product,omitempty" url:"-"`
+	// Mutually exclusive with product. Provide at most one.
+	OrderID *string `json:"orderId,omitempty" url:"-"`
+}
+
+func (s *SyncValueReceiptRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler SyncValueReceiptRequest
+	var body unmarshaler
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	*s = SyncValueReceiptRequest(body)
+	return nil
+}
+
+func (s *SyncValueReceiptRequest) MarshalJSON() ([]byte, error) {
+	type embed SyncValueReceiptRequest
+	var marshaler = struct {
+		embed
+		StartDate *internal.DateTime `json:"startDate"`
+		EndDate   *internal.DateTime `json:"endDate"`
+	}{
+		embed:     embed(*s),
+		StartDate: internal.NewDateTime(s.StartDate),
+		EndDate:   internal.NewDateTime(s.EndDate),
+	}
+	return json.Marshal(marshaler)
+}
+
+type SuccessResponse struct {
+	Success bool `json:"success" url:"success"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SuccessResponse) GetSuccess() bool {
+	if s == nil {
+		return false
+	}
+	return s.Success
+}
+
+func (s *SuccessResponse) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SuccessResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler SuccessResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SuccessResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SuccessResponse) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
 type ValueReceiptDetail struct {
 	ID                  string     `json:"id" url:"id"`
 	Status              string     `json:"status" url:"status"`
@@ -57,10 +158,12 @@ type ValueReceiptDetail struct {
 	CustomerName        *string    `json:"customerName,omitempty" url:"customerName,omitempty"`
 	CustomerExternalID  *string    `json:"customerExternalId,omitempty" url:"customerExternalId,omitempty"`
 	OrderID             *string    `json:"orderId,omitempty" url:"orderId,omitempty"`
+	ProductID           *string    `json:"productId,omitempty" url:"productId,omitempty"`
 	Currency            string     `json:"currency" url:"currency"`
 	StartDate           *time.Time `json:"startDate,omitempty" url:"startDate,omitempty"`
 	EndDate             *time.Time `json:"endDate,omitempty" url:"endDate,omitempty"`
 	TotalDeliveredValue *float64   `json:"totalDeliveredValue,omitempty" url:"totalDeliveredValue,omitempty"`
+	ArchivedAt          *time.Time `json:"archivedAt,omitempty" url:"archivedAt,omitempty"`
 	CreatedAt           time.Time  `json:"createdAt" url:"createdAt"`
 	PublishedAt         *time.Time `json:"publishedAt,omitempty" url:"publishedAt,omitempty"`
 	PublishExpiresAt    *time.Time `json:"publishExpiresAt,omitempty" url:"publishExpiresAt,omitempty"`
@@ -133,6 +236,13 @@ func (v *ValueReceiptDetail) GetOrderID() *string {
 	return v.OrderID
 }
 
+func (v *ValueReceiptDetail) GetProductID() *string {
+	if v == nil {
+		return nil
+	}
+	return v.ProductID
+}
+
 func (v *ValueReceiptDetail) GetCurrency() string {
 	if v == nil {
 		return ""
@@ -159,6 +269,13 @@ func (v *ValueReceiptDetail) GetTotalDeliveredValue() *float64 {
 		return nil
 	}
 	return v.TotalDeliveredValue
+}
+
+func (v *ValueReceiptDetail) GetArchivedAt() *time.Time {
+	if v == nil {
+		return nil
+	}
+	return v.ArchivedAt
 }
 
 func (v *ValueReceiptDetail) GetCreatedAt() time.Time {
@@ -199,6 +316,7 @@ func (v *ValueReceiptDetail) UnmarshalJSON(data []byte) error {
 		embed
 		StartDate        *internal.DateTime `json:"startDate,omitempty"`
 		EndDate          *internal.DateTime `json:"endDate,omitempty"`
+		ArchivedAt       *internal.DateTime `json:"archivedAt,omitempty"`
 		CreatedAt        *internal.DateTime `json:"createdAt"`
 		PublishedAt      *internal.DateTime `json:"publishedAt,omitempty"`
 		PublishExpiresAt *internal.DateTime `json:"publishExpiresAt,omitempty"`
@@ -211,6 +329,7 @@ func (v *ValueReceiptDetail) UnmarshalJSON(data []byte) error {
 	*v = ValueReceiptDetail(unmarshaler.embed)
 	v.StartDate = unmarshaler.StartDate.TimePtr()
 	v.EndDate = unmarshaler.EndDate.TimePtr()
+	v.ArchivedAt = unmarshaler.ArchivedAt.TimePtr()
 	v.CreatedAt = unmarshaler.CreatedAt.Time()
 	v.PublishedAt = unmarshaler.PublishedAt.TimePtr()
 	v.PublishExpiresAt = unmarshaler.PublishExpiresAt.TimePtr()
@@ -229,6 +348,7 @@ func (v *ValueReceiptDetail) MarshalJSON() ([]byte, error) {
 		embed
 		StartDate        *internal.DateTime `json:"startDate,omitempty"`
 		EndDate          *internal.DateTime `json:"endDate,omitempty"`
+		ArchivedAt       *internal.DateTime `json:"archivedAt,omitempty"`
 		CreatedAt        *internal.DateTime `json:"createdAt"`
 		PublishedAt      *internal.DateTime `json:"publishedAt,omitempty"`
 		PublishExpiresAt *internal.DateTime `json:"publishExpiresAt,omitempty"`
@@ -236,6 +356,7 @@ func (v *ValueReceiptDetail) MarshalJSON() ([]byte, error) {
 		embed:            embed(*v),
 		StartDate:        internal.NewOptionalDateTime(v.StartDate),
 		EndDate:          internal.NewOptionalDateTime(v.EndDate),
+		ArchivedAt:       internal.NewOptionalDateTime(v.ArchivedAt),
 		CreatedAt:        internal.NewDateTime(v.CreatedAt),
 		PublishedAt:      internal.NewOptionalDateTime(v.PublishedAt),
 		PublishExpiresAt: internal.NewOptionalDateTime(v.PublishExpiresAt),
@@ -319,10 +440,12 @@ type ValueReceiptSummary struct {
 	CustomerName        *string    `json:"customerName,omitempty" url:"customerName,omitempty"`
 	CustomerExternalID  *string    `json:"customerExternalId,omitempty" url:"customerExternalId,omitempty"`
 	OrderID             *string    `json:"orderId,omitempty" url:"orderId,omitempty"`
+	ProductID           *string    `json:"productId,omitempty" url:"productId,omitempty"`
 	Currency            string     `json:"currency" url:"currency"`
 	StartDate           *time.Time `json:"startDate,omitempty" url:"startDate,omitempty"`
 	EndDate             *time.Time `json:"endDate,omitempty" url:"endDate,omitempty"`
 	TotalDeliveredValue *float64   `json:"totalDeliveredValue,omitempty" url:"totalDeliveredValue,omitempty"`
+	ArchivedAt          *time.Time `json:"archivedAt,omitempty" url:"archivedAt,omitempty"`
 	CreatedAt           time.Time  `json:"createdAt" url:"createdAt"`
 
 	extraProperties map[string]interface{}
@@ -392,6 +515,13 @@ func (v *ValueReceiptSummary) GetOrderID() *string {
 	return v.OrderID
 }
 
+func (v *ValueReceiptSummary) GetProductID() *string {
+	if v == nil {
+		return nil
+	}
+	return v.ProductID
+}
+
 func (v *ValueReceiptSummary) GetCurrency() string {
 	if v == nil {
 		return ""
@@ -420,6 +550,13 @@ func (v *ValueReceiptSummary) GetTotalDeliveredValue() *float64 {
 	return v.TotalDeliveredValue
 }
 
+func (v *ValueReceiptSummary) GetArchivedAt() *time.Time {
+	if v == nil {
+		return nil
+	}
+	return v.ArchivedAt
+}
+
 func (v *ValueReceiptSummary) GetCreatedAt() time.Time {
 	if v == nil {
 		return time.Time{}
@@ -435,9 +572,10 @@ func (v *ValueReceiptSummary) UnmarshalJSON(data []byte) error {
 	type embed ValueReceiptSummary
 	var unmarshaler = struct {
 		embed
-		StartDate *internal.DateTime `json:"startDate,omitempty"`
-		EndDate   *internal.DateTime `json:"endDate,omitempty"`
-		CreatedAt *internal.DateTime `json:"createdAt"`
+		StartDate  *internal.DateTime `json:"startDate,omitempty"`
+		EndDate    *internal.DateTime `json:"endDate,omitempty"`
+		ArchivedAt *internal.DateTime `json:"archivedAt,omitempty"`
+		CreatedAt  *internal.DateTime `json:"createdAt"`
 	}{
 		embed: embed(*v),
 	}
@@ -447,6 +585,7 @@ func (v *ValueReceiptSummary) UnmarshalJSON(data []byte) error {
 	*v = ValueReceiptSummary(unmarshaler.embed)
 	v.StartDate = unmarshaler.StartDate.TimePtr()
 	v.EndDate = unmarshaler.EndDate.TimePtr()
+	v.ArchivedAt = unmarshaler.ArchivedAt.TimePtr()
 	v.CreatedAt = unmarshaler.CreatedAt.Time()
 	extraProperties, err := internal.ExtractExtraProperties(data, *v)
 	if err != nil {
@@ -461,14 +600,16 @@ func (v *ValueReceiptSummary) MarshalJSON() ([]byte, error) {
 	type embed ValueReceiptSummary
 	var marshaler = struct {
 		embed
-		StartDate *internal.DateTime `json:"startDate,omitempty"`
-		EndDate   *internal.DateTime `json:"endDate,omitempty"`
-		CreatedAt *internal.DateTime `json:"createdAt"`
+		StartDate  *internal.DateTime `json:"startDate,omitempty"`
+		EndDate    *internal.DateTime `json:"endDate,omitempty"`
+		ArchivedAt *internal.DateTime `json:"archivedAt,omitempty"`
+		CreatedAt  *internal.DateTime `json:"createdAt"`
 	}{
-		embed:     embed(*v),
-		StartDate: internal.NewOptionalDateTime(v.StartDate),
-		EndDate:   internal.NewOptionalDateTime(v.EndDate),
-		CreatedAt: internal.NewDateTime(v.CreatedAt),
+		embed:      embed(*v),
+		StartDate:  internal.NewOptionalDateTime(v.StartDate),
+		EndDate:    internal.NewOptionalDateTime(v.EndDate),
+		ArchivedAt: internal.NewOptionalDateTime(v.ArchivedAt),
+		CreatedAt:  internal.NewDateTime(v.CreatedAt),
 	}
 	return json.Marshal(marshaler)
 }
@@ -483,6 +624,157 @@ func (v *ValueReceiptSummary) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", v)
+}
+
+type ValueReceiptSyncResponse struct {
+	ID             string `json:"id" url:"id"`
+	Status         string `json:"status" url:"status"`
+	PublicURLToken string `json:"publicUrlToken" url:"publicUrlToken"`
+	PublicURL      string `json:"publicUrl" url:"publicUrl"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueReceiptSyncResponse) GetID() string {
+	if v == nil {
+		return ""
+	}
+	return v.ID
+}
+
+func (v *ValueReceiptSyncResponse) GetStatus() string {
+	if v == nil {
+		return ""
+	}
+	return v.Status
+}
+
+func (v *ValueReceiptSyncResponse) GetPublicURLToken() string {
+	if v == nil {
+		return ""
+	}
+	return v.PublicURLToken
+}
+
+func (v *ValueReceiptSyncResponse) GetPublicURL() string {
+	if v == nil {
+		return ""
+	}
+	return v.PublicURL
+}
+
+func (v *ValueReceiptSyncResponse) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueReceiptSyncResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueReceiptSyncResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueReceiptSyncResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueReceiptSyncResponse) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ListValueReceiptsRequestArchived string
+
+const (
+	ListValueReceiptsRequestArchivedTrue  ListValueReceiptsRequestArchived = "true"
+	ListValueReceiptsRequestArchivedFalse ListValueReceiptsRequestArchived = "false"
+)
+
+func NewListValueReceiptsRequestArchivedFromString(s string) (ListValueReceiptsRequestArchived, error) {
+	switch s {
+	case "true":
+		return ListValueReceiptsRequestArchivedTrue, nil
+	case "false":
+		return ListValueReceiptsRequestArchivedFalse, nil
+	}
+	var t ListValueReceiptsRequestArchived
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListValueReceiptsRequestArchived) Ptr() *ListValueReceiptsRequestArchived {
+	return &l
+}
+
+// Mutually exclusive with orderId. Provide at most one.
+type SyncValueReceiptRequestProduct struct {
+	ProductID string  `json:"productId" url:"productId"`
+	Currency  *string `json:"currency,omitempty" url:"currency,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SyncValueReceiptRequestProduct) GetProductID() string {
+	if s == nil {
+		return ""
+	}
+	return s.ProductID
+}
+
+func (s *SyncValueReceiptRequestProduct) GetCurrency() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Currency
+}
+
+func (s *SyncValueReceiptRequestProduct) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SyncValueReceiptRequestProduct) UnmarshalJSON(data []byte) error {
+	type unmarshaler SyncValueReceiptRequestProduct
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SyncValueReceiptRequestProduct(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SyncValueReceiptRequestProduct) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type UnarchiveValueReceiptRequest struct {
+	ID string `json:"-" url:"-"`
 }
 
 type UnpublishValueReceiptRequest struct {

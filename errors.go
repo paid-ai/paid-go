@@ -126,3 +126,51 @@ func (n *NotFoundError) MarshalJSON() ([]byte, error) {
 func (n *NotFoundError) Unwrap() error {
 	return n.APIError
 }
+
+// 408
+type RequestTimeoutError struct {
+	*core.APIError
+	Body *ErrorResponse
+}
+
+func (r *RequestTimeoutError) UnmarshalJSON(data []byte) error {
+	var body *ErrorResponse
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	r.StatusCode = 408
+	r.Body = body
+	return nil
+}
+
+func (r *RequestTimeoutError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.Body)
+}
+
+func (r *RequestTimeoutError) Unwrap() error {
+	return r.APIError
+}
+
+// 429
+type TooManyRequestsError struct {
+	*core.APIError
+	Body *ErrorResponse
+}
+
+func (t *TooManyRequestsError) UnmarshalJSON(data []byte) error {
+	var body *ErrorResponse
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	t.StatusCode = 429
+	t.Body = body
+	return nil
+}
+
+func (t *TooManyRequestsError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.Body)
+}
+
+func (t *TooManyRequestsError) Unwrap() error {
+	return t.APIError
+}

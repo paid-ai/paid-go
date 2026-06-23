@@ -3,9 +3,11 @@
 package client
 
 import (
+	analyticsexperimental "github.com/paid-ai/paid-go/analyticsexperimental"
 	checkouts "github.com/paid-ai/paid-go/checkouts"
 	contacts "github.com/paid-ai/paid-go/contacts"
 	core "github.com/paid-ai/paid-go/core"
+	costs "github.com/paid-ai/paid-go/costs"
 	credits "github.com/paid-ai/paid-go/credits"
 	customerportals "github.com/paid-ai/paid-go/customerportals"
 	customers "github.com/paid-ai/paid-go/customers"
@@ -13,6 +15,8 @@ import (
 	invoices "github.com/paid-ai/paid-go/invoices"
 	option "github.com/paid-ai/paid-go/option"
 	orders "github.com/paid-ai/paid-go/orders"
+	plans "github.com/paid-ai/paid-go/plans"
+	pricing "github.com/paid-ai/paid-go/pricing"
 	products "github.com/paid-ai/paid-go/products"
 	signals "github.com/paid-ai/paid-go/signals"
 	valuereceipts "github.com/paid-ai/paid-go/valuereceipts"
@@ -25,17 +29,21 @@ type Client struct {
 	caller  *internal.Caller
 	header  http.Header
 
-	Products        *products.Client
-	Customers       *customers.Client
-	Contacts        *contacts.Client
-	Orders          *orders.Client
-	Invoices        *invoices.Client
-	Signals         *signals.Client
-	Credits         *credits.Client
-	Checkouts       *checkouts.Client
-	CustomerPortals *customerportals.Client
-	ValueReceipts   *valuereceipts.Client
-	Webhooks        *webhooks.Client
+	Products              *products.Client
+	Plans                 *plans.Client
+	Customers             *customers.Client
+	Contacts              *contacts.Client
+	Orders                *orders.Client
+	Invoices              *invoices.Client
+	Signals               *signals.Client
+	Credits               *credits.Client
+	Checkouts             *checkouts.Client
+	CustomerPortals       *customerportals.Client
+	ValueReceipts         *valuereceipts.Client
+	Webhooks              *webhooks.Client
+	Pricing               *pricing.Client
+	Costs                 *costs.Client
+	AnalyticsExperimental *analyticsexperimental.Client
 }
 
 func NewClient(opts ...option.RequestOption) *Client {
@@ -48,17 +56,21 @@ func NewClient(opts ...option.RequestOption) *Client {
 				MaxAttempts: options.MaxAttempts,
 			},
 		),
-		header:          options.ToHeader(),
-		Products:        products.NewClient(opts...),
-		Customers:       customers.NewClient(opts...),
-		Contacts:        contacts.NewClient(opts...),
-		Orders:          orders.NewClient(opts...),
-		Invoices:        invoices.NewClient(opts...),
-		Signals:         signals.NewClient(opts...),
-		Credits:         credits.NewClient(opts...),
-		Checkouts:       checkouts.NewClient(opts...),
-		CustomerPortals: customerportals.NewClient(opts...),
-		ValueReceipts:   valuereceipts.NewClient(opts...),
-		Webhooks:        webhooks.NewClient(opts...),
+		header:                options.ToHeader(),
+		Products:              products.NewClient(opts...),
+		Plans:                 plans.NewClient(opts...),
+		Customers:             customers.NewClient(opts...),
+		Contacts:              contacts.NewClient(opts...),
+		Orders:                orders.NewClient(opts...),
+		Invoices:              invoices.NewClient(opts...),
+		Signals:               signals.NewClient(opts...),
+		Credits:               credits.NewClient(opts...),
+		Checkouts:             checkouts.NewClient(opts...),
+		CustomerPortals:       customerportals.NewClient(opts...),
+		ValueReceipts:         valuereceipts.NewClient(opts...),
+		Webhooks:              webhooks.NewClient(opts...),
+		Pricing:               pricing.NewClient(opts...),
+		Costs:                 costs.NewClient(opts...),
+		AnalyticsExperimental: analyticsexperimental.NewClient(opts...),
 	}
 }
