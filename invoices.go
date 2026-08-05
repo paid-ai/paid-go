@@ -22,6 +22,30 @@ type GetInvoiceLinesRequest struct {
 type ListInvoicesRequest struct {
 	Limit  *int `json:"-" url:"limit,omitempty"`
 	Offset *int `json:"-" url:"offset,omitempty"`
+	// Filter by customer ID.
+	CustomerID *string `json:"-" url:"customerId,omitempty"`
+	// Filter by customer external ID.
+	ExternalCustomerID *string `json:"-" url:"externalCustomerId,omitempty"`
+	// Filter by the order this invoice was generated from.
+	OrderID *string `json:"-" url:"orderId,omitempty"`
+	// Filter by invoice status.
+	Status *ListInvoicesRequestStatus `json:"-" url:"status,omitempty"`
+	// Filter by payment status.
+	PaymentStatus *ListInvoicesRequestPaymentStatus `json:"-" url:"paymentStatus,omitempty"`
+	// Only invoices whose issue date is on or after this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	IssueDateFrom *string `json:"-" url:"issueDateFrom,omitempty"`
+	// Only invoices whose issue date is on or before this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	IssueDateTo *string `json:"-" url:"issueDateTo,omitempty"`
+	// Only invoices whose due date is on or after this date. Invoices without a due date are not matched. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	DueDateFrom *string `json:"-" url:"dueDateFrom,omitempty"`
+	// Only invoices whose due date is on or before this date. Invoices without a due date are not matched. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	DueDateTo *string `json:"-" url:"dueDateTo,omitempty"`
+	// Filter by the invoice number shown on the invoice, whether draft or posted (exact match).
+	DisplayNumber *string `json:"-" url:"displayNumber,omitempty"`
+	// Filter by purchase order reference (exact match, whitespace-sensitive).
+	PurchaseOrderReference *string `json:"-" url:"purchaseOrderReference,omitempty"`
+	// Filter by invoice currency code (case-insensitive, e.g. USD).
+	Currency *string `json:"-" url:"currency,omitempty"`
 }
 
 type Invoice struct {
@@ -55,6 +79,8 @@ type Invoice struct {
 	PublicURLToken           *string                `json:"publicUrlToken,omitempty" url:"publicUrlToken,omitempty"`
 	TaxExempt                bool                   `json:"taxExempt" url:"taxExempt"`
 	BillingContactID         *string                `json:"billingContactId,omitempty" url:"billingContactId,omitempty"`
+	// Purchase order reference stamped on this invoice.
+	PurchaseOrderReference *string `json:"purchaseOrderReference,omitempty" url:"purchaseOrderReference,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -268,6 +294,13 @@ func (i *Invoice) GetBillingContactID() *string {
 		return nil
 	}
 	return i.BillingContactID
+}
+
+func (i *Invoice) GetPurchaseOrderReference() *string {
+	if i == nil {
+		return nil
+	}
+	return i.PurchaseOrderReference
 }
 
 func (i *Invoice) GetExtraProperties() map[string]interface{} {
@@ -814,6 +847,74 @@ func NewInvoiceTaxStatusFromString(s string) (InvoiceTaxStatus, error) {
 
 func (i InvoiceTaxStatus) Ptr() *InvoiceTaxStatus {
 	return &i
+}
+
+type ListInvoicesRequestPaymentStatus string
+
+const (
+	ListInvoicesRequestPaymentStatusPending       ListInvoicesRequestPaymentStatus = "pending"
+	ListInvoicesRequestPaymentStatusPaid          ListInvoicesRequestPaymentStatus = "paid"
+	ListInvoicesRequestPaymentStatusPartiallyPaid ListInvoicesRequestPaymentStatus = "partiallyPaid"
+	ListInvoicesRequestPaymentStatusOverdue       ListInvoicesRequestPaymentStatus = "overdue"
+	ListInvoicesRequestPaymentStatusError         ListInvoicesRequestPaymentStatus = "error"
+)
+
+func NewListInvoicesRequestPaymentStatusFromString(s string) (ListInvoicesRequestPaymentStatus, error) {
+	switch s {
+	case "pending":
+		return ListInvoicesRequestPaymentStatusPending, nil
+	case "paid":
+		return ListInvoicesRequestPaymentStatusPaid, nil
+	case "partiallyPaid":
+		return ListInvoicesRequestPaymentStatusPartiallyPaid, nil
+	case "overdue":
+		return ListInvoicesRequestPaymentStatusOverdue, nil
+	case "error":
+		return ListInvoicesRequestPaymentStatusError, nil
+	}
+	var t ListInvoicesRequestPaymentStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListInvoicesRequestPaymentStatus) Ptr() *ListInvoicesRequestPaymentStatus {
+	return &l
+}
+
+type ListInvoicesRequestStatus string
+
+const (
+	ListInvoicesRequestStatusBuilding ListInvoicesRequestStatus = "building"
+	ListInvoicesRequestStatusDraft    ListInvoicesRequestStatus = "draft"
+	ListInvoicesRequestStatusPending  ListInvoicesRequestStatus = "pending"
+	ListInvoicesRequestStatusPosted   ListInvoicesRequestStatus = "posted"
+	ListInvoicesRequestStatusVoided   ListInvoicesRequestStatus = "voided"
+	ListInvoicesRequestStatusCanceled ListInvoicesRequestStatus = "canceled"
+	ListInvoicesRequestStatusError    ListInvoicesRequestStatus = "error"
+)
+
+func NewListInvoicesRequestStatusFromString(s string) (ListInvoicesRequestStatus, error) {
+	switch s {
+	case "building":
+		return ListInvoicesRequestStatusBuilding, nil
+	case "draft":
+		return ListInvoicesRequestStatusDraft, nil
+	case "pending":
+		return ListInvoicesRequestStatusPending, nil
+	case "posted":
+		return ListInvoicesRequestStatusPosted, nil
+	case "voided":
+		return ListInvoicesRequestStatusVoided, nil
+	case "canceled":
+		return ListInvoicesRequestStatusCanceled, nil
+	case "error":
+		return ListInvoicesRequestStatusError, nil
+	}
+	var t ListInvoicesRequestStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListInvoicesRequestStatus) Ptr() *ListInvoicesRequestStatus {
+	return &l
 }
 
 type UpdateInvoiceRequest struct {

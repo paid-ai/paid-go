@@ -91,6 +91,24 @@ type ListOrderSeatsRequest struct {
 type ListOrdersRequest struct {
 	Limit  *int `json:"-" url:"limit,omitempty"`
 	Offset *int `json:"-" url:"offset,omitempty"`
+	// Filter by customer ID.
+	CustomerID *string `json:"-" url:"customerId,omitempty"`
+	// Filter by customer external ID.
+	ExternalCustomerID *string `json:"-" url:"externalCustomerId,omitempty"`
+	// Filter by the order's external ID (exact match).
+	ExternalID *string `json:"-" url:"externalId,omitempty"`
+	// Filter by creation state: draft or active.
+	CreationState *ListOrdersRequestCreationState `json:"-" url:"creationState,omitempty"`
+	// Filter by derived order status. draft: not yet activated. paused: billing is paused. ended: end date is in the past. active: activated, not paused, and not ended.
+	Status *OrderStatusFilter `json:"-" url:"status,omitempty"`
+	// Only orders whose start date is on or after this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	StartDateFrom *string `json:"-" url:"startDateFrom,omitempty"`
+	// Only orders whose start date is on or before this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	StartDateTo *string `json:"-" url:"startDateTo,omitempty"`
+	// Only orders whose end date is on or after this date. Orders without an end date are not matched. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	EndDateFrom *string `json:"-" url:"endDateFrom,omitempty"`
+	// Only orders whose end date is on or before this date. Orders without an end date are not matched. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	EndDateTo *string `json:"-" url:"endDateTo,omitempty"`
 }
 
 type BatchSeatAssignmentsResponse struct {
@@ -893,6 +911,8 @@ func (c CreateOrderLineAttributeRequestPricingPricePointsTiersItemTierBillingTyp
 
 type CreateOrderLineAttributeRequestPricingPricingInput struct {
 	Kind CreateOrderLineAttributeRequestPricingPricingInputKind `json:"kind" url:"kind"`
+	// Key in the signal's data payload that supplies the bracket-matching quantity — for a signal with data {"rooms": 3}, use rooms. Dots address nested fields, for example dimensions.pages. Defaults to the top-level quantity field. Cannot be changed after the order is created.
+	Path *string `json:"path,omitempty" url:"path,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -903,6 +923,13 @@ func (c *CreateOrderLineAttributeRequestPricingPricingInput) GetKind() CreateOrd
 		return ""
 	}
 	return c.Kind
+}
+
+func (c *CreateOrderLineAttributeRequestPricingPricingInput) GetPath() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Path
 }
 
 func (c *CreateOrderLineAttributeRequestPricingPricingInput) GetExtraProperties() map[string]interface{} {
@@ -2147,6 +2174,56 @@ func NewListOrderSeatsRequestStatusFromString(s string) (ListOrderSeatsRequestSt
 
 func (l ListOrderSeatsRequestStatus) Ptr() *ListOrderSeatsRequestStatus {
 	return &l
+}
+
+type ListOrdersRequestCreationState string
+
+const (
+	ListOrdersRequestCreationStateDraft  ListOrdersRequestCreationState = "draft"
+	ListOrdersRequestCreationStateActive ListOrdersRequestCreationState = "active"
+)
+
+func NewListOrdersRequestCreationStateFromString(s string) (ListOrdersRequestCreationState, error) {
+	switch s {
+	case "draft":
+		return ListOrdersRequestCreationStateDraft, nil
+	case "active":
+		return ListOrdersRequestCreationStateActive, nil
+	}
+	var t ListOrdersRequestCreationState
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListOrdersRequestCreationState) Ptr() *ListOrdersRequestCreationState {
+	return &l
+}
+
+type OrderStatusFilter string
+
+const (
+	OrderStatusFilterDraft  OrderStatusFilter = "draft"
+	OrderStatusFilterPaused OrderStatusFilter = "paused"
+	OrderStatusFilterActive OrderStatusFilter = "active"
+	OrderStatusFilterEnded  OrderStatusFilter = "ended"
+)
+
+func NewOrderStatusFilterFromString(s string) (OrderStatusFilter, error) {
+	switch s {
+	case "draft":
+		return OrderStatusFilterDraft, nil
+	case "paused":
+		return OrderStatusFilterPaused, nil
+	case "active":
+		return OrderStatusFilterActive, nil
+	case "ended":
+		return OrderStatusFilterEnded, nil
+	}
+	var t OrderStatusFilter
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (o OrderStatusFilter) Ptr() *OrderStatusFilter {
+	return &o
 }
 
 type UpdateOrderRequest struct {

@@ -29,6 +29,12 @@ type GetProductByIDRequest struct {
 type ListProductsRequest struct {
 	Limit  *int `json:"-" url:"limit,omitempty"`
 	Offset *int `json:"-" url:"offset,omitempty"`
+	// Search by product name (case-insensitive, matches anywhere in the name).
+	Name *string `json:"-" url:"name,omitempty"`
+	// Filter by the product's active flag: true or false.
+	Active *bool `json:"-" url:"active,omitempty"`
+	// Filter by archived state: true returns only archived products, false only non-archived. Omit to include both.
+	Archived *bool `json:"-" url:"archived,omitempty"`
 }
 
 type Product struct {
@@ -259,6 +265,7 @@ type ProductAttributeUpsert struct {
 	Active             *bool                        `json:"active,omitempty" url:"active,omitempty"`
 	Pricing            *ProductPricingInput         `json:"pricing" url:"pricing"`
 	CreditBenefits     []*ProductCreditBenefitInput `json:"creditBenefits,omitempty" url:"creditBenefits,omitempty"`
+	TaxCode            *string                      `json:"taxCode,omitempty" url:"taxCode,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -297,6 +304,13 @@ func (p *ProductAttributeUpsert) GetCreditBenefits() []*ProductCreditBenefitInpu
 		return nil
 	}
 	return p.CreditBenefits
+}
+
+func (p *ProductAttributeUpsert) GetTaxCode() *string {
+	if p == nil {
+		return nil
+	}
+	return p.TaxCode
 }
 
 func (p *ProductAttributeUpsert) GetExtraProperties() map[string]interface{} {

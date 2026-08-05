@@ -9,16 +9,22 @@ import (
 	core "github.com/paid-ai/paid-go/core"
 	costs "github.com/paid-ai/paid-go/costs"
 	credits "github.com/paid-ai/paid-go/credits"
+	customergroups "github.com/paid-ai/paid-go/customergroups"
 	customerportals "github.com/paid-ai/paid-go/customerportals"
 	customers "github.com/paid-ai/paid-go/customers"
+	customviewsexperimental "github.com/paid-ai/paid-go/customviewsexperimental"
 	internal "github.com/paid-ai/paid-go/internal"
 	invoices "github.com/paid-ai/paid-go/invoices"
 	option "github.com/paid-ai/paid-go/option"
 	orders "github.com/paid-ai/paid-go/orders"
+	paymentallocations "github.com/paid-ai/paid-go/paymentallocations"
+	paymentmethods "github.com/paid-ai/paid-go/paymentmethods"
+	payments "github.com/paid-ai/paid-go/payments"
 	plans "github.com/paid-ai/paid-go/plans"
 	pricing "github.com/paid-ai/paid-go/pricing"
 	products "github.com/paid-ai/paid-go/products"
 	signals "github.com/paid-ai/paid-go/signals"
+	valuemodels "github.com/paid-ai/paid-go/valuemodels"
 	valuereceipts "github.com/paid-ai/paid-go/valuereceipts"
 	webhooks "github.com/paid-ai/paid-go/webhooks"
 	http "net/http"
@@ -29,21 +35,27 @@ type Client struct {
 	caller  *internal.Caller
 	header  http.Header
 
-	Products              *products.Client
-	Plans                 *plans.Client
-	Customers             *customers.Client
-	Contacts              *contacts.Client
-	Orders                *orders.Client
-	Invoices              *invoices.Client
-	Signals               *signals.Client
-	Credits               *credits.Client
-	Checkouts             *checkouts.Client
-	CustomerPortals       *customerportals.Client
-	ValueReceipts         *valuereceipts.Client
-	Webhooks              *webhooks.Client
-	Pricing               *pricing.Client
-	Costs                 *costs.Client
-	AnalyticsExperimental *analyticsexperimental.Client
+	Products                *products.Client
+	Plans                   *plans.Client
+	Customers               *customers.Client
+	Contacts                *contacts.Client
+	Orders                  *orders.Client
+	Invoices                *invoices.Client
+	Signals                 *signals.Client
+	Credits                 *credits.Client
+	Checkouts               *checkouts.Client
+	CustomerPortals         *customerportals.Client
+	ValueReceipts           *valuereceipts.Client
+	Webhooks                *webhooks.Client
+	Pricing                 *pricing.Client
+	Costs                   *costs.Client
+	AnalyticsExperimental   *analyticsexperimental.Client
+	CustomViewsExperimental *customviewsexperimental.Client
+	ValueModels             *valuemodels.Client
+	CustomerGroups          *customergroups.Client
+	PaymentMethods          *paymentmethods.Client
+	Payments                *payments.Client
+	PaymentAllocations      *paymentallocations.Client
 }
 
 func NewClient(opts ...option.RequestOption) *Client {
@@ -56,21 +68,27 @@ func NewClient(opts ...option.RequestOption) *Client {
 				MaxAttempts: options.MaxAttempts,
 			},
 		),
-		header:                options.ToHeader(),
-		Products:              products.NewClient(opts...),
-		Plans:                 plans.NewClient(opts...),
-		Customers:             customers.NewClient(opts...),
-		Contacts:              contacts.NewClient(opts...),
-		Orders:                orders.NewClient(opts...),
-		Invoices:              invoices.NewClient(opts...),
-		Signals:               signals.NewClient(opts...),
-		Credits:               credits.NewClient(opts...),
-		Checkouts:             checkouts.NewClient(opts...),
-		CustomerPortals:       customerportals.NewClient(opts...),
-		ValueReceipts:         valuereceipts.NewClient(opts...),
-		Webhooks:              webhooks.NewClient(opts...),
-		Pricing:               pricing.NewClient(opts...),
-		Costs:                 costs.NewClient(opts...),
-		AnalyticsExperimental: analyticsexperimental.NewClient(opts...),
+		header:                  options.ToHeader(),
+		Products:                products.NewClient(opts...),
+		Plans:                   plans.NewClient(opts...),
+		Customers:               customers.NewClient(opts...),
+		Contacts:                contacts.NewClient(opts...),
+		Orders:                  orders.NewClient(opts...),
+		Invoices:                invoices.NewClient(opts...),
+		Signals:                 signals.NewClient(opts...),
+		Credits:                 credits.NewClient(opts...),
+		Checkouts:               checkouts.NewClient(opts...),
+		CustomerPortals:         customerportals.NewClient(opts...),
+		ValueReceipts:           valuereceipts.NewClient(opts...),
+		Webhooks:                webhooks.NewClient(opts...),
+		Pricing:                 pricing.NewClient(opts...),
+		Costs:                   costs.NewClient(opts...),
+		AnalyticsExperimental:   analyticsexperimental.NewClient(opts...),
+		CustomViewsExperimental: customviewsexperimental.NewClient(opts...),
+		ValueModels:             valuemodels.NewClient(opts...),
+		CustomerGroups:          customergroups.NewClient(opts...),
+		PaymentMethods:          paymentmethods.NewClient(opts...),
+		Payments:                payments.NewClient(opts...),
+		PaymentAllocations:      paymentallocations.NewClient(opts...),
 	}
 }

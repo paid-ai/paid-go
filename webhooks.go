@@ -257,6 +257,7 @@ type WebhookName string
 const (
 	WebhookNameBillingInvoiceCreated    WebhookName = "billing-invoice-created"
 	WebhookNameBillingInvoicePaid       WebhookName = "billing-invoice-paid"
+	WebhookNameBillingInvoicePosted     WebhookName = "billing-invoice-posted"
 	WebhookNameBillingCheckoutCreated   WebhookName = "billing-checkout-created"
 	WebhookNameBillingCheckoutCompleted WebhookName = "billing-checkout-completed"
 	WebhookNameBillingCheckoutExpired   WebhookName = "billing-checkout-expired"
@@ -272,6 +273,8 @@ func NewWebhookNameFromString(s string) (WebhookName, error) {
 		return WebhookNameBillingInvoiceCreated, nil
 	case "billing-invoice-paid":
 		return WebhookNameBillingInvoicePaid, nil
+	case "billing-invoice-posted":
+		return WebhookNameBillingInvoicePosted, nil
 	case "billing-checkout-created":
 		return WebhookNameBillingCheckoutCreated, nil
 	case "billing-checkout-completed":
@@ -467,6 +470,7 @@ type WebhookUpdateResponseName string
 const (
 	WebhookUpdateResponseNameBillingInvoiceCreated    WebhookUpdateResponseName = "billing-invoice-created"
 	WebhookUpdateResponseNameBillingInvoicePaid       WebhookUpdateResponseName = "billing-invoice-paid"
+	WebhookUpdateResponseNameBillingInvoicePosted     WebhookUpdateResponseName = "billing-invoice-posted"
 	WebhookUpdateResponseNameBillingCheckoutCreated   WebhookUpdateResponseName = "billing-checkout-created"
 	WebhookUpdateResponseNameBillingCheckoutCompleted WebhookUpdateResponseName = "billing-checkout-completed"
 	WebhookUpdateResponseNameBillingCheckoutExpired   WebhookUpdateResponseName = "billing-checkout-expired"
@@ -482,6 +486,8 @@ func NewWebhookUpdateResponseNameFromString(s string) (WebhookUpdateResponseName
 		return WebhookUpdateResponseNameBillingInvoiceCreated, nil
 	case "billing-invoice-paid":
 		return WebhookUpdateResponseNameBillingInvoicePaid, nil
+	case "billing-invoice-posted":
+		return WebhookUpdateResponseNameBillingInvoicePosted, nil
 	case "billing-checkout-created":
 		return WebhookUpdateResponseNameBillingCheckoutCreated, nil
 	case "billing-checkout-completed":
@@ -510,6 +516,7 @@ type TestWebhookRequestWebhookName string
 const (
 	TestWebhookRequestWebhookNameBillingInvoiceCreated    TestWebhookRequestWebhookName = "billing-invoice-created"
 	TestWebhookRequestWebhookNameBillingInvoicePaid       TestWebhookRequestWebhookName = "billing-invoice-paid"
+	TestWebhookRequestWebhookNameBillingInvoicePosted     TestWebhookRequestWebhookName = "billing-invoice-posted"
 	TestWebhookRequestWebhookNameBillingCheckoutCreated   TestWebhookRequestWebhookName = "billing-checkout-created"
 	TestWebhookRequestWebhookNameBillingCheckoutCompleted TestWebhookRequestWebhookName = "billing-checkout-completed"
 	TestWebhookRequestWebhookNameBillingCheckoutExpired   TestWebhookRequestWebhookName = "billing-checkout-expired"
@@ -525,6 +532,8 @@ func NewTestWebhookRequestWebhookNameFromString(s string) (TestWebhookRequestWeb
 		return TestWebhookRequestWebhookNameBillingInvoiceCreated, nil
 	case "billing-invoice-paid":
 		return TestWebhookRequestWebhookNameBillingInvoicePaid, nil
+	case "billing-invoice-posted":
+		return TestWebhookRequestWebhookNameBillingInvoicePosted, nil
 	case "billing-checkout-created":
 		return TestWebhookRequestWebhookNameBillingCheckoutCreated, nil
 	case "billing-checkout-completed":
@@ -553,6 +562,7 @@ type UpdateWebhookRequestWebhookName string
 const (
 	UpdateWebhookRequestWebhookNameBillingInvoiceCreated    UpdateWebhookRequestWebhookName = "billing-invoice-created"
 	UpdateWebhookRequestWebhookNameBillingInvoicePaid       UpdateWebhookRequestWebhookName = "billing-invoice-paid"
+	UpdateWebhookRequestWebhookNameBillingInvoicePosted     UpdateWebhookRequestWebhookName = "billing-invoice-posted"
 	UpdateWebhookRequestWebhookNameBillingCheckoutCreated   UpdateWebhookRequestWebhookName = "billing-checkout-created"
 	UpdateWebhookRequestWebhookNameBillingCheckoutCompleted UpdateWebhookRequestWebhookName = "billing-checkout-completed"
 	UpdateWebhookRequestWebhookNameBillingCheckoutExpired   UpdateWebhookRequestWebhookName = "billing-checkout-expired"
@@ -568,6 +578,8 @@ func NewUpdateWebhookRequestWebhookNameFromString(s string) (UpdateWebhookReques
 		return UpdateWebhookRequestWebhookNameBillingInvoiceCreated, nil
 	case "billing-invoice-paid":
 		return UpdateWebhookRequestWebhookNameBillingInvoicePaid, nil
+	case "billing-invoice-posted":
+		return UpdateWebhookRequestWebhookNameBillingInvoicePosted, nil
 	case "billing-checkout-created":
 		return UpdateWebhookRequestWebhookNameBillingCheckoutCreated, nil
 	case "billing-checkout-completed":

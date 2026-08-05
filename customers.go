@@ -167,9 +167,35 @@ type ListCustomerAliasesByExternalIDRequest struct {
 	Offset     *int   `json:"-" url:"offset,omitempty"`
 }
 
+type ListCustomerPendingCreditConsumptionRequest struct {
+	// Paid customer display id
+	ID     string `json:"-" url:"-"`
+	Limit  *int   `json:"-" url:"limit,omitempty"`
+	Offset *int   `json:"-" url:"offset,omitempty"`
+}
+
+type ListCustomerPendingCreditConsumptionByExternalIDRequest struct {
+	// Customer ID from the integrator's system, stored on Paid as `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	Limit      *int   `json:"-" url:"limit,omitempty"`
+	Offset     *int   `json:"-" url:"offset,omitempty"`
+}
+
 type ListCustomersRequest struct {
 	Limit  *int `json:"-" url:"limit,omitempty"`
 	Offset *int `json:"-" url:"offset,omitempty"`
+	// Search by customer name (case-insensitive, matches anywhere in the name).
+	Name *string `json:"-" url:"name,omitempty"`
+	// Filter by customer status. churned: customers marked as churned. active: everyone else.
+	Status *ListCustomersRequestStatus `json:"-" url:"status,omitempty"`
+	// Filter by creation state: draft or active.
+	CreationState *ListCustomersRequestCreationState `json:"-" url:"creationState,omitempty"`
+	// Only customers created on or after this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	CreatedAtFrom *string `json:"-" url:"createdAtFrom,omitempty"`
+	// Only customers created on or before this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	CreatedAtTo *string `json:"-" url:"createdAtTo,omitempty"`
+	// Filter by your external customer ID (exact match).
+	ExternalID *string `json:"-" url:"externalId,omitempty"`
 }
 
 type CreditBalance struct {
@@ -864,21 +890,24 @@ type CurrencyCode = string
 
 type Customer struct {
 	// Stable Paid customer display ID. Use this value as the `{id}` path parameter for customer routes, for example `GET /api/v2/customers/cus_abc123/state`.
-	ID              string                          `json:"id" url:"id"`
-	Name            string                          `json:"name" url:"name"`
-	LegalName       *string                         `json:"legalName,omitempty" url:"legalName,omitempty"`
-	Email           string                          `json:"email" url:"email"`
-	Phone           string                          `json:"phone" url:"phone"`
-	Website         string                          `json:"website" url:"website"`
-	ExternalID      *string                         `json:"externalId,omitempty" url:"externalId,omitempty"`
-	BillingAddress  *CustomerBillingAddressResponse `json:"billingAddress,omitempty" url:"billingAddress,omitempty"`
-	CreationState   CustomerCreationState           `json:"creationState" url:"creationState"`
-	ChurnDate       *time.Time                      `json:"churnDate,omitempty" url:"churnDate,omitempty"`
-	VatNumber       *string                         `json:"vatNumber,omitempty" url:"vatNumber,omitempty"`
-	Metadata        map[string]interface{}          `json:"metadata,omitempty" url:"metadata,omitempty"`
-	DefaultCurrency CurrencyCode                    `json:"defaultCurrency" url:"defaultCurrency"`
-	CreatedAt       time.Time                       `json:"createdAt" url:"createdAt"`
-	UpdatedAt       time.Time                       `json:"updatedAt" url:"updatedAt"`
+	ID             string                          `json:"id" url:"id"`
+	Name           string                          `json:"name" url:"name"`
+	LegalName      *string                         `json:"legalName,omitempty" url:"legalName,omitempty"`
+	Email          string                          `json:"email" url:"email"`
+	Phone          string                          `json:"phone" url:"phone"`
+	Website        string                          `json:"website" url:"website"`
+	ExternalID     *string                         `json:"externalId,omitempty" url:"externalId,omitempty"`
+	BillingAddress *CustomerBillingAddressResponse `json:"billingAddress,omitempty" url:"billingAddress,omitempty"`
+	CreationState  CustomerCreationState           `json:"creationState" url:"creationState"`
+	// Customer status: churned when the customer is marked as churned, active otherwise.
+	Status          CustomerStatus         `json:"status" url:"status"`
+	ChurnDate       *time.Time             `json:"churnDate,omitempty" url:"churnDate,omitempty"`
+	VatNumber       *string                `json:"vatNumber,omitempty" url:"vatNumber,omitempty"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
+	DefaultCurrency CurrencyCode           `json:"defaultCurrency" url:"defaultCurrency"`
+	Connections     *CustomerConnections   `json:"connections" url:"connections"`
+	CreatedAt       time.Time              `json:"createdAt" url:"createdAt"`
+	UpdatedAt       time.Time              `json:"updatedAt" url:"updatedAt"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -947,6 +976,13 @@ func (c *Customer) GetCreationState() CustomerCreationState {
 	return c.CreationState
 }
 
+func (c *Customer) GetStatus() CustomerStatus {
+	if c == nil {
+		return ""
+	}
+	return c.Status
+}
+
 func (c *Customer) GetChurnDate() *time.Time {
 	if c == nil {
 		return nil
@@ -973,6 +1009,13 @@ func (c *Customer) GetDefaultCurrency() CurrencyCode {
 		return ""
 	}
 	return c.DefaultCurrency
+}
+
+func (c *Customer) GetConnections() *CustomerConnections {
+	if c == nil {
+		return nil
+	}
+	return c.Connections
 }
 
 func (c *Customer) GetCreatedAt() time.Time {
@@ -1438,6 +1481,53 @@ func (c *CustomerBillingAddressResponse) UnmarshalJSON(data []byte) error {
 }
 
 func (c *CustomerBillingAddressResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Linked external system IDs for this customer.
+type CustomerConnections struct {
+	Stripe *StripeConnection `json:"stripe,omitempty" url:"stripe,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerConnections) GetStripe() *StripeConnection {
+	if c == nil {
+		return nil
+	}
+	return c.Stripe
+}
+
+func (c *CustomerConnections) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerConnections) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerConnections
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerConnections(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerConnections) String() string {
 	if len(c.rawJSON) > 0 {
 		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
 			return value
@@ -2432,6 +2522,29 @@ func (c *CustomerStateSeats) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
+// Customer status: churned when the customer is marked as churned, active otherwise.
+type CustomerStatus string
+
+const (
+	CustomerStatusActive  CustomerStatus = "active"
+	CustomerStatusChurned CustomerStatus = "churned"
+)
+
+func NewCustomerStatusFromString(s string) (CustomerStatus, error) {
+	switch s {
+	case "active":
+		return CustomerStatusActive, nil
+	case "churned":
+		return CustomerStatusChurned, nil
+	}
+	var t CustomerStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerStatus) Ptr() *CustomerStatus {
+	return &c
+}
+
 type CustomerUser struct {
 	ID                 string                 `json:"id" url:"id"`
 	ExternalID         string                 `json:"externalId" url:"externalId"`
@@ -2691,6 +2804,279 @@ func (g *GrantCustomerCreditsResponse) String() string {
 	return fmt.Sprintf("%#v", g)
 }
 
+type PendingCreditConsumption struct {
+	// Number of credits consumed. This is not a monetary amount.
+	Credits        int                               `json:"credits" url:"credits"`
+	CreditCurrency *PendingCreditConsumptionCurrency `json:"creditCurrency,omitempty" url:"creditCurrency,omitempty"`
+	// Paid order display ID the consumption belongs to, if any.
+	OrderID *string `json:"orderId,omitempty" url:"orderId,omitempty"`
+	// Usage event that produced the consumption.
+	EventName *string `json:"eventName,omitempty" url:"eventName,omitempty"`
+	// When the usage actually happened.
+	OccurredAt time.Time `json:"occurredAt" url:"occurredAt"`
+	// When the consumption was recorded as pending.
+	RecordedAt time.Time `json:"recordedAt" url:"recordedAt"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PendingCreditConsumption) GetCredits() int {
+	if p == nil {
+		return 0
+	}
+	return p.Credits
+}
+
+func (p *PendingCreditConsumption) GetCreditCurrency() *PendingCreditConsumptionCurrency {
+	if p == nil {
+		return nil
+	}
+	return p.CreditCurrency
+}
+
+func (p *PendingCreditConsumption) GetOrderID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.OrderID
+}
+
+func (p *PendingCreditConsumption) GetEventName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.EventName
+}
+
+func (p *PendingCreditConsumption) GetOccurredAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.OccurredAt
+}
+
+func (p *PendingCreditConsumption) GetRecordedAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.RecordedAt
+}
+
+func (p *PendingCreditConsumption) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *PendingCreditConsumption) UnmarshalJSON(data []byte) error {
+	type embed PendingCreditConsumption
+	var unmarshaler = struct {
+		embed
+		OccurredAt *internal.DateTime `json:"occurredAt"`
+		RecordedAt *internal.DateTime `json:"recordedAt"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = PendingCreditConsumption(unmarshaler.embed)
+	p.OccurredAt = unmarshaler.OccurredAt.Time()
+	p.RecordedAt = unmarshaler.RecordedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PendingCreditConsumption) MarshalJSON() ([]byte, error) {
+	type embed PendingCreditConsumption
+	var marshaler = struct {
+		embed
+		OccurredAt *internal.DateTime `json:"occurredAt"`
+		RecordedAt *internal.DateTime `json:"recordedAt"`
+	}{
+		embed:      embed(*p),
+		OccurredAt: internal.NewDateTime(p.OccurredAt),
+		RecordedAt: internal.NewDateTime(p.RecordedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (p *PendingCreditConsumption) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// Credit currency the consumption is scoped to. Null when the usage may draw from any credit pool.
+type PendingCreditConsumptionCurrency struct {
+	// Stable machine-readable key for this credit currency.
+	Key string `json:"key" url:"key"`
+	// Human-readable name for this credit currency.
+	Name string `json:"name" url:"name"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PendingCreditConsumptionCurrency) GetKey() string {
+	if p == nil {
+		return ""
+	}
+	return p.Key
+}
+
+func (p *PendingCreditConsumptionCurrency) GetName() string {
+	if p == nil {
+		return ""
+	}
+	return p.Name
+}
+
+func (p *PendingCreditConsumptionCurrency) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *PendingCreditConsumptionCurrency) UnmarshalJSON(data []byte) error {
+	type unmarshaler PendingCreditConsumptionCurrency
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PendingCreditConsumptionCurrency(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PendingCreditConsumptionCurrency) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type PendingCreditConsumptionListResponse struct {
+	// Pending consumption, oldest first. Entries leave this list once they are applied to a credit pool or settled.
+	Data       []*PendingCreditConsumption `json:"data" url:"data"`
+	Pagination *Pagination                 `json:"pagination" url:"pagination"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PendingCreditConsumptionListResponse) GetData() []*PendingCreditConsumption {
+	if p == nil {
+		return nil
+	}
+	return p.Data
+}
+
+func (p *PendingCreditConsumptionListResponse) GetPagination() *Pagination {
+	if p == nil {
+		return nil
+	}
+	return p.Pagination
+}
+
+func (p *PendingCreditConsumptionListResponse) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *PendingCreditConsumptionListResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler PendingCreditConsumptionListResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PendingCreditConsumptionListResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PendingCreditConsumptionListResponse) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// Stripe customer link, or null when no Stripe gateway account is configured.
+type StripeConnection struct {
+	// Stripe customer ID.
+	CustomerID string `json:"customerId" url:"customerId"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *StripeConnection) GetCustomerID() string {
+	if s == nil {
+		return ""
+	}
+	return s.CustomerID
+}
+
+func (s *StripeConnection) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *StripeConnection) UnmarshalJSON(data []byte) error {
+	type unmarshaler StripeConnection
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = StripeConnection(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *StripeConnection) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
 type UpdateCustomerRequest struct {
 	Name           *string                      `json:"name,omitempty" url:"name,omitempty"`
 	LegalName      *string                      `json:"legalName,omitempty" url:"legalName,omitempty"`
@@ -2833,6 +3219,50 @@ func (u *UpdateCustomerRequest) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", u)
+}
+
+type ListCustomersRequestCreationState string
+
+const (
+	ListCustomersRequestCreationStateDraft  ListCustomersRequestCreationState = "draft"
+	ListCustomersRequestCreationStateActive ListCustomersRequestCreationState = "active"
+)
+
+func NewListCustomersRequestCreationStateFromString(s string) (ListCustomersRequestCreationState, error) {
+	switch s {
+	case "draft":
+		return ListCustomersRequestCreationStateDraft, nil
+	case "active":
+		return ListCustomersRequestCreationStateActive, nil
+	}
+	var t ListCustomersRequestCreationState
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListCustomersRequestCreationState) Ptr() *ListCustomersRequestCreationState {
+	return &l
+}
+
+type ListCustomersRequestStatus string
+
+const (
+	ListCustomersRequestStatusActive  ListCustomersRequestStatus = "active"
+	ListCustomersRequestStatusChurned ListCustomersRequestStatus = "churned"
+)
+
+func NewListCustomersRequestStatusFromString(s string) (ListCustomersRequestStatus, error) {
+	switch s {
+	case "active":
+		return ListCustomersRequestStatusActive, nil
+	case "churned":
+		return ListCustomersRequestStatusChurned, nil
+	}
+	var t ListCustomersRequestStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListCustomersRequestStatus) Ptr() *ListCustomersRequestStatus {
+	return &l
 }
 
 type UpdateCustomerByExternalIDRequest struct {
