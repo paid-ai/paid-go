@@ -8,6 +8,675 @@ import (
 	internal "github.com/paid-ai/paid-go/internal"
 )
 
+type CustomViewAuthoringDetail struct {
+	DisplayID   string                          `json:"displayId" url:"displayId"`
+	Name        string                          `json:"name" url:"name"`
+	Description *string                         `json:"description,omitempty" url:"description,omitempty"`
+	Status      CustomViewAuthoringDetailStatus `json:"status" url:"status"`
+	// Ids of the result sets the render bundle will receive.
+	QueryIDs []string `json:"queryIds" url:"queryIds"`
+	// Self-contained HTML document rendered inside the isolated sandbox iframe.
+	RenderBundle string `json:"renderBundle" url:"renderBundle"`
+	// The view's current default date range, or null if it uses no adjustable period.
+	Period *CustomViewAuthoringDetailPeriod `json:"period,omitempty" url:"period,omitempty"`
+	// 'customer': data is scoped to one viewing customer and the view is embeddable per-customer. 'organization': data is org-wide and the view is internal-only.
+	Scope         CustomViewAuthoringDetailScope `json:"scope" url:"scope"`
+	Queries       []*CustomViewQuery             `json:"queries" url:"queries"`
+	CreatedBy     string                         `json:"createdBy" url:"createdBy"`
+	CreatedAt     string                         `json:"createdAt" url:"createdAt"`
+	UpdatedAt     string                         `json:"updatedAt" url:"updatedAt"`
+	SchemaVersion int                            `json:"schemaVersion" url:"schemaVersion"`
+	// The authoring guide (only when includeGuide=true) — same content as getCustomViewAuthoringGuide, returned inline to save a round trip.
+	Guide *string `json:"guide,omitempty" url:"guide,omitempty"`
+	// The render-bundle template (only when includeGuide=true).
+	SampleBundle *string `json:"sampleBundle,omitempty" url:"sampleBundle,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewAuthoringDetail) GetDisplayID() string {
+	if c == nil {
+		return ""
+	}
+	return c.DisplayID
+}
+
+func (c *CustomViewAuthoringDetail) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomViewAuthoringDetail) GetDescription() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Description
+}
+
+func (c *CustomViewAuthoringDetail) GetStatus() CustomViewAuthoringDetailStatus {
+	if c == nil {
+		return ""
+	}
+	return c.Status
+}
+
+func (c *CustomViewAuthoringDetail) GetQueryIDs() []string {
+	if c == nil {
+		return nil
+	}
+	return c.QueryIDs
+}
+
+func (c *CustomViewAuthoringDetail) GetRenderBundle() string {
+	if c == nil {
+		return ""
+	}
+	return c.RenderBundle
+}
+
+func (c *CustomViewAuthoringDetail) GetPeriod() *CustomViewAuthoringDetailPeriod {
+	if c == nil {
+		return nil
+	}
+	return c.Period
+}
+
+func (c *CustomViewAuthoringDetail) GetScope() CustomViewAuthoringDetailScope {
+	if c == nil {
+		return ""
+	}
+	return c.Scope
+}
+
+func (c *CustomViewAuthoringDetail) GetQueries() []*CustomViewQuery {
+	if c == nil {
+		return nil
+	}
+	return c.Queries
+}
+
+func (c *CustomViewAuthoringDetail) GetCreatedBy() string {
+	if c == nil {
+		return ""
+	}
+	return c.CreatedBy
+}
+
+func (c *CustomViewAuthoringDetail) GetCreatedAt() string {
+	if c == nil {
+		return ""
+	}
+	return c.CreatedAt
+}
+
+func (c *CustomViewAuthoringDetail) GetUpdatedAt() string {
+	if c == nil {
+		return ""
+	}
+	return c.UpdatedAt
+}
+
+func (c *CustomViewAuthoringDetail) GetSchemaVersion() int {
+	if c == nil {
+		return 0
+	}
+	return c.SchemaVersion
+}
+
+func (c *CustomViewAuthoringDetail) GetGuide() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Guide
+}
+
+func (c *CustomViewAuthoringDetail) GetSampleBundle() *string {
+	if c == nil {
+		return nil
+	}
+	return c.SampleBundle
+}
+
+func (c *CustomViewAuthoringDetail) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewAuthoringDetail) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewAuthoringDetail
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewAuthoringDetail(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewAuthoringDetail) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// The view's current default date range, or null if it uses no adjustable period.
+type CustomViewAuthoringDetailPeriod struct {
+	// 'relative' = a rolling window ending today (set `unit` + `amount`); 'absolute' = a fixed calendar range (set `start` + `end`).
+	Kind CustomViewAuthoringDetailPeriodKind `json:"kind" url:"kind"`
+	// relative only: the unit of the rolling window.
+	Unit *CustomViewAuthoringDetailPeriodUnit `json:"unit,omitempty" url:"unit,omitempty"`
+	// relative only: how many units back from today (e.g. unit 'day', amount 30 = last 30 days).
+	Amount *int `json:"amount,omitempty" url:"amount,omitempty"`
+	// absolute only: inclusive start date (YYYY-MM-DD).
+	Start *string `json:"start,omitempty" url:"start,omitempty"`
+	// absolute only: inclusive end date (YYYY-MM-DD).
+	End *string `json:"end,omitempty" url:"end,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewAuthoringDetailPeriod) GetKind() CustomViewAuthoringDetailPeriodKind {
+	if c == nil {
+		return ""
+	}
+	return c.Kind
+}
+
+func (c *CustomViewAuthoringDetailPeriod) GetUnit() *CustomViewAuthoringDetailPeriodUnit {
+	if c == nil {
+		return nil
+	}
+	return c.Unit
+}
+
+func (c *CustomViewAuthoringDetailPeriod) GetAmount() *int {
+	if c == nil {
+		return nil
+	}
+	return c.Amount
+}
+
+func (c *CustomViewAuthoringDetailPeriod) GetStart() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Start
+}
+
+func (c *CustomViewAuthoringDetailPeriod) GetEnd() *string {
+	if c == nil {
+		return nil
+	}
+	return c.End
+}
+
+func (c *CustomViewAuthoringDetailPeriod) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewAuthoringDetailPeriod) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewAuthoringDetailPeriod
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewAuthoringDetailPeriod(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewAuthoringDetailPeriod) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// 'relative' = a rolling window ending today (set `unit` + `amount`); 'absolute' = a fixed calendar range (set `start` + `end`).
+type CustomViewAuthoringDetailPeriodKind string
+
+const (
+	CustomViewAuthoringDetailPeriodKindRelative CustomViewAuthoringDetailPeriodKind = "relative"
+	CustomViewAuthoringDetailPeriodKindAbsolute CustomViewAuthoringDetailPeriodKind = "absolute"
+)
+
+func NewCustomViewAuthoringDetailPeriodKindFromString(s string) (CustomViewAuthoringDetailPeriodKind, error) {
+	switch s {
+	case "relative":
+		return CustomViewAuthoringDetailPeriodKindRelative, nil
+	case "absolute":
+		return CustomViewAuthoringDetailPeriodKindAbsolute, nil
+	}
+	var t CustomViewAuthoringDetailPeriodKind
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewAuthoringDetailPeriodKind) Ptr() *CustomViewAuthoringDetailPeriodKind {
+	return &c
+}
+
+// relative only: the unit of the rolling window.
+type CustomViewAuthoringDetailPeriodUnit string
+
+const (
+	CustomViewAuthoringDetailPeriodUnitDay   CustomViewAuthoringDetailPeriodUnit = "day"
+	CustomViewAuthoringDetailPeriodUnitMonth CustomViewAuthoringDetailPeriodUnit = "month"
+	CustomViewAuthoringDetailPeriodUnitYear  CustomViewAuthoringDetailPeriodUnit = "year"
+)
+
+func NewCustomViewAuthoringDetailPeriodUnitFromString(s string) (CustomViewAuthoringDetailPeriodUnit, error) {
+	switch s {
+	case "day":
+		return CustomViewAuthoringDetailPeriodUnitDay, nil
+	case "month":
+		return CustomViewAuthoringDetailPeriodUnitMonth, nil
+	case "year":
+		return CustomViewAuthoringDetailPeriodUnitYear, nil
+	}
+	var t CustomViewAuthoringDetailPeriodUnit
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewAuthoringDetailPeriodUnit) Ptr() *CustomViewAuthoringDetailPeriodUnit {
+	return &c
+}
+
+// 'customer': data is scoped to one viewing customer and the view is embeddable per-customer. 'organization': data is org-wide and the view is internal-only.
+type CustomViewAuthoringDetailScope string
+
+const (
+	CustomViewAuthoringDetailScopeCustomer     CustomViewAuthoringDetailScope = "customer"
+	CustomViewAuthoringDetailScopeOrganization CustomViewAuthoringDetailScope = "organization"
+)
+
+func NewCustomViewAuthoringDetailScopeFromString(s string) (CustomViewAuthoringDetailScope, error) {
+	switch s {
+	case "customer":
+		return CustomViewAuthoringDetailScopeCustomer, nil
+	case "organization":
+		return CustomViewAuthoringDetailScopeOrganization, nil
+	}
+	var t CustomViewAuthoringDetailScope
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewAuthoringDetailScope) Ptr() *CustomViewAuthoringDetailScope {
+	return &c
+}
+
+type CustomViewAuthoringDetailStatus string
+
+const (
+	CustomViewAuthoringDetailStatusDraft     CustomViewAuthoringDetailStatus = "DRAFT"
+	CustomViewAuthoringDetailStatusPublished CustomViewAuthoringDetailStatus = "PUBLISHED"
+)
+
+func NewCustomViewAuthoringDetailStatusFromString(s string) (CustomViewAuthoringDetailStatus, error) {
+	switch s {
+	case "DRAFT":
+		return CustomViewAuthoringDetailStatusDraft, nil
+	case "PUBLISHED":
+		return CustomViewAuthoringDetailStatusPublished, nil
+	}
+	var t CustomViewAuthoringDetailStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewAuthoringDetailStatus) Ptr() *CustomViewAuthoringDetailStatus {
+	return &c
+}
+
+type CustomViewAuthoringGuide struct {
+	// Markdown guide for authoring a custom view: SQL query conventions, the render-bundle data contract, the no-network/inline rules, and interactivity requirements.
+	Guide string `json:"guide" url:"guide"`
+	// A complete, interactive, copy-paste render-bundle template (HTML) to start from.
+	SampleBundle string `json:"sampleBundle" url:"sampleBundle"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewAuthoringGuide) GetGuide() string {
+	if c == nil {
+		return ""
+	}
+	return c.Guide
+}
+
+func (c *CustomViewAuthoringGuide) GetSampleBundle() string {
+	if c == nil {
+		return ""
+	}
+	return c.SampleBundle
+}
+
+func (c *CustomViewAuthoringGuide) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewAuthoringGuide) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewAuthoringGuide
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewAuthoringGuide(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewAuthoringGuide) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomViewPreviewHarness struct {
+	// A complete HTML document that renders your bundle exactly as Paid does (same sandbox, CSP, and paid:data handshake). Render it as-is — everything is already assembled and escaped; do not edit it.
+	Harness string `json:"harness" url:"harness"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewPreviewHarness) GetHarness() string {
+	if c == nil {
+		return ""
+	}
+	return c.Harness
+}
+
+func (c *CustomViewPreviewHarness) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewPreviewHarness) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewPreviewHarness
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewPreviewHarness(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewPreviewHarness) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomViewPreviewHarnessRequest struct {
+	// The raw, self-contained HTML render bundle to preview — the SAME string you would pass to createCustomView. Pass it verbatim; do NOT escape `</script>`, backticks, or quotes yourself (that is exactly what this endpoint does for you).
+	RenderBundle string `json:"renderBundle" url:"renderBundle"`
+	// Optional sample data keyed by query id (as getCustomViewData returns it), e.g. `{ "usage": [{ "day": "2026-01-01", "signals": "42" }] }`. Delivered to the bundle via the same `paid:data` message the real embed sends. Omit to preview the empty state. If these rows are fabricated (a data-restricted org), also set `sampleData: true` so the harness is marked with a sample-data banner.
+	Data map[string][]map[string]interface{} `json:"data,omitempty" url:"data,omitempty"`
+	// For data-restricted orgs (API key without read:analytics, so the real data endpoints are blocked): a per-query column contract, keyed by query id, describing the columns each SQL returns. The server fabricates deterministic sample rows from it — no query runs, so no customer data is used — and marks the preview as sample data. Mutually exclusive with `data`.
+	Synthetic map[string][]*CustomViewPreviewHarnessRequestSyntheticValueItem `json:"synthetic,omitempty" url:"synthetic,omitempty"`
+	// Set to true when the `data` you pass is fabricated sample data, not real customer rows — e.g. a data-restricted org where you brought your own realistic rows instead of the server's `synthetic` ramp. The harness is then marked with the same sample-data banner as the server-fabricated `synthetic` path. Ignored on the `synthetic` path (already marked) and when previewing real data.
+	SampleData *bool `json:"sampleData,omitempty" url:"sampleData,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewPreviewHarnessRequest) GetRenderBundle() string {
+	if c == nil {
+		return ""
+	}
+	return c.RenderBundle
+}
+
+func (c *CustomViewPreviewHarnessRequest) GetData() map[string][]map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.Data
+}
+
+func (c *CustomViewPreviewHarnessRequest) GetSynthetic() map[string][]*CustomViewPreviewHarnessRequestSyntheticValueItem {
+	if c == nil {
+		return nil
+	}
+	return c.Synthetic
+}
+
+func (c *CustomViewPreviewHarnessRequest) GetSampleData() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.SampleData
+}
+
+func (c *CustomViewPreviewHarnessRequest) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewPreviewHarnessRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewPreviewHarnessRequest
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewPreviewHarnessRequest(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewPreviewHarnessRequest) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomViewPreviewHarnessRequestSyntheticValueItem struct {
+	// Column name exactly as your SQL aliases it (the `AS` name).
+	Name string `json:"name" url:"name"`
+	// Coarse column type used to fabricate plausible values.
+	Type CustomViewPreviewHarnessRequestSyntheticValueItemType `json:"type" url:"type"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewPreviewHarnessRequestSyntheticValueItem) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomViewPreviewHarnessRequestSyntheticValueItem) GetType() CustomViewPreviewHarnessRequestSyntheticValueItemType {
+	if c == nil {
+		return ""
+	}
+	return c.Type
+}
+
+func (c *CustomViewPreviewHarnessRequestSyntheticValueItem) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewPreviewHarnessRequestSyntheticValueItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewPreviewHarnessRequestSyntheticValueItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewPreviewHarnessRequestSyntheticValueItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewPreviewHarnessRequestSyntheticValueItem) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Coarse column type used to fabricate plausible values.
+type CustomViewPreviewHarnessRequestSyntheticValueItemType string
+
+const (
+	CustomViewPreviewHarnessRequestSyntheticValueItemTypeDate    CustomViewPreviewHarnessRequestSyntheticValueItemType = "date"
+	CustomViewPreviewHarnessRequestSyntheticValueItemTypeNumber  CustomViewPreviewHarnessRequestSyntheticValueItemType = "number"
+	CustomViewPreviewHarnessRequestSyntheticValueItemTypeString  CustomViewPreviewHarnessRequestSyntheticValueItemType = "string"
+	CustomViewPreviewHarnessRequestSyntheticValueItemTypeBoolean CustomViewPreviewHarnessRequestSyntheticValueItemType = "boolean"
+)
+
+func NewCustomViewPreviewHarnessRequestSyntheticValueItemTypeFromString(s string) (CustomViewPreviewHarnessRequestSyntheticValueItemType, error) {
+	switch s {
+	case "date":
+		return CustomViewPreviewHarnessRequestSyntheticValueItemTypeDate, nil
+	case "number":
+		return CustomViewPreviewHarnessRequestSyntheticValueItemTypeNumber, nil
+	case "string":
+		return CustomViewPreviewHarnessRequestSyntheticValueItemTypeString, nil
+	case "boolean":
+		return CustomViewPreviewHarnessRequestSyntheticValueItemTypeBoolean, nil
+	}
+	var t CustomViewPreviewHarnessRequestSyntheticValueItemType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewPreviewHarnessRequestSyntheticValueItemType) Ptr() *CustomViewPreviewHarnessRequestSyntheticValueItemType {
+	return &c
+}
+
+type CustomViewValidationFinding struct {
+	// Stable machine-readable code for this finding.
+	Reason string `json:"reason" url:"reason"`
+	// Human-readable description of what to fix.
+	Error string `json:"error" url:"error"`
+	// Extra context for this finding, when available.
+	Details *string `json:"details,omitempty" url:"details,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewValidationFinding) GetReason() string {
+	if c == nil {
+		return ""
+	}
+	return c.Reason
+}
+
+func (c *CustomViewValidationFinding) GetError() string {
+	if c == nil {
+		return ""
+	}
+	return c.Error
+}
+
+func (c *CustomViewValidationFinding) GetDetails() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Details
+}
+
+func (c *CustomViewValidationFinding) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewValidationFinding) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewValidationFinding
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewValidationFinding(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewValidationFinding) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
 type CustomerAttribution struct {
 	CustomerByID         *CustomerByID
 	CustomerByExternalID *CustomerByExternalID
@@ -2821,6 +3490,8 @@ func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) String(
 
 type ProductUsageBracketedPrepaidCreditsInputPricingInput struct {
 	Kind ProductUsageBracketedPrepaidCreditsInputPricingInputKind `json:"kind" url:"kind"`
+	// Key in the signal's data payload that supplies the bracket-matching quantity — for a signal with data {"rooms": 3}, use rooms. Dots address nested fields, for example dimensions.pages. Defaults to the top-level quantity field.
+	Path *string `json:"path,omitempty" url:"path,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -2831,6 +3502,13 @@ func (p *ProductUsageBracketedPrepaidCreditsInputPricingInput) GetKind() Product
 		return ""
 	}
 	return p.Kind
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputPricingInput) GetPath() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Path
 }
 
 func (p *ProductUsageBracketedPrepaidCreditsInputPricingInput) GetExtraProperties() map[string]interface{} {
@@ -3733,4 +4411,290 @@ func NewProductUsageVolumeInputSignalTypeFromString(s string) (ProductUsageVolum
 
 func (p ProductUsageVolumeInputSignalType) Ptr() *ProductUsageVolumeInputSignalType {
 	return &p
+}
+
+type ValidateCustomViewRequest struct {
+	// Query list to validate (same shape and gates as createCustomView).
+	Queries []*CustomViewQuery `json:"queries,omitempty" url:"queries,omitempty"`
+	// Render bundle to validate (same gates as createCustomView: size cap, self-contained, not truncated, paid:data listener).
+	RenderBundle *string `json:"renderBundle,omitempty" url:"renderBundle,omitempty"`
+	// Period to validate together with the queries (required when a query uses the {period_start}/{period_end} placeholders).
+	Period *ValidateCustomViewRequestPeriod `json:"period,omitempty" url:"period,omitempty"`
+	// The scope the view will be created with (default 'customer'). Customer-scoped SQL is compiled against the per-customer analytics views (which cannot read org-wide analytics.* directly), matching how it runs at embed time; pass 'organization' for an org-wide view.
+	Scope *ValidateCustomViewRequestScope `json:"scope,omitempty" url:"scope,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidateCustomViewRequest) GetQueries() []*CustomViewQuery {
+	if v == nil {
+		return nil
+	}
+	return v.Queries
+}
+
+func (v *ValidateCustomViewRequest) GetRenderBundle() *string {
+	if v == nil {
+		return nil
+	}
+	return v.RenderBundle
+}
+
+func (v *ValidateCustomViewRequest) GetPeriod() *ValidateCustomViewRequestPeriod {
+	if v == nil {
+		return nil
+	}
+	return v.Period
+}
+
+func (v *ValidateCustomViewRequest) GetScope() *ValidateCustomViewRequestScope {
+	if v == nil {
+		return nil
+	}
+	return v.Scope
+}
+
+func (v *ValidateCustomViewRequest) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValidateCustomViewRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidateCustomViewRequest
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidateCustomViewRequest(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidateCustomViewRequest) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Period to validate together with the queries (required when a query uses the {period_start}/{period_end} placeholders).
+type ValidateCustomViewRequestPeriod struct {
+	// 'relative' = a rolling window ending today (set `unit` + `amount`); 'absolute' = a fixed calendar range (set `start` + `end`).
+	Kind ValidateCustomViewRequestPeriodKind `json:"kind" url:"kind"`
+	// relative only: the unit of the rolling window.
+	Unit *ValidateCustomViewRequestPeriodUnit `json:"unit,omitempty" url:"unit,omitempty"`
+	// relative only: how many units back from today (e.g. unit 'day', amount 30 = last 30 days).
+	Amount *int `json:"amount,omitempty" url:"amount,omitempty"`
+	// absolute only: inclusive start date (YYYY-MM-DD).
+	Start *string `json:"start,omitempty" url:"start,omitempty"`
+	// absolute only: inclusive end date (YYYY-MM-DD).
+	End *string `json:"end,omitempty" url:"end,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidateCustomViewRequestPeriod) GetKind() ValidateCustomViewRequestPeriodKind {
+	if v == nil {
+		return ""
+	}
+	return v.Kind
+}
+
+func (v *ValidateCustomViewRequestPeriod) GetUnit() *ValidateCustomViewRequestPeriodUnit {
+	if v == nil {
+		return nil
+	}
+	return v.Unit
+}
+
+func (v *ValidateCustomViewRequestPeriod) GetAmount() *int {
+	if v == nil {
+		return nil
+	}
+	return v.Amount
+}
+
+func (v *ValidateCustomViewRequestPeriod) GetStart() *string {
+	if v == nil {
+		return nil
+	}
+	return v.Start
+}
+
+func (v *ValidateCustomViewRequestPeriod) GetEnd() *string {
+	if v == nil {
+		return nil
+	}
+	return v.End
+}
+
+func (v *ValidateCustomViewRequestPeriod) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValidateCustomViewRequestPeriod) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidateCustomViewRequestPeriod
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidateCustomViewRequestPeriod(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidateCustomViewRequestPeriod) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// 'relative' = a rolling window ending today (set `unit` + `amount`); 'absolute' = a fixed calendar range (set `start` + `end`).
+type ValidateCustomViewRequestPeriodKind string
+
+const (
+	ValidateCustomViewRequestPeriodKindRelative ValidateCustomViewRequestPeriodKind = "relative"
+	ValidateCustomViewRequestPeriodKindAbsolute ValidateCustomViewRequestPeriodKind = "absolute"
+)
+
+func NewValidateCustomViewRequestPeriodKindFromString(s string) (ValidateCustomViewRequestPeriodKind, error) {
+	switch s {
+	case "relative":
+		return ValidateCustomViewRequestPeriodKindRelative, nil
+	case "absolute":
+		return ValidateCustomViewRequestPeriodKindAbsolute, nil
+	}
+	var t ValidateCustomViewRequestPeriodKind
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValidateCustomViewRequestPeriodKind) Ptr() *ValidateCustomViewRequestPeriodKind {
+	return &v
+}
+
+// relative only: the unit of the rolling window.
+type ValidateCustomViewRequestPeriodUnit string
+
+const (
+	ValidateCustomViewRequestPeriodUnitDay   ValidateCustomViewRequestPeriodUnit = "day"
+	ValidateCustomViewRequestPeriodUnitMonth ValidateCustomViewRequestPeriodUnit = "month"
+	ValidateCustomViewRequestPeriodUnitYear  ValidateCustomViewRequestPeriodUnit = "year"
+)
+
+func NewValidateCustomViewRequestPeriodUnitFromString(s string) (ValidateCustomViewRequestPeriodUnit, error) {
+	switch s {
+	case "day":
+		return ValidateCustomViewRequestPeriodUnitDay, nil
+	case "month":
+		return ValidateCustomViewRequestPeriodUnitMonth, nil
+	case "year":
+		return ValidateCustomViewRequestPeriodUnitYear, nil
+	}
+	var t ValidateCustomViewRequestPeriodUnit
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValidateCustomViewRequestPeriodUnit) Ptr() *ValidateCustomViewRequestPeriodUnit {
+	return &v
+}
+
+// The scope the view will be created with (default 'customer'). Customer-scoped SQL is compiled against the per-customer analytics views (which cannot read org-wide analytics.* directly), matching how it runs at embed time; pass 'organization' for an org-wide view.
+type ValidateCustomViewRequestScope string
+
+const (
+	ValidateCustomViewRequestScopeCustomer     ValidateCustomViewRequestScope = "customer"
+	ValidateCustomViewRequestScopeOrganization ValidateCustomViewRequestScope = "organization"
+)
+
+func NewValidateCustomViewRequestScopeFromString(s string) (ValidateCustomViewRequestScope, error) {
+	switch s {
+	case "customer":
+		return ValidateCustomViewRequestScopeCustomer, nil
+	case "organization":
+		return ValidateCustomViewRequestScopeOrganization, nil
+	}
+	var t ValidateCustomViewRequestScope
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValidateCustomViewRequestScope) Ptr() *ValidateCustomViewRequestScope {
+	return &v
+}
+
+type ValidateCustomViewResponse struct {
+	// True when every provided part passed validation. A valid payload will not be rejected by createCustomView/updateCustomView for content reasons.
+	Valid bool `json:"valid" url:"valid"`
+	// ALL problems found (empty when valid). Fix every finding in one revision instead of re-submitting once per error.
+	Findings []*CustomViewValidationFinding `json:"findings" url:"findings"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidateCustomViewResponse) GetValid() bool {
+	if v == nil {
+		return false
+	}
+	return v.Valid
+}
+
+func (v *ValidateCustomViewResponse) GetFindings() []*CustomViewValidationFinding {
+	if v == nil {
+		return nil
+	}
+	return v.Findings
+}
+
+func (v *ValidateCustomViewResponse) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValidateCustomViewResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidateCustomViewResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidateCustomViewResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidateCustomViewResponse) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
 }

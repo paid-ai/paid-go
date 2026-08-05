@@ -3095,6 +3095,8 @@ func (u *UsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) String() strin
 
 type UsageBracketedPrepaidCreditsInputPricingInput struct {
 	Kind UsageBracketedPrepaidCreditsInputPricingInputKind `json:"kind" url:"kind"`
+	// Key in the signal's data payload that supplies the bracket-matching quantity — for a signal with data {"rooms": 3}, use rooms. Dots address nested fields, for example dimensions.pages. Defaults to the top-level quantity field.
+	Path *string `json:"path,omitempty" url:"path,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3105,6 +3107,13 @@ func (u *UsageBracketedPrepaidCreditsInputPricingInput) GetKind() UsageBracketed
 		return ""
 	}
 	return u.Kind
+}
+
+func (u *UsageBracketedPrepaidCreditsInputPricingInput) GetPath() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Path
 }
 
 func (u *UsageBracketedPrepaidCreditsInputPricingInput) GetExtraProperties() map[string]interface{} {
