@@ -189,84 +189,6 @@ func (c *Contact) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-type ContactBillingAddress struct {
-	Street  *string `json:"street,omitempty" url:"street,omitempty"`
-	City    *string `json:"city,omitempty" url:"city,omitempty"`
-	State   *string `json:"state,omitempty" url:"state,omitempty"`
-	Country *string `json:"country,omitempty" url:"country,omitempty"`
-	ZipCode *string `json:"zipCode,omitempty" url:"zipCode,omitempty"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (c *ContactBillingAddress) GetStreet() *string {
-	if c == nil {
-		return nil
-	}
-	return c.Street
-}
-
-func (c *ContactBillingAddress) GetCity() *string {
-	if c == nil {
-		return nil
-	}
-	return c.City
-}
-
-func (c *ContactBillingAddress) GetState() *string {
-	if c == nil {
-		return nil
-	}
-	return c.State
-}
-
-func (c *ContactBillingAddress) GetCountry() *string {
-	if c == nil {
-		return nil
-	}
-	return c.Country
-}
-
-func (c *ContactBillingAddress) GetZipCode() *string {
-	if c == nil {
-		return nil
-	}
-	return c.ZipCode
-}
-
-func (c *ContactBillingAddress) GetExtraProperties() map[string]interface{} {
-	return c.extraProperties
-}
-
-func (c *ContactBillingAddress) UnmarshalJSON(data []byte) error {
-	type unmarshaler ContactBillingAddress
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*c = ContactBillingAddress(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *c)
-	if err != nil {
-		return err
-	}
-	c.extraProperties = extraProperties
-	c.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (c *ContactBillingAddress) String() string {
-	if len(c.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(c); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", c)
-}
-
 type ContactListResponse struct {
 	Data       []*Contact  `json:"data" url:"data"`
 	Pagination *Pagination `json:"pagination" url:"pagination"`
@@ -344,6 +266,7 @@ func (c ContactRolesItem) Ptr() *ContactRolesItem {
 }
 
 type UpdateContactRequest struct {
+	// Destination customer ID. A contact can move only if no orders or invoices reference it.
 	CustomerID     *string                         `json:"customerId,omitempty" url:"customerId,omitempty"`
 	FirstName      *string                         `json:"firstName,omitempty" url:"firstName,omitempty"`
 	LastName       *string                         `json:"lastName,omitempty" url:"lastName,omitempty"`

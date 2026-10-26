@@ -213,7 +213,7 @@ func (c *Client) GetCheckout(
 	return response, nil
 }
 
-// Archive a checkout by ID
+// Archive a checkout by ID so it can no longer be paid. A completed (paid) checkout can't be archived and returns 409.
 func (c *Client) ArchiveCheckout(
 	ctx context.Context,
 	request *paidgo.ArchiveCheckoutRequest,
@@ -241,6 +241,11 @@ func (c *Client) ArchiveCheckout(
 		},
 		404: func(apiError *core.APIError) error {
 			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &paidgo.ConflictError{
 				APIError: apiError,
 			}
 		},

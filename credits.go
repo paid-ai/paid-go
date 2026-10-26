@@ -18,9 +18,57 @@ type CreateCreditCurrencyRequest struct {
 	Description *string `json:"description,omitempty" url:"-"`
 }
 
+type GetCreditTransactionSummaryRequest struct {
+	// Filter by customer ID.
+	CustomerID *string `json:"-" url:"customerId,omitempty"`
+	// Filter by customer external ID.
+	ExternalCustomerID *string `json:"-" url:"externalCustomerId,omitempty"`
+	// Filter by credit currency ID.
+	CreditsCurrencyID *string `json:"-" url:"creditsCurrencyId,omitempty"`
+	// Filter by the stable machine-readable key of the credit currency.
+	CreditCurrencyKey *string `json:"-" url:"creditCurrencyKey,omitempty"`
+	// Ledger type to summarize. Each call summarizes exactly one type, so a spend chart never nets grants against spends. Defaults to `spend`.
+	Type *GetCreditTransactionSummaryRequestType `json:"-" url:"type,omitempty"`
+	// Filter by the order this transaction is linked to.
+	OrderID *string `json:"-" url:"orderId,omitempty"`
+	// Filter by the usage event that produced the transaction (exact match, untrimmed). Transactions with no event (grants, invoice-void clawbacks, manual adjustments) never match.
+	EventName *string `json:"-" url:"eventName,omitempty"`
+	// Start of the window (inclusive). Required: the window may span at most 92 days. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	CreatedAtFrom string `json:"-" url:"createdAtFrom"`
+	// End of the window (inclusive). Defaults to now. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	CreatedAtTo *string `json:"-" url:"createdAtTo,omitempty"`
+	// Dimension to group buckets by. `eventName` groups signal-driven spends by the usage event that produced them; transactions without one (grants, invoice-void clawbacks, manual adjustments) share a bucket whose `groupKey` is null.
+	GroupBy GetCreditTransactionSummaryRequestGroupBy `json:"-" url:"groupBy"`
+	// Period bucket size. Buckets align to UTC calendar days, ISO weeks (Monday start), or calendar months; the first and last bucket's published bounds are clipped to the requested window.
+	Interval GetCreditTransactionSummaryRequestInterval `json:"-" url:"interval"`
+}
+
 type ListCreditCurrenciesRequest struct {
 	// Filter credit currencies by status. Defaults to `all` so archived currencies remain readable after they are archived.
 	Status *ListCreditCurrenciesRequestStatus `json:"-" url:"status,omitempty"`
+}
+
+type ListCreditTransactionsRequest struct {
+	Limit  *int `json:"-" url:"limit,omitempty"`
+	Offset *int `json:"-" url:"offset,omitempty"`
+	// Filter by customer ID.
+	CustomerID *string `json:"-" url:"customerId,omitempty"`
+	// Filter by customer external ID.
+	ExternalCustomerID *string `json:"-" url:"externalCustomerId,omitempty"`
+	// Filter by credit currency ID.
+	CreditsCurrencyID *string `json:"-" url:"creditsCurrencyId,omitempty"`
+	// Filter by the stable machine-readable key of the credit currency.
+	CreditCurrencyKey *string `json:"-" url:"creditCurrencyKey,omitempty"`
+	// Filter by transaction type.
+	Type *ListCreditTransactionsRequestType `json:"-" url:"type,omitempty"`
+	// Filter by the order this transaction is linked to.
+	OrderID *string `json:"-" url:"orderId,omitempty"`
+	// Filter by the usage event that produced the transaction (exact match, untrimmed). Transactions with no event (grants, invoice-void clawbacks, manual adjustments) never match.
+	EventName *string `json:"-" url:"eventName,omitempty"`
+	// Only transactions recorded on or after this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	CreatedAtFrom *string `json:"-" url:"createdAtFrom,omitempty"`
+	// Only transactions recorded on or before this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	CreatedAtTo *string `json:"-" url:"createdAtTo,omitempty"`
 }
 
 type CreditCurrency struct {
@@ -228,6 +276,803 @@ func (c CreditCurrencyStatus) Ptr() *CreditCurrencyStatus {
 	return &c
 }
 
+type CreditTransaction struct {
+	// Unique identifier for this credit transaction.
+	ID             string                     `json:"id" url:"id"`
+	Customer       *CreditTransactionCustomer `json:"customer" url:"customer"`
+	CreditCurrency *CreditTransactionCurrency `json:"creditCurrency" url:"creditCurrency"`
+	// Transaction type: `grant` adds credits, `spend` consumes them (negative amount), `pendingGrant` records credits awaiting payment.
+	Type CreditTransactionType `json:"type" url:"type"`
+	// Exact signed transaction amount in credits, as a decimal string: positive for grants, negative for spends. Exact at any magnitude, and at the full 6 decimal places.
+	Amount string `json:"amount" url:"amount"`
+	// Origin of the credit pool this transaction touched (e.g. `purchased`, or a custom label). `unknown` when the transaction is not linked to a pool with an origin.
+	OriginCode string `json:"originCode" url:"originCode"`
+	// Usage event that produced this spend. Null for grants and non-signal spends.
+	EventName *string `json:"eventName,omitempty" url:"eventName,omitempty"`
+	// ID of the usage signal that produced this spend, resolvable via `GET /api/v2/signals/{id}`, or in bulk for a whole page via `POST /api/v2/signals/lookup` (both include the signal's data payload). Null for grants and non-signal spends.
+	SignalID *string `json:"signalId,omitempty" url:"signalId,omitempty"`
+	// Paid order display ID this transaction is linked to, if any.
+	OrderID *string                   `json:"orderId,omitempty" url:"orderId,omitempty"`
+	Product *CreditTransactionProduct `json:"product,omitempty" url:"product,omitempty"`
+	// When the originating signal was recorded, or when the transaction was recorded if it has no signal.
+	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CreditTransaction) GetID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ID
+}
+
+func (c *CreditTransaction) GetCustomer() *CreditTransactionCustomer {
+	if c == nil {
+		return nil
+	}
+	return c.Customer
+}
+
+func (c *CreditTransaction) GetCreditCurrency() *CreditTransactionCurrency {
+	if c == nil {
+		return nil
+	}
+	return c.CreditCurrency
+}
+
+func (c *CreditTransaction) GetType() CreditTransactionType {
+	if c == nil {
+		return ""
+	}
+	return c.Type
+}
+
+func (c *CreditTransaction) GetAmount() string {
+	if c == nil {
+		return ""
+	}
+	return c.Amount
+}
+
+func (c *CreditTransaction) GetOriginCode() string {
+	if c == nil {
+		return ""
+	}
+	return c.OriginCode
+}
+
+func (c *CreditTransaction) GetEventName() *string {
+	if c == nil {
+		return nil
+	}
+	return c.EventName
+}
+
+func (c *CreditTransaction) GetSignalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.SignalID
+}
+
+func (c *CreditTransaction) GetOrderID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.OrderID
+}
+
+func (c *CreditTransaction) GetProduct() *CreditTransactionProduct {
+	if c == nil {
+		return nil
+	}
+	return c.Product
+}
+
+func (c *CreditTransaction) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *CreditTransaction) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CreditTransaction) UnmarshalJSON(data []byte) error {
+	type embed CreditTransaction
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CreditTransaction(unmarshaler.embed)
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CreditTransaction) MarshalJSON() ([]byte, error) {
+	type embed CreditTransaction
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed:     embed(*c),
+		CreatedAt: internal.NewDateTime(c.CreatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CreditTransaction) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CreditTransactionCurrency struct {
+	// Stable machine-readable key for this credit currency.
+	Key string `json:"key" url:"key"`
+	// Human-readable name for this credit currency.
+	Name string `json:"name" url:"name"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CreditTransactionCurrency) GetKey() string {
+	if c == nil {
+		return ""
+	}
+	return c.Key
+}
+
+func (c *CreditTransactionCurrency) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CreditTransactionCurrency) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CreditTransactionCurrency) UnmarshalJSON(data []byte) error {
+	type unmarshaler CreditTransactionCurrency
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CreditTransactionCurrency(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CreditTransactionCurrency) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CreditTransactionCustomer struct {
+	// Stable Paid customer display ID.
+	ID string `json:"id" url:"id"`
+	// Customer ID from the caller's system, if set.
+	ExternalID *string `json:"externalId,omitempty" url:"externalId,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CreditTransactionCustomer) GetID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ID
+}
+
+func (c *CreditTransactionCustomer) GetExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ExternalID
+}
+
+func (c *CreditTransactionCustomer) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CreditTransactionCustomer) UnmarshalJSON(data []byte) error {
+	type unmarshaler CreditTransactionCustomer
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CreditTransactionCustomer(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CreditTransactionCustomer) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CreditTransactionListResponse struct {
+	// Credit transactions, newest first.
+	Data       []*CreditTransaction `json:"data" url:"data"`
+	Pagination *Pagination          `json:"pagination" url:"pagination"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CreditTransactionListResponse) GetData() []*CreditTransaction {
+	if c == nil {
+		return nil
+	}
+	return c.Data
+}
+
+func (c *CreditTransactionListResponse) GetPagination() *Pagination {
+	if c == nil {
+		return nil
+	}
+	return c.Pagination
+}
+
+func (c *CreditTransactionListResponse) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CreditTransactionListResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler CreditTransactionListResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CreditTransactionListResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CreditTransactionListResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Product this transaction is scoped to. Null for org-wide transactions.
+type CreditTransactionProduct struct {
+	// Stable Paid product display ID.
+	ID string `json:"id" url:"id"`
+	// Product ID from the caller's system, if set.
+	ExternalID *string `json:"externalId,omitempty" url:"externalId,omitempty"`
+	// Product name.
+	Name string `json:"name" url:"name"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CreditTransactionProduct) GetID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ID
+}
+
+func (c *CreditTransactionProduct) GetExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ExternalID
+}
+
+func (c *CreditTransactionProduct) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CreditTransactionProduct) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CreditTransactionProduct) UnmarshalJSON(data []byte) error {
+	type unmarshaler CreditTransactionProduct
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CreditTransactionProduct(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CreditTransactionProduct) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CreditTransactionSummaryBucket struct {
+	// Start of the period bucket (inclusive), UTC. For the first bucket this is `createdAtFrom` when the window starts inside the period.
+	PeriodStart time.Time `json:"periodStart" url:"periodStart"`
+	// Last instant of the period bucket (inclusive), UTC; for the last bucket this is `createdAtTo` (or the request time) when the window ends inside the period. To fetch exactly this bucket's transactions, call the transaction list with `createdAtFrom`/`createdAtTo` set to `periodStart`/`periodEnd`, `creditCurrencyKey` set to this bucket's currency key, `eventName` set to `groupKey`, and the same `type` and other filters. A null `groupKey` has no event to filter on; select those rows client-side by their null `eventName`.
+	PeriodEnd time.Time `json:"periodEnd" url:"periodEnd"`
+	// Value of the `groupBy` dimension. For `eventName`, the usage event that produced the spends; null for transactions with no event (grants, invoice-void clawbacks, manual adjustments).
+	GroupKey *string `json:"groupKey,omitempty" url:"groupKey,omitempty"`
+	// Credits are counted per currency and never summed across currencies.
+	CreditCurrency *CreditTransactionSummaryBucketCreditCurrency `json:"creditCurrency" url:"creditCurrency"`
+	// Net credits in this bucket as an exact decimal string, in the type's natural direction: for `spend`, the credits consumed (positive; negative only when the bucket holds solely reversals); for `grant` and `pendingGrant`, the credits granted. Exact at any magnitude and at the full 6 decimal places. Summing the transaction list's `amount` over the same filters and period gives the same value (negated for `spend`).
+	Credits string `json:"credits" url:"credits"`
+	// Number of ledger transactions in this bucket.
+	TransactionCount int `json:"transactionCount" url:"transactionCount"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CreditTransactionSummaryBucket) GetPeriodStart() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.PeriodStart
+}
+
+func (c *CreditTransactionSummaryBucket) GetPeriodEnd() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.PeriodEnd
+}
+
+func (c *CreditTransactionSummaryBucket) GetGroupKey() *string {
+	if c == nil {
+		return nil
+	}
+	return c.GroupKey
+}
+
+func (c *CreditTransactionSummaryBucket) GetCreditCurrency() *CreditTransactionSummaryBucketCreditCurrency {
+	if c == nil {
+		return nil
+	}
+	return c.CreditCurrency
+}
+
+func (c *CreditTransactionSummaryBucket) GetCredits() string {
+	if c == nil {
+		return ""
+	}
+	return c.Credits
+}
+
+func (c *CreditTransactionSummaryBucket) GetTransactionCount() int {
+	if c == nil {
+		return 0
+	}
+	return c.TransactionCount
+}
+
+func (c *CreditTransactionSummaryBucket) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CreditTransactionSummaryBucket) UnmarshalJSON(data []byte) error {
+	type embed CreditTransactionSummaryBucket
+	var unmarshaler = struct {
+		embed
+		PeriodStart *internal.DateTime `json:"periodStart"`
+		PeriodEnd   *internal.DateTime `json:"periodEnd"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CreditTransactionSummaryBucket(unmarshaler.embed)
+	c.PeriodStart = unmarshaler.PeriodStart.Time()
+	c.PeriodEnd = unmarshaler.PeriodEnd.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CreditTransactionSummaryBucket) MarshalJSON() ([]byte, error) {
+	type embed CreditTransactionSummaryBucket
+	var marshaler = struct {
+		embed
+		PeriodStart *internal.DateTime `json:"periodStart"`
+		PeriodEnd   *internal.DateTime `json:"periodEnd"`
+	}{
+		embed:       embed(*c),
+		PeriodStart: internal.NewDateTime(c.PeriodStart),
+		PeriodEnd:   internal.NewDateTime(c.PeriodEnd),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CreditTransactionSummaryBucket) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Credits are counted per currency and never summed across currencies.
+type CreditTransactionSummaryBucketCreditCurrency struct {
+	// Stable machine-readable key for this credit currency.
+	Key string `json:"key" url:"key"`
+	// Human-readable name for this credit currency.
+	Name string `json:"name" url:"name"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CreditTransactionSummaryBucketCreditCurrency) GetKey() string {
+	if c == nil {
+		return ""
+	}
+	return c.Key
+}
+
+func (c *CreditTransactionSummaryBucketCreditCurrency) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CreditTransactionSummaryBucketCreditCurrency) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CreditTransactionSummaryBucketCreditCurrency) UnmarshalJSON(data []byte) error {
+	type unmarshaler CreditTransactionSummaryBucketCreditCurrency
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CreditTransactionSummaryBucketCreditCurrency(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CreditTransactionSummaryBucketCreditCurrency) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CreditTransactionSummaryResponse struct {
+	// Ledger type these buckets summarize.
+	Type CreditTransactionSummaryResponseType `json:"type" url:"type"`
+	// Dimension the buckets are grouped by.
+	GroupBy CreditTransactionSummaryResponseGroupBy `json:"groupBy" url:"groupBy"`
+	// Period bucket size.
+	Interval CreditTransactionSummaryResponseInterval `json:"interval" url:"interval"`
+	// Buckets ordered by period, then credit currency key, then group key (null last). Periods with no transactions are omitted.
+	Data []*CreditTransactionSummaryBucket `json:"data" url:"data"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CreditTransactionSummaryResponse) GetType() CreditTransactionSummaryResponseType {
+	if c == nil {
+		return ""
+	}
+	return c.Type
+}
+
+func (c *CreditTransactionSummaryResponse) GetGroupBy() CreditTransactionSummaryResponseGroupBy {
+	if c == nil {
+		return ""
+	}
+	return c.GroupBy
+}
+
+func (c *CreditTransactionSummaryResponse) GetInterval() CreditTransactionSummaryResponseInterval {
+	if c == nil {
+		return ""
+	}
+	return c.Interval
+}
+
+func (c *CreditTransactionSummaryResponse) GetData() []*CreditTransactionSummaryBucket {
+	if c == nil {
+		return nil
+	}
+	return c.Data
+}
+
+func (c *CreditTransactionSummaryResponse) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CreditTransactionSummaryResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler CreditTransactionSummaryResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CreditTransactionSummaryResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CreditTransactionSummaryResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Dimension the buckets are grouped by.
+type CreditTransactionSummaryResponseGroupBy string
+
+const (
+	CreditTransactionSummaryResponseGroupByEventName CreditTransactionSummaryResponseGroupBy = "eventName"
+)
+
+func NewCreditTransactionSummaryResponseGroupByFromString(s string) (CreditTransactionSummaryResponseGroupBy, error) {
+	switch s {
+	case "eventName":
+		return CreditTransactionSummaryResponseGroupByEventName, nil
+	}
+	var t CreditTransactionSummaryResponseGroupBy
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CreditTransactionSummaryResponseGroupBy) Ptr() *CreditTransactionSummaryResponseGroupBy {
+	return &c
+}
+
+// Period bucket size.
+type CreditTransactionSummaryResponseInterval string
+
+const (
+	CreditTransactionSummaryResponseIntervalDay   CreditTransactionSummaryResponseInterval = "day"
+	CreditTransactionSummaryResponseIntervalWeek  CreditTransactionSummaryResponseInterval = "week"
+	CreditTransactionSummaryResponseIntervalMonth CreditTransactionSummaryResponseInterval = "month"
+)
+
+func NewCreditTransactionSummaryResponseIntervalFromString(s string) (CreditTransactionSummaryResponseInterval, error) {
+	switch s {
+	case "day":
+		return CreditTransactionSummaryResponseIntervalDay, nil
+	case "week":
+		return CreditTransactionSummaryResponseIntervalWeek, nil
+	case "month":
+		return CreditTransactionSummaryResponseIntervalMonth, nil
+	}
+	var t CreditTransactionSummaryResponseInterval
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CreditTransactionSummaryResponseInterval) Ptr() *CreditTransactionSummaryResponseInterval {
+	return &c
+}
+
+// Ledger type these buckets summarize.
+type CreditTransactionSummaryResponseType string
+
+const (
+	CreditTransactionSummaryResponseTypeGrant        CreditTransactionSummaryResponseType = "grant"
+	CreditTransactionSummaryResponseTypeSpend        CreditTransactionSummaryResponseType = "spend"
+	CreditTransactionSummaryResponseTypePendingGrant CreditTransactionSummaryResponseType = "pendingGrant"
+)
+
+func NewCreditTransactionSummaryResponseTypeFromString(s string) (CreditTransactionSummaryResponseType, error) {
+	switch s {
+	case "grant":
+		return CreditTransactionSummaryResponseTypeGrant, nil
+	case "spend":
+		return CreditTransactionSummaryResponseTypeSpend, nil
+	case "pendingGrant":
+		return CreditTransactionSummaryResponseTypePendingGrant, nil
+	}
+	var t CreditTransactionSummaryResponseType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CreditTransactionSummaryResponseType) Ptr() *CreditTransactionSummaryResponseType {
+	return &c
+}
+
+// Transaction type: `grant` adds credits, `spend` consumes them (negative amount), `pendingGrant` records credits awaiting payment.
+type CreditTransactionType string
+
+const (
+	CreditTransactionTypeGrant        CreditTransactionType = "grant"
+	CreditTransactionTypeSpend        CreditTransactionType = "spend"
+	CreditTransactionTypePendingGrant CreditTransactionType = "pendingGrant"
+)
+
+func NewCreditTransactionTypeFromString(s string) (CreditTransactionType, error) {
+	switch s {
+	case "grant":
+		return CreditTransactionTypeGrant, nil
+	case "spend":
+		return CreditTransactionTypeSpend, nil
+	case "pendingGrant":
+		return CreditTransactionTypePendingGrant, nil
+	}
+	var t CreditTransactionType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CreditTransactionType) Ptr() *CreditTransactionType {
+	return &c
+}
+
+type GetCreditTransactionSummaryRequestGroupBy string
+
+const (
+	GetCreditTransactionSummaryRequestGroupByEventName GetCreditTransactionSummaryRequestGroupBy = "eventName"
+)
+
+func NewGetCreditTransactionSummaryRequestGroupByFromString(s string) (GetCreditTransactionSummaryRequestGroupBy, error) {
+	switch s {
+	case "eventName":
+		return GetCreditTransactionSummaryRequestGroupByEventName, nil
+	}
+	var t GetCreditTransactionSummaryRequestGroupBy
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (g GetCreditTransactionSummaryRequestGroupBy) Ptr() *GetCreditTransactionSummaryRequestGroupBy {
+	return &g
+}
+
+type GetCreditTransactionSummaryRequestInterval string
+
+const (
+	GetCreditTransactionSummaryRequestIntervalDay   GetCreditTransactionSummaryRequestInterval = "day"
+	GetCreditTransactionSummaryRequestIntervalWeek  GetCreditTransactionSummaryRequestInterval = "week"
+	GetCreditTransactionSummaryRequestIntervalMonth GetCreditTransactionSummaryRequestInterval = "month"
+)
+
+func NewGetCreditTransactionSummaryRequestIntervalFromString(s string) (GetCreditTransactionSummaryRequestInterval, error) {
+	switch s {
+	case "day":
+		return GetCreditTransactionSummaryRequestIntervalDay, nil
+	case "week":
+		return GetCreditTransactionSummaryRequestIntervalWeek, nil
+	case "month":
+		return GetCreditTransactionSummaryRequestIntervalMonth, nil
+	}
+	var t GetCreditTransactionSummaryRequestInterval
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (g GetCreditTransactionSummaryRequestInterval) Ptr() *GetCreditTransactionSummaryRequestInterval {
+	return &g
+}
+
+type GetCreditTransactionSummaryRequestType string
+
+const (
+	GetCreditTransactionSummaryRequestTypeGrant        GetCreditTransactionSummaryRequestType = "grant"
+	GetCreditTransactionSummaryRequestTypeSpend        GetCreditTransactionSummaryRequestType = "spend"
+	GetCreditTransactionSummaryRequestTypePendingGrant GetCreditTransactionSummaryRequestType = "pendingGrant"
+)
+
+func NewGetCreditTransactionSummaryRequestTypeFromString(s string) (GetCreditTransactionSummaryRequestType, error) {
+	switch s {
+	case "grant":
+		return GetCreditTransactionSummaryRequestTypeGrant, nil
+	case "spend":
+		return GetCreditTransactionSummaryRequestTypeSpend, nil
+	case "pendingGrant":
+		return GetCreditTransactionSummaryRequestTypePendingGrant, nil
+	}
+	var t GetCreditTransactionSummaryRequestType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (g GetCreditTransactionSummaryRequestType) Ptr() *GetCreditTransactionSummaryRequestType {
+	return &g
+}
+
 type ListCreditCurrenciesRequestStatus string
 
 const (
@@ -250,6 +1095,31 @@ func NewListCreditCurrenciesRequestStatusFromString(s string) (ListCreditCurrenc
 }
 
 func (l ListCreditCurrenciesRequestStatus) Ptr() *ListCreditCurrenciesRequestStatus {
+	return &l
+}
+
+type ListCreditTransactionsRequestType string
+
+const (
+	ListCreditTransactionsRequestTypeGrant        ListCreditTransactionsRequestType = "grant"
+	ListCreditTransactionsRequestTypeSpend        ListCreditTransactionsRequestType = "spend"
+	ListCreditTransactionsRequestTypePendingGrant ListCreditTransactionsRequestType = "pendingGrant"
+)
+
+func NewListCreditTransactionsRequestTypeFromString(s string) (ListCreditTransactionsRequestType, error) {
+	switch s {
+	case "grant":
+		return ListCreditTransactionsRequestTypeGrant, nil
+	case "spend":
+		return ListCreditTransactionsRequestTypeSpend, nil
+	case "pendingGrant":
+		return ListCreditTransactionsRequestTypePendingGrant, nil
+	}
+	var t ListCreditTransactionsRequestType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListCreditTransactionsRequestType) Ptr() *ListCreditTransactionsRequestType {
 	return &l
 }
 

@@ -75,10 +75,11 @@ type Invoice struct {
 	CreatedAt                time.Time              `json:"createdAt" url:"createdAt"`
 	UpdatedAt                time.Time              `json:"updatedAt" url:"updatedAt"`
 	PaymentLink              *string                `json:"paymentLink,omitempty" url:"paymentLink,omitempty"`
-	DisputeLink              *string                `json:"disputeLink,omitempty" url:"disputeLink,omitempty"`
-	PublicURLToken           *string                `json:"publicUrlToken,omitempty" url:"publicUrlToken,omitempty"`
-	TaxExempt                bool                   `json:"taxExempt" url:"taxExempt"`
-	BillingContactID         *string                `json:"billingContactId,omitempty" url:"billingContactId,omitempty"`
+	// Always null. The disputes feature is removed. Will be removed in a future API version.
+	DisputeLink      *string `json:"disputeLink,omitempty" url:"disputeLink,omitempty"`
+	PublicURLToken   *string `json:"publicUrlToken,omitempty" url:"publicUrlToken,omitempty"`
+	TaxExempt        bool    `json:"taxExempt" url:"taxExempt"`
+	BillingContactID *string `json:"billingContactId,omitempty" url:"billingContactId,omitempty"`
 	// Purchase order reference stamped on this invoice.
 	PurchaseOrderReference *string `json:"purchaseOrderReference,omitempty" url:"purchaseOrderReference,omitempty"`
 

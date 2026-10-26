@@ -61,6 +61,195 @@ func (c *CreateCustomerAliasByExternalIDRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(c.Body)
 }
 
+type CreateCustomerAPIKeyRequest struct {
+	// Paid customer display id
+	ID   string                `json:"-" url:"-"`
+	Body *CustomerAPIKeyCreate `json:"-" url:"-"`
+}
+
+func (c *CreateCustomerAPIKeyRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerAPIKeyCreate)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.Body = body
+	return nil
+}
+
+func (c *CreateCustomerAPIKeyRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+type CreateCustomerAPIKeyByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string                `json:"-" url:"-"`
+	Body       *CustomerAPIKeyCreate `json:"-" url:"-"`
+}
+
+func (c *CreateCustomerAPIKeyByExternalIDRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerAPIKeyCreate)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.Body = body
+	return nil
+}
+
+func (c *CreateCustomerAPIKeyByExternalIDRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+type CreateCustomerFundingInstructionsRequest struct {
+	// Paid customer display id
+	ID   string                                    `json:"-" url:"-"`
+	Body *CustomerFundingInstructionsCreateRequest `json:"-" url:"-"`
+}
+
+func (c *CreateCustomerFundingInstructionsRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerFundingInstructionsCreateRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.Body = body
+	return nil
+}
+
+func (c *CreateCustomerFundingInstructionsRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+type CreateCustomerFundingInstructionsByExternalIDRequest struct {
+	ExternalID string                                    `json:"-" url:"-"`
+	Body       *CustomerFundingInstructionsCreateRequest `json:"-" url:"-"`
+}
+
+func (c *CreateCustomerFundingInstructionsByExternalIDRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerFundingInstructionsCreateRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.Body = body
+	return nil
+}
+
+func (c *CreateCustomerFundingInstructionsByExternalIDRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+type CreateCustomerUnitRequest struct {
+	// Paid customer display id
+	ID   string              `json:"-" url:"-"`
+	Body *CustomerUnitCreate `json:"-" url:"-"`
+}
+
+func (c *CreateCustomerUnitRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerUnitCreate)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.Body = body
+	return nil
+}
+
+func (c *CreateCustomerUnitRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+type CreateCustomerUnitAliasRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string                      `json:"-" url:"-"`
+	Body                   *CustomerAliasCreateRequest `json:"-" url:"-"`
+}
+
+func (c *CreateCustomerUnitAliasRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerAliasCreateRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.Body = body
+	return nil
+}
+
+func (c *CreateCustomerUnitAliasRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+type CreateCustomerUnitAliasByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string                      `json:"-" url:"-"`
+	Body                   *CustomerAliasCreateRequest `json:"-" url:"-"`
+}
+
+func (c *CreateCustomerUnitAliasByExternalIDRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerAliasCreateRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.Body = body
+	return nil
+}
+
+func (c *CreateCustomerUnitAliasByExternalIDRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+type CreateCustomerUnitAliasByKeyRequest struct {
+	// Your id of the unit (its `externalId`), unique within the organization ignoring letter case.
+	ExternalCustomerUnitID string                      `json:"-" url:"-"`
+	Body                   *CustomerAliasCreateRequest `json:"-" url:"-"`
+}
+
+func (c *CreateCustomerUnitAliasByKeyRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerAliasCreateRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.Body = body
+	return nil
+}
+
+func (c *CreateCustomerUnitAliasByKeyRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+type CreateCustomerUnitByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string              `json:"-" url:"-"`
+	Body       *CustomerUnitCreate `json:"-" url:"-"`
+}
+
+func (c *CreateCustomerUnitByExternalIDRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerUnitCreate)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	c.Body = body
+	return nil
+}
+
+func (c *CreateCustomerUnitByExternalIDRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.Body)
+}
+
+type CustomerUnitCreateUnderParent struct {
+	// Your own id for the unit: required, immutable, at most 255 characters, and unique within the organization: no other customer's unit id, external id or alias may be the same, ignoring letter case. Every unit route addresses the unit by it (percent-encode it in the path), and so do signals (`customerUnit.externalCustomerUnitId`). Cannot be `.` or `..`.
+	ExternalID string `json:"externalId" url:"-"`
+	// Display name (defaults to the external ID).
+	Name *string `json:"name,omitempty" url:"-"`
+	// Your structural vocabulary for the unit (`department`, `tenant`, `team`, ...). Free text; filterable; Paid never branches on it.
+	ExternalType *string `json:"externalType,omitempty" url:"-"`
+	// Your id of the parent, looked up across the organization ignoring letter case: a unit id makes the new unit its child; a customer external id or alias names the customer, so the new unit goes under that customer's root unit, or becomes the root when the customer has none. Required: a parent is only ever named by your id, never by a Paid id.
+	ParentExternalID string `json:"parentExternalId" url:"-"`
+	// Freeform JSON for your own use.
+	Metadata map[string]interface{} `json:"metadata,omitempty" url:"-"`
+	// `false` makes the unit non-billable, together with every unit under it (a dev or QA environment, say). Defaults to `true`. The root unit is always billable (`409 ROOT_UNIT_ALWAYS_BILLABLE`): a customer that should never be billed simply has no order. Sending `false` needs non-billable units enabled for your organization (`403 FEATURE_NOT_ENABLED` otherwise). Usage on a non-billable unit is still recorded but not billed: it burns no credits, adds nothing to invoices or overage, and counts toward no cap, on a price whose usage comes from a meter (read from your events when the invoice closes) too. A meter's derived signal, and a correlation-window meter's window, follow the source event they take their unit from (the window's closing event, else its opening event): they are not billed when that event was not. Usage is still billed when it is sent with a customer API key, and on cost-plus pricing, which bills from costs that carry no unit. Only signals sent to `/api/v2/signals` that resolve to an active unit, by its key or through an alias on it, can be non-billable, and a change applies to signals received afterwards.
+	Billable *bool `json:"billable,omitempty" url:"-"`
+}
+
 type DeleteCustomerAliasRequest struct {
 	// Paid customer display id
 	ID string `json:"-" url:"-"`
@@ -85,6 +274,63 @@ type DeleteCustomerByIDRequest struct {
 	ID string `json:"-" url:"-"`
 }
 
+type DeleteCustomerUnitRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+}
+
+type DeleteCustomerUnitAliasRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	// The alias, as created.
+	Alias string `json:"-" url:"-"`
+}
+
+type DeleteCustomerUnitAliasByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	// The alias, as created.
+	Alias string `json:"-" url:"-"`
+}
+
+type DeleteCustomerUnitAliasByKeyRequest struct {
+	// Your id of the unit (its `externalId`), unique within the organization ignoring letter case.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	// The alias, as created.
+	Alias string `json:"-" url:"-"`
+}
+
+type DeleteCustomerUnitByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+}
+
+type EndCustomerUnitCapRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	// The credits currency whose cap to end. Omit it only when the organization has exactly one credits currency, which is then used; otherwise it is required.
+	CreditsCurrencyID *string `json:"-" url:"creditsCurrencyId,omitempty"`
+}
+
+type EndCustomerUnitCapByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	// The credits currency whose cap to end. Omit it only when the organization has exactly one credits currency, which is then used; otherwise it is required.
+	CreditsCurrencyID *string `json:"-" url:"creditsCurrencyId,omitempty"`
+}
+
 type GetCustomerByExternalIDRequest struct {
 	// Customer ID from the integrator's system, stored on Paid as `externalId`.
 	ExternalID string `json:"-" url:"-"`
@@ -105,6 +351,17 @@ type GetCustomerCreditBalancesByExternalIDRequest struct {
 	ExternalID string `json:"-" url:"-"`
 }
 
+type GetCustomerFundingInstructionsRequest struct {
+	// Paid customer display id
+	ID       string  `json:"-" url:"-"`
+	Currency *string `json:"-" url:"currency,omitempty"`
+}
+
+type GetCustomerFundingInstructionsByExternalIDRequest struct {
+	ExternalID string  `json:"-" url:"-"`
+	Currency   *string `json:"-" url:"currency,omitempty"`
+}
+
 type GetCustomerStateByExternalIDRequest struct {
 	// Customer ID from the integrator's system, stored on Paid as `externalId`.
 	ExternalID string `json:"-" url:"-"`
@@ -113,6 +370,69 @@ type GetCustomerStateByExternalIDRequest struct {
 type GetCustomerStateByIDRequest struct {
 	// Paid customer display id
 	ID string `json:"-" url:"-"`
+}
+
+type GetCustomerUnitRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+}
+
+type GetCustomerUnitByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+}
+
+type GetCustomerUnitByKeyRequest struct {
+	// Your id of the unit (its `externalId`), unique within the organization ignoring letter case.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+}
+
+type GetCustomerUnitCapRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	// The credits currency to read. Omit it only when the organization has exactly one credits currency, which is then used; otherwise it is required.
+	CreditsCurrencyID *string `json:"-" url:"creditsCurrencyId,omitempty"`
+}
+
+type GetCustomerUnitCapByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	// The credits currency to read. Omit it only when the organization has exactly one credits currency, which is then used; otherwise it is required.
+	CreditsCurrencyID *string `json:"-" url:"creditsCurrencyId,omitempty"`
+}
+
+type GetCustomerUnitSpendRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	// The credits currency to read. Omit it only when the organization has exactly one credits currency, which is then used; otherwise it is required.
+	CreditsCurrencyID *string `json:"-" url:"creditsCurrencyId,omitempty"`
+	// ISO 8601 timestamp, the window's inclusive start. Give `start` and `end` together, with `start` before `end`, or omit both for the current calendar month (UTC).
+	Start *time.Time `json:"-" url:"start,omitempty"`
+	// ISO 8601 timestamp, the window's exclusive end. Give `start` and `end` together, with `start` before `end`, or omit both for the current calendar month (UTC).
+	End *time.Time `json:"-" url:"end,omitempty"`
+}
+
+type GetCustomerUnitSpendByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	// The credits currency to read. Omit it only when the organization has exactly one credits currency, which is then used; otherwise it is required.
+	CreditsCurrencyID *string `json:"-" url:"creditsCurrencyId,omitempty"`
+	// ISO 8601 timestamp, the window's inclusive start. Give `start` and `end` together, with `start` before `end`, or omit both for the current calendar month (UTC).
+	Start *time.Time `json:"-" url:"start,omitempty"`
+	// ISO 8601 timestamp, the window's exclusive end. Give `start` and `end` together, with `start` before `end`, or omit both for the current calendar month (UTC).
+	End *time.Time `json:"-" url:"end,omitempty"`
 }
 
 type GrantCustomerCreditsRequest struct {
@@ -167,6 +487,20 @@ type ListCustomerAliasesByExternalIDRequest struct {
 	Offset     *int   `json:"-" url:"offset,omitempty"`
 }
 
+type ListCustomerAPIKeysRequest struct {
+	// Paid customer display id
+	ID     string `json:"-" url:"-"`
+	Limit  *int   `json:"-" url:"limit,omitempty"`
+	Offset *int   `json:"-" url:"offset,omitempty"`
+}
+
+type ListCustomerAPIKeysByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	Limit      *int   `json:"-" url:"limit,omitempty"`
+	Offset     *int   `json:"-" url:"offset,omitempty"`
+}
+
 type ListCustomerPendingCreditConsumptionRequest struct {
 	// Paid customer display id
 	ID     string `json:"-" url:"-"`
@@ -179,6 +513,57 @@ type ListCustomerPendingCreditConsumptionByExternalIDRequest struct {
 	ExternalID string `json:"-" url:"-"`
 	Limit      *int   `json:"-" url:"limit,omitempty"`
 	Offset     *int   `json:"-" url:"offset,omitempty"`
+}
+
+type ListCustomerUnitAliasesRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	Limit                  *int   `json:"-" url:"limit,omitempty"`
+	Offset                 *int   `json:"-" url:"offset,omitempty"`
+}
+
+type ListCustomerUnitAliasesByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	Limit                  *int   `json:"-" url:"limit,omitempty"`
+	Offset                 *int   `json:"-" url:"offset,omitempty"`
+}
+
+type ListCustomerUnitAliasesByKeyRequest struct {
+	// Your id of the unit (its `externalId`), unique within the organization ignoring letter case.
+	ExternalCustomerUnitID string `json:"-" url:"-"`
+	Limit                  *int   `json:"-" url:"limit,omitempty"`
+	Offset                 *int   `json:"-" url:"offset,omitempty"`
+}
+
+type ListCustomerUnitsRequest struct {
+	// Paid customer display id
+	ID     string `json:"-" url:"-"`
+	Limit  *int   `json:"-" url:"limit,omitempty"`
+	Offset *int   `json:"-" url:"offset,omitempty"`
+	// Filter by status (default ACTIVE; drafts are listed only with DRAFT).
+	Status *ListCustomerUnitsRequestStatus `json:"-" url:"status,omitempty"`
+	// Filter by external type.
+	ExternalType *string `json:"-" url:"externalType,omitempty"`
+	// Your external ID of the parent unit; lists its direct children.
+	ParentExternalID *string `json:"-" url:"parentExternalId,omitempty"`
+}
+
+type ListCustomerUnitsByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	Limit      *int   `json:"-" url:"limit,omitempty"`
+	Offset     *int   `json:"-" url:"offset,omitempty"`
+	// Filter by status (default ACTIVE; drafts are listed only with DRAFT).
+	Status *ListCustomerUnitsByExternalIDRequestStatus `json:"-" url:"status,omitempty"`
+	// Filter by external type.
+	ExternalType *string `json:"-" url:"externalType,omitempty"`
+	// Your external ID of the parent unit; lists its direct children.
+	ParentExternalID *string `json:"-" url:"parentExternalId,omitempty"`
 }
 
 type ListCustomersRequest struct {
@@ -198,14 +583,72 @@ type ListCustomersRequest struct {
 	ExternalID *string `json:"-" url:"externalId,omitempty"`
 }
 
+type RevokeCustomerAPIKeyRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// The key's id, as returned by create or list.
+	APIKeyID string `json:"-" url:"-"`
+}
+
+type RevokeCustomerAPIKeyByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// The key's id, as returned by create or list.
+	APIKeyID string `json:"-" url:"-"`
+}
+
+type SetCustomerUnitCapRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string              `json:"-" url:"-"`
+	Body                   *CustomerUnitCapSet `json:"-" url:"-"`
+}
+
+func (s *SetCustomerUnitCapRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerUnitCapSet)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	s.Body = body
+	return nil
+}
+
+func (s *SetCustomerUnitCapRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Body)
+}
+
+type SetCustomerUnitCapByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string              `json:"-" url:"-"`
+	Body                   *CustomerUnitCapSet `json:"-" url:"-"`
+}
+
+func (s *SetCustomerUnitCapByExternalIDRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerUnitCapSet)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	s.Body = body
+	return nil
+}
+
+func (s *SetCustomerUnitCapByExternalIDRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Body)
+}
+
 type CreditBalance struct {
 	CreditsCurrencyID string `json:"creditsCurrencyId" url:"creditsCurrencyId"`
 	CurrencyName      string `json:"currencyName" url:"currencyName"`
 	CurrencyKey       string `json:"currencyKey" url:"currencyKey"`
-	// Effective spendable balance across all grants in this pool, rollover-capped during rollover windows. Equals sum(grants[].available).
+	// Effective spendable balance across all grants in this pool, rollover-capped during rollover windows. Equals sum(grants[].available). JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
 	Available float64 `json:"available" url:"available"`
-	Used      float64 `json:"used" url:"used"`
-	Total     float64 `json:"total" url:"total"`
+	// JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
+	Used float64 `json:"used" url:"used"`
+	// JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
+	Total float64 `json:"total" url:"total"`
 	// Aggregate min(periodStart) across grants in this pool. Does not correspond to any real billing period when grants overlap. Use grants[].periodStart instead. Will be removed in a future API version.
 	PeriodStart *time.Time `json:"periodStart,omitempty" url:"periodStart,omitempty"`
 	// Aggregate max(periodEnd) across grants in this pool. Does not correspond to any real billing period when grants overlap. Use grants[].periodEnd or grants[].expiresAt instead. Will be removed in a future API version.
@@ -423,8 +866,11 @@ func (c CreditBalanceRecipient) Ptr() *CreditBalanceRecipient {
 }
 
 type CreditGrant struct {
-	Available          float64    `json:"available" url:"available"`
-	Used               float64    `json:"used" url:"used"`
+	// JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
+	Available float64 `json:"available" url:"available"`
+	// JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
+	Used float64 `json:"used" url:"used"`
+	// JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
 	Total              float64    `json:"total" url:"total"`
 	RolloverAmount     *float64   `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
 	PeriodStart        time.Time  `json:"periodStart" url:"periodStart"`
@@ -565,12 +1011,14 @@ func (c *CreditGrant) String() string {
 type CreditGrantCreateRequest struct {
 	// Stable machine-readable key for the active credit currency to grant.
 	CreditCurrencyKey string `json:"creditCurrencyKey" url:"creditCurrencyKey"`
-	// Number of credits to grant. This is not a monetary amount.
-	Amount int `json:"amount" url:"amount"`
+	// Number of credits to grant, exact to at most 6 decimal places. This is not a monetary amount.
+	Amount float64 `json:"amount" url:"amount"`
 	// When these credits become spendable, as an RFC3339 datetime with timezone. Must be at or before the current server time. Defaults to the current server time when omitted.
 	StartsAt *time.Time `json:"startsAt,omitempty" url:"startsAt,omitempty"`
 	// When these credits expire, as an RFC3339 datetime with timezone. Omit or set null for credits that do not expire.
 	ExpiresAt *time.Time `json:"expiresAt,omitempty" url:"expiresAt,omitempty"`
+	// Unique key for this grant within your organization. A retry with the same key and request body returns the original grant with `created: false` instead of granting again. Reusing a key for a different customer or request body returns 409.
+	IdempotencyKey *string `json:"idempotencyKey,omitempty" url:"idempotencyKey,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -583,7 +1031,7 @@ func (c *CreditGrantCreateRequest) GetCreditCurrencyKey() string {
 	return c.CreditCurrencyKey
 }
 
-func (c *CreditGrantCreateRequest) GetAmount() int {
+func (c *CreditGrantCreateRequest) GetAmount() float64 {
 	if c == nil {
 		return 0
 	}
@@ -602,6 +1050,13 @@ func (c *CreditGrantCreateRequest) GetExpiresAt() *time.Time {
 		return nil
 	}
 	return c.ExpiresAt
+}
+
+func (c *CreditGrantCreateRequest) GetIdempotencyKey() *string {
+	if c == nil {
+		return nil
+	}
+	return c.IdempotencyKey
 }
 
 func (c *CreditGrantCreateRequest) GetExtraProperties() map[string]interface{} {
@@ -771,7 +1226,10 @@ func (c *CreditGrantCustomer) String() string {
 }
 
 type CreditGrantResult struct {
+	// Whole-credit projection of the amount granted, truncated toward zero. May be 0 for a sub-unit grant. Exact for values within ±2^53; see amountDecimal for the exact value at any magnitude.
 	Amount int `json:"amount" url:"amount"`
+	// Exact number of credits granted, as a decimal string. Exact at any magnitude, and at the full 6 decimal places.
+	AmountDecimal string `json:"amountDecimal" url:"amountDecimal"`
 	// When these credits become spendable, as an RFC3339 datetime with timezone.
 	StartsAt time.Time `json:"startsAt" url:"startsAt"`
 	// When these credits expire, as an RFC3339 datetime with timezone. Null when the credits do not expire.
@@ -788,6 +1246,13 @@ func (c *CreditGrantResult) GetAmount() int {
 		return 0
 	}
 	return c.Amount
+}
+
+func (c *CreditGrantResult) GetAmountDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.AmountDecimal
 }
 
 func (c *CreditGrantResult) GetStartsAt() time.Time {
@@ -1094,11 +1559,13 @@ type CustomerAlias struct {
 	// Alternate external identifier that resolves to the customer.
 	Alias string `json:"alias" url:"alias"`
 	// Paid customer display ID this alias resolves to.
-	CustomerID  string    `json:"customerId" url:"customerId"`
-	Name        *string   `json:"name,omitempty" url:"name,omitempty"`
-	Description *string   `json:"description,omitempty" url:"description,omitempty"`
-	CreatedAt   time.Time `json:"createdAt" url:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt" url:"updatedAt"`
+	CustomerID string `json:"customerId" url:"customerId"`
+	// Your id of the customer unit signals carrying this alias land on: the unit the alias was created under, or the customer's root unit for a customer-level alias. `null` only while the customer has no root unit.
+	CustomerUnitExternalID *string   `json:"customerUnitExternalId,omitempty" url:"customerUnitExternalId,omitempty"`
+	Name                   *string   `json:"name,omitempty" url:"name,omitempty"`
+	Description            *string   `json:"description,omitempty" url:"description,omitempty"`
+	CreatedAt              time.Time `json:"createdAt" url:"createdAt"`
+	UpdatedAt              time.Time `json:"updatedAt" url:"updatedAt"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -1116,6 +1583,13 @@ func (c *CustomerAlias) GetCustomerID() string {
 		return ""
 	}
 	return c.CustomerID
+}
+
+func (c *CustomerAlias) GetCustomerUnitExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerUnitExternalID
 }
 
 func (c *CustomerAlias) GetName() *string {
@@ -1319,71 +1793,146 @@ func (c *CustomerAliasListResponse) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-type CustomerBillingAddressInput struct {
-	Line1   *string `json:"line1,omitempty" url:"line1,omitempty"`
-	Line2   *string `json:"line2,omitempty" url:"line2,omitempty"`
-	City    *string `json:"city,omitempty" url:"city,omitempty"`
-	State   *string `json:"state,omitempty" url:"state,omitempty"`
-	ZipCode *string `json:"zipCode,omitempty" url:"zipCode,omitempty"`
-	Country *string `json:"country,omitempty" url:"country,omitempty"`
+type CustomerAPIKey struct {
+	// The key's id.
+	ID          string  `json:"id" url:"id"`
+	Name        string  `json:"name" url:"name"`
+	Description *string `json:"description,omitempty" url:"description,omitempty"`
+	// Display id (`cus_…`) of the customer the key acts for.
+	CustomerID *string `json:"customerId,omitempty" url:"customerId,omitempty"`
+	// That customer's id in your system, if it has one.
+	CustomerExternalID *string `json:"customerExternalId,omitempty" url:"customerExternalId,omitempty"`
+	// What the key may do.
+	Scopes []string `json:"scopes" url:"scopes"`
+	// The key's first characters, to recognise it in a list.
+	KeyPrefix string `json:"keyPrefix" url:"keyPrefix"`
+	// The key's last four characters.
+	Last4 string `json:"last4" url:"last4"`
+	// `ACTIVE` until the key is revoked (`REVOKED`) or its expiry passes (`EXPIRED`).
+	Status     CustomerAPIKeyStatus `json:"status" url:"status"`
+	CreatedAt  time.Time            `json:"createdAt" url:"createdAt"`
+	LastUsedAt *time.Time           `json:"lastUsedAt,omitempty" url:"lastUsedAt,omitempty"`
+	ExpiresAt  *time.Time           `json:"expiresAt,omitempty" url:"expiresAt,omitempty"`
+	RevokedAt  *time.Time           `json:"revokedAt,omitempty" url:"revokedAt,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (c *CustomerBillingAddressInput) GetLine1() *string {
+func (c *CustomerAPIKey) GetID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ID
+}
+
+func (c *CustomerAPIKey) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomerAPIKey) GetDescription() *string {
 	if c == nil {
 		return nil
 	}
-	return c.Line1
+	return c.Description
 }
 
-func (c *CustomerBillingAddressInput) GetLine2() *string {
+func (c *CustomerAPIKey) GetCustomerID() *string {
 	if c == nil {
 		return nil
 	}
-	return c.Line2
+	return c.CustomerID
 }
 
-func (c *CustomerBillingAddressInput) GetCity() *string {
+func (c *CustomerAPIKey) GetCustomerExternalID() *string {
 	if c == nil {
 		return nil
 	}
-	return c.City
+	return c.CustomerExternalID
 }
 
-func (c *CustomerBillingAddressInput) GetState() *string {
+func (c *CustomerAPIKey) GetScopes() []string {
 	if c == nil {
 		return nil
 	}
-	return c.State
+	return c.Scopes
 }
 
-func (c *CustomerBillingAddressInput) GetZipCode() *string {
+func (c *CustomerAPIKey) GetKeyPrefix() string {
+	if c == nil {
+		return ""
+	}
+	return c.KeyPrefix
+}
+
+func (c *CustomerAPIKey) GetLast4() string {
+	if c == nil {
+		return ""
+	}
+	return c.Last4
+}
+
+func (c *CustomerAPIKey) GetStatus() CustomerAPIKeyStatus {
+	if c == nil {
+		return ""
+	}
+	return c.Status
+}
+
+func (c *CustomerAPIKey) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *CustomerAPIKey) GetLastUsedAt() *time.Time {
 	if c == nil {
 		return nil
 	}
-	return c.ZipCode
+	return c.LastUsedAt
 }
 
-func (c *CustomerBillingAddressInput) GetCountry() *string {
+func (c *CustomerAPIKey) GetExpiresAt() *time.Time {
 	if c == nil {
 		return nil
 	}
-	return c.Country
+	return c.ExpiresAt
 }
 
-func (c *CustomerBillingAddressInput) GetExtraProperties() map[string]interface{} {
+func (c *CustomerAPIKey) GetRevokedAt() *time.Time {
+	if c == nil {
+		return nil
+	}
+	return c.RevokedAt
+}
+
+func (c *CustomerAPIKey) GetExtraProperties() map[string]interface{} {
 	return c.extraProperties
 }
 
-func (c *CustomerBillingAddressInput) UnmarshalJSON(data []byte) error {
-	type unmarshaler CustomerBillingAddressInput
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
+func (c *CustomerAPIKey) UnmarshalJSON(data []byte) error {
+	type embed CustomerAPIKey
+	var unmarshaler = struct {
+		embed
+		CreatedAt  *internal.DateTime `json:"createdAt"`
+		LastUsedAt *internal.DateTime `json:"lastUsedAt,omitempty"`
+		ExpiresAt  *internal.DateTime `json:"expiresAt,omitempty"`
+		RevokedAt  *internal.DateTime `json:"revokedAt,omitempty"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
 		return err
 	}
-	*c = CustomerBillingAddressInput(value)
+	*c = CustomerAPIKey(unmarshaler.embed)
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	c.LastUsedAt = unmarshaler.LastUsedAt.TimePtr()
+	c.ExpiresAt = unmarshaler.ExpiresAt.TimePtr()
+	c.RevokedAt = unmarshaler.RevokedAt.TimePtr()
 	extraProperties, err := internal.ExtractExtraProperties(data, *c)
 	if err != nil {
 		return err
@@ -1393,7 +1942,25 @@ func (c *CustomerBillingAddressInput) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (c *CustomerBillingAddressInput) String() string {
+func (c *CustomerAPIKey) MarshalJSON() ([]byte, error) {
+	type embed CustomerAPIKey
+	var marshaler = struct {
+		embed
+		CreatedAt  *internal.DateTime `json:"createdAt"`
+		LastUsedAt *internal.DateTime `json:"lastUsedAt,omitempty"`
+		ExpiresAt  *internal.DateTime `json:"expiresAt,omitempty"`
+		RevokedAt  *internal.DateTime `json:"revokedAt,omitempty"`
+	}{
+		embed:      embed(*c),
+		CreatedAt:  internal.NewDateTime(c.CreatedAt),
+		LastUsedAt: internal.NewOptionalDateTime(c.LastUsedAt),
+		ExpiresAt:  internal.NewOptionalDateTime(c.ExpiresAt),
+		RevokedAt:  internal.NewOptionalDateTime(c.RevokedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerAPIKey) String() string {
 	if len(c.rawJSON) > 0 {
 		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
 			return value
@@ -1403,6 +1970,383 @@ func (c *CustomerBillingAddressInput) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerAPIKeyCreate struct {
+	// A label for the key, shown in lists and in the audit log.
+	Name string `json:"name" url:"name"`
+	// Optional free text about where the key is used.
+	Description *string `json:"description,omitempty" url:"description,omitempty"`
+	// Optional expiry (ISO 8601), which must be in the future. Without it the key works until it is revoked.
+	ExpiresAt *time.Time `json:"expiresAt,omitempty" url:"expiresAt,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerAPIKeyCreate) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomerAPIKeyCreate) GetDescription() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Description
+}
+
+func (c *CustomerAPIKeyCreate) GetExpiresAt() *time.Time {
+	if c == nil {
+		return nil
+	}
+	return c.ExpiresAt
+}
+
+func (c *CustomerAPIKeyCreate) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerAPIKeyCreate) UnmarshalJSON(data []byte) error {
+	type embed CustomerAPIKeyCreate
+	var unmarshaler = struct {
+		embed
+		ExpiresAt *internal.DateTime `json:"expiresAt,omitempty"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerAPIKeyCreate(unmarshaler.embed)
+	c.ExpiresAt = unmarshaler.ExpiresAt.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerAPIKeyCreate) MarshalJSON() ([]byte, error) {
+	type embed CustomerAPIKeyCreate
+	var marshaler = struct {
+		embed
+		ExpiresAt *internal.DateTime `json:"expiresAt,omitempty"`
+	}{
+		embed:     embed(*c),
+		ExpiresAt: internal.NewOptionalDateTime(c.ExpiresAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerAPIKeyCreate) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerAPIKeyCreated struct {
+	// The key's id.
+	ID          string  `json:"id" url:"id"`
+	Name        string  `json:"name" url:"name"`
+	Description *string `json:"description,omitempty" url:"description,omitempty"`
+	// Display id (`cus_…`) of the customer the key acts for.
+	CustomerID *string `json:"customerId,omitempty" url:"customerId,omitempty"`
+	// That customer's id in your system, if it has one.
+	CustomerExternalID *string `json:"customerExternalId,omitempty" url:"customerExternalId,omitempty"`
+	// What the key may do.
+	Scopes []string `json:"scopes" url:"scopes"`
+	// The key's first characters, to recognise it in a list.
+	KeyPrefix string `json:"keyPrefix" url:"keyPrefix"`
+	// The key's last four characters.
+	Last4 string `json:"last4" url:"last4"`
+	// `ACTIVE` until the key is revoked (`REVOKED`) or its expiry passes (`EXPIRED`).
+	Status     CustomerAPIKeyCreatedStatus `json:"status" url:"status"`
+	CreatedAt  time.Time                   `json:"createdAt" url:"createdAt"`
+	LastUsedAt *time.Time                  `json:"lastUsedAt,omitempty" url:"lastUsedAt,omitempty"`
+	ExpiresAt  *time.Time                  `json:"expiresAt,omitempty" url:"expiresAt,omitempty"`
+	RevokedAt  *time.Time                  `json:"revokedAt,omitempty" url:"revokedAt,omitempty"`
+	// The secret. Returned only in this response and never again: store it now. Paid keeps only its hash.
+	Key string `json:"key" url:"key"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerAPIKeyCreated) GetID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ID
+}
+
+func (c *CustomerAPIKeyCreated) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomerAPIKeyCreated) GetDescription() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Description
+}
+
+func (c *CustomerAPIKeyCreated) GetCustomerID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerID
+}
+
+func (c *CustomerAPIKeyCreated) GetCustomerExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerExternalID
+}
+
+func (c *CustomerAPIKeyCreated) GetScopes() []string {
+	if c == nil {
+		return nil
+	}
+	return c.Scopes
+}
+
+func (c *CustomerAPIKeyCreated) GetKeyPrefix() string {
+	if c == nil {
+		return ""
+	}
+	return c.KeyPrefix
+}
+
+func (c *CustomerAPIKeyCreated) GetLast4() string {
+	if c == nil {
+		return ""
+	}
+	return c.Last4
+}
+
+func (c *CustomerAPIKeyCreated) GetStatus() CustomerAPIKeyCreatedStatus {
+	if c == nil {
+		return ""
+	}
+	return c.Status
+}
+
+func (c *CustomerAPIKeyCreated) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *CustomerAPIKeyCreated) GetLastUsedAt() *time.Time {
+	if c == nil {
+		return nil
+	}
+	return c.LastUsedAt
+}
+
+func (c *CustomerAPIKeyCreated) GetExpiresAt() *time.Time {
+	if c == nil {
+		return nil
+	}
+	return c.ExpiresAt
+}
+
+func (c *CustomerAPIKeyCreated) GetRevokedAt() *time.Time {
+	if c == nil {
+		return nil
+	}
+	return c.RevokedAt
+}
+
+func (c *CustomerAPIKeyCreated) GetKey() string {
+	if c == nil {
+		return ""
+	}
+	return c.Key
+}
+
+func (c *CustomerAPIKeyCreated) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerAPIKeyCreated) UnmarshalJSON(data []byte) error {
+	type embed CustomerAPIKeyCreated
+	var unmarshaler = struct {
+		embed
+		CreatedAt  *internal.DateTime `json:"createdAt"`
+		LastUsedAt *internal.DateTime `json:"lastUsedAt,omitempty"`
+		ExpiresAt  *internal.DateTime `json:"expiresAt,omitempty"`
+		RevokedAt  *internal.DateTime `json:"revokedAt,omitempty"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerAPIKeyCreated(unmarshaler.embed)
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	c.LastUsedAt = unmarshaler.LastUsedAt.TimePtr()
+	c.ExpiresAt = unmarshaler.ExpiresAt.TimePtr()
+	c.RevokedAt = unmarshaler.RevokedAt.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerAPIKeyCreated) MarshalJSON() ([]byte, error) {
+	type embed CustomerAPIKeyCreated
+	var marshaler = struct {
+		embed
+		CreatedAt  *internal.DateTime `json:"createdAt"`
+		LastUsedAt *internal.DateTime `json:"lastUsedAt,omitempty"`
+		ExpiresAt  *internal.DateTime `json:"expiresAt,omitempty"`
+		RevokedAt  *internal.DateTime `json:"revokedAt,omitempty"`
+	}{
+		embed:      embed(*c),
+		CreatedAt:  internal.NewDateTime(c.CreatedAt),
+		LastUsedAt: internal.NewOptionalDateTime(c.LastUsedAt),
+		ExpiresAt:  internal.NewOptionalDateTime(c.ExpiresAt),
+		RevokedAt:  internal.NewOptionalDateTime(c.RevokedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerAPIKeyCreated) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// `ACTIVE` until the key is revoked (`REVOKED`) or its expiry passes (`EXPIRED`).
+type CustomerAPIKeyCreatedStatus string
+
+const (
+	CustomerAPIKeyCreatedStatusActive  CustomerAPIKeyCreatedStatus = "ACTIVE"
+	CustomerAPIKeyCreatedStatusRevoked CustomerAPIKeyCreatedStatus = "REVOKED"
+	CustomerAPIKeyCreatedStatusExpired CustomerAPIKeyCreatedStatus = "EXPIRED"
+)
+
+func NewCustomerAPIKeyCreatedStatusFromString(s string) (CustomerAPIKeyCreatedStatus, error) {
+	switch s {
+	case "ACTIVE":
+		return CustomerAPIKeyCreatedStatusActive, nil
+	case "REVOKED":
+		return CustomerAPIKeyCreatedStatusRevoked, nil
+	case "EXPIRED":
+		return CustomerAPIKeyCreatedStatusExpired, nil
+	}
+	var t CustomerAPIKeyCreatedStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerAPIKeyCreatedStatus) Ptr() *CustomerAPIKeyCreatedStatus {
+	return &c
+}
+
+type CustomerAPIKeyList struct {
+	Data       []*CustomerAPIKey `json:"data" url:"data"`
+	Pagination *Pagination       `json:"pagination" url:"pagination"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerAPIKeyList) GetData() []*CustomerAPIKey {
+	if c == nil {
+		return nil
+	}
+	return c.Data
+}
+
+func (c *CustomerAPIKeyList) GetPagination() *Pagination {
+	if c == nil {
+		return nil
+	}
+	return c.Pagination
+}
+
+func (c *CustomerAPIKeyList) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerAPIKeyList) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerAPIKeyList
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerAPIKeyList(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerAPIKeyList) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// `ACTIVE` until the key is revoked (`REVOKED`) or its expiry passes (`EXPIRED`).
+type CustomerAPIKeyStatus string
+
+const (
+	CustomerAPIKeyStatusActive  CustomerAPIKeyStatus = "ACTIVE"
+	CustomerAPIKeyStatusRevoked CustomerAPIKeyStatus = "REVOKED"
+	CustomerAPIKeyStatusExpired CustomerAPIKeyStatus = "EXPIRED"
+)
+
+func NewCustomerAPIKeyStatusFromString(s string) (CustomerAPIKeyStatus, error) {
+	switch s {
+	case "ACTIVE":
+		return CustomerAPIKeyStatusActive, nil
+	case "REVOKED":
+		return CustomerAPIKeyStatusRevoked, nil
+	case "EXPIRED":
+		return CustomerAPIKeyStatusExpired, nil
+	}
+	var t CustomerAPIKeyStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerAPIKeyStatus) Ptr() *CustomerAPIKeyStatus {
+	return &c
 }
 
 // Customer billing address, or null when no address is set.
@@ -1559,6 +2503,214 @@ func NewCustomerCreationStateFromString(s string) (CustomerCreationState, error)
 
 func (c CustomerCreationState) Ptr() *CustomerCreationState {
 	return &c
+}
+
+type CustomerFundingInstructions struct {
+	// Paid customer display id
+	CustomerID string `json:"customerId" url:"customerId"`
+	Currency   string `json:"currency" url:"currency"`
+	// Bank holding the virtual account, as issued by Stripe
+	BankName string `json:"bankName" url:"bankName"`
+	// Name the customer should address the transfer to
+	AccountHolderName string `json:"accountHolderName" url:"accountHolderName"`
+	// ABA routing number
+	RoutingNumber string `json:"routingNumber" url:"routingNumber"`
+	// Account number unique to this customer
+	AccountNumber string                                 `json:"accountNumber" url:"accountNumber"`
+	AccountType   CustomerFundingInstructionsAccountType `json:"accountType" url:"accountType"`
+	Status        string                                 `json:"status" url:"status"`
+	// What the customer must put in the transfer memo so the payment is matched to an invoice
+	Memo      string    `json:"memo" url:"memo"`
+	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerFundingInstructions) GetCustomerID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CustomerID
+}
+
+func (c *CustomerFundingInstructions) GetCurrency() string {
+	if c == nil {
+		return ""
+	}
+	return c.Currency
+}
+
+func (c *CustomerFundingInstructions) GetBankName() string {
+	if c == nil {
+		return ""
+	}
+	return c.BankName
+}
+
+func (c *CustomerFundingInstructions) GetAccountHolderName() string {
+	if c == nil {
+		return ""
+	}
+	return c.AccountHolderName
+}
+
+func (c *CustomerFundingInstructions) GetRoutingNumber() string {
+	if c == nil {
+		return ""
+	}
+	return c.RoutingNumber
+}
+
+func (c *CustomerFundingInstructions) GetAccountNumber() string {
+	if c == nil {
+		return ""
+	}
+	return c.AccountNumber
+}
+
+func (c *CustomerFundingInstructions) GetAccountType() CustomerFundingInstructionsAccountType {
+	if c == nil {
+		return ""
+	}
+	return c.AccountType
+}
+
+func (c *CustomerFundingInstructions) GetStatus() string {
+	if c == nil {
+		return ""
+	}
+	return c.Status
+}
+
+func (c *CustomerFundingInstructions) GetMemo() string {
+	if c == nil {
+		return ""
+	}
+	return c.Memo
+}
+
+func (c *CustomerFundingInstructions) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *CustomerFundingInstructions) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerFundingInstructions) UnmarshalJSON(data []byte) error {
+	type embed CustomerFundingInstructions
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerFundingInstructions(unmarshaler.embed)
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerFundingInstructions) MarshalJSON() ([]byte, error) {
+	type embed CustomerFundingInstructions
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed:     embed(*c),
+		CreatedAt: internal.NewDateTime(c.CreatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerFundingInstructions) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerFundingInstructionsAccountType string
+
+const (
+	CustomerFundingInstructionsAccountTypeChecking CustomerFundingInstructionsAccountType = "checking"
+)
+
+func NewCustomerFundingInstructionsAccountTypeFromString(s string) (CustomerFundingInstructionsAccountType, error) {
+	switch s {
+	case "checking":
+		return CustomerFundingInstructionsAccountTypeChecking, nil
+	}
+	var t CustomerFundingInstructionsAccountType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerFundingInstructionsAccountType) Ptr() *CustomerFundingInstructionsAccountType {
+	return &c
+}
+
+type CustomerFundingInstructionsCreateRequest struct {
+	// Currency of the virtual bank account. Only USD is supported today; defaults to USD.
+	Currency *string `json:"currency,omitempty" url:"currency,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerFundingInstructionsCreateRequest) GetCurrency() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Currency
+}
+
+func (c *CustomerFundingInstructionsCreateRequest) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerFundingInstructionsCreateRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerFundingInstructionsCreateRequest
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerFundingInstructionsCreateRequest(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerFundingInstructionsCreateRequest) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
 }
 
 type CustomerListResponse struct {
@@ -2545,6 +3697,2023 @@ func (c CustomerStatus) Ptr() *CustomerStatus {
 	return &c
 }
 
+type CustomerUnit struct {
+	// Paid's id for the unit (`cu_…`), unique within the organization and stable across renames of the customer. For reference only: no unit route accepts it, and routes and signals name a unit by its `externalId`.
+	ID string `json:"id" url:"id"`
+	// Your own id for the unit, unique within the customer; the identifier every unit route takes.
+	ExternalID string `json:"externalId" url:"externalId"`
+	// Paid's id of the customer the unit belongs to (`cus_…`). `null` only for a legacy customer that has no Paid id; `customerExternalId` still names it.
+	CustomerID *string `json:"customerId,omitempty" url:"customerId,omitempty"`
+	// Your external id of that customer, when it has one.
+	CustomerExternalID *string `json:"customerExternalId,omitempty" url:"customerExternalId,omitempty"`
+	// Display name. Never used to address the unit.
+	Name string `json:"name" url:"name"`
+	// Your structural vocabulary for the unit.
+	ExternalType *string `json:"externalType,omitempty" url:"externalType,omitempty"`
+	// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+	Status CustomerUnitStatus `json:"status" url:"status"`
+	// `externalId` of the parent unit; `null` only on the customer's root unit.
+	ParentExternalID *string `json:"parentExternalId,omitempty" url:"parentExternalId,omitempty"`
+	// Whether this unit is the customer's root: the one unit without a parent. Derived from the missing parent, not stored. At most one active root per customer; the root cannot be moved, and once deleted a new root can be created.
+	IsRoot bool `json:"isRoot" url:"isRoot"`
+	// The unit's own setting, as last created or updated: `false` marks it, and every unit under it, non-billable. Always `true` on the root. `effectiveBillable` says whether the unit is billable once its ancestors are counted. Usage on a non-billable unit is still recorded but not billed: it burns no credits, adds nothing to invoices or overage, and counts toward no cap, on a price whose usage comes from a meter (read from your events when the invoice closes) too. A meter's derived signal, and a correlation-window meter's window, follow the source event they take their unit from (the window's closing event, else its opening event): they are not billed when that event was not. Usage is still billed when it is sent with a customer API key, and on cost-plus pricing, which bills from costs that carry no unit. Only signals sent to `/api/v2/signals` that resolve to an active unit, by its key or through an alias on it, can be non-billable, and a change applies to signals received afterwards.
+	Billable bool `json:"billable" url:"billable"`
+	// Read-only. Whether the unit is billable in effect: `false` when the unit or any unit above it has `billable: false`. A unit cannot make itself billable under a non-billable ancestor, and moving a unit under one makes it non-billable.
+	EffectiveBillable bool                   `json:"effectiveBillable" url:"effectiveBillable"`
+	Metadata          map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
+	CreatedAt         time.Time              `json:"createdAt" url:"createdAt"`
+	UpdatedAt         time.Time              `json:"updatedAt" url:"updatedAt"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnit) GetID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ID
+}
+
+func (c *CustomerUnit) GetExternalID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalID
+}
+
+func (c *CustomerUnit) GetCustomerID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerID
+}
+
+func (c *CustomerUnit) GetCustomerExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerExternalID
+}
+
+func (c *CustomerUnit) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomerUnit) GetExternalType() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ExternalType
+}
+
+func (c *CustomerUnit) GetStatus() CustomerUnitStatus {
+	if c == nil {
+		return ""
+	}
+	return c.Status
+}
+
+func (c *CustomerUnit) GetParentExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ParentExternalID
+}
+
+func (c *CustomerUnit) GetIsRoot() bool {
+	if c == nil {
+		return false
+	}
+	return c.IsRoot
+}
+
+func (c *CustomerUnit) GetBillable() bool {
+	if c == nil {
+		return false
+	}
+	return c.Billable
+}
+
+func (c *CustomerUnit) GetEffectiveBillable() bool {
+	if c == nil {
+		return false
+	}
+	return c.EffectiveBillable
+}
+
+func (c *CustomerUnit) GetMetadata() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.Metadata
+}
+
+func (c *CustomerUnit) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *CustomerUnit) GetUpdatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.UpdatedAt
+}
+
+func (c *CustomerUnit) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnit) UnmarshalJSON(data []byte) error {
+	type embed CustomerUnit
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerUnit(unmarshaler.embed)
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	c.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnit) MarshalJSON() ([]byte, error) {
+	type embed CustomerUnit
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+	}{
+		embed:     embed(*c),
+		CreatedAt: internal.NewDateTime(c.CreatedAt),
+		UpdatedAt: internal.NewDateTime(c.UpdatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerUnit) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// A customer unit as the organization-level routes return it: the customer-scoped unit shape without Paid's unit id.
+type CustomerUnitByKey struct {
+	// Your own id for the unit, unique within the customer; the identifier every unit route takes.
+	ExternalID string `json:"externalId" url:"externalId"`
+	// Paid's id of the customer the unit belongs to (`cus_…`). `null` only for a legacy customer that has no Paid id; `customerExternalId` still names it.
+	CustomerID *string `json:"customerId,omitempty" url:"customerId,omitempty"`
+	// Your external id of that customer, when it has one.
+	CustomerExternalID *string `json:"customerExternalId,omitempty" url:"customerExternalId,omitempty"`
+	// Display name. Never used to address the unit.
+	Name string `json:"name" url:"name"`
+	// Your structural vocabulary for the unit.
+	ExternalType *string `json:"externalType,omitempty" url:"externalType,omitempty"`
+	// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+	Status CustomerUnitByKeyStatus `json:"status" url:"status"`
+	// `externalId` of the parent unit; `null` only on the customer's root unit.
+	ParentExternalID *string `json:"parentExternalId,omitempty" url:"parentExternalId,omitempty"`
+	// Whether this unit is the customer's root: the one unit without a parent. Derived from the missing parent, not stored. At most one active root per customer; the root cannot be moved, and once deleted a new root can be created.
+	IsRoot bool `json:"isRoot" url:"isRoot"`
+	// The unit's own setting, as last created or updated: `false` marks it, and every unit under it, non-billable. Always `true` on the root. `effectiveBillable` says whether the unit is billable once its ancestors are counted. Usage on a non-billable unit is still recorded but not billed: it burns no credits, adds nothing to invoices or overage, and counts toward no cap, on a price whose usage comes from a meter (read from your events when the invoice closes) too. A meter's derived signal, and a correlation-window meter's window, follow the source event they take their unit from (the window's closing event, else its opening event): they are not billed when that event was not. Usage is still billed when it is sent with a customer API key, and on cost-plus pricing, which bills from costs that carry no unit. Only signals sent to `/api/v2/signals` that resolve to an active unit, by its key or through an alias on it, can be non-billable, and a change applies to signals received afterwards.
+	Billable bool `json:"billable" url:"billable"`
+	// Read-only. Whether the unit is billable in effect: `false` when the unit or any unit above it has `billable: false`. A unit cannot make itself billable under a non-billable ancestor, and moving a unit under one makes it non-billable.
+	EffectiveBillable bool                   `json:"effectiveBillable" url:"effectiveBillable"`
+	Metadata          map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
+	CreatedAt         time.Time              `json:"createdAt" url:"createdAt"`
+	UpdatedAt         time.Time              `json:"updatedAt" url:"updatedAt"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitByKey) GetExternalID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalID
+}
+
+func (c *CustomerUnitByKey) GetCustomerID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerID
+}
+
+func (c *CustomerUnitByKey) GetCustomerExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerExternalID
+}
+
+func (c *CustomerUnitByKey) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomerUnitByKey) GetExternalType() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ExternalType
+}
+
+func (c *CustomerUnitByKey) GetStatus() CustomerUnitByKeyStatus {
+	if c == nil {
+		return ""
+	}
+	return c.Status
+}
+
+func (c *CustomerUnitByKey) GetParentExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ParentExternalID
+}
+
+func (c *CustomerUnitByKey) GetIsRoot() bool {
+	if c == nil {
+		return false
+	}
+	return c.IsRoot
+}
+
+func (c *CustomerUnitByKey) GetBillable() bool {
+	if c == nil {
+		return false
+	}
+	return c.Billable
+}
+
+func (c *CustomerUnitByKey) GetEffectiveBillable() bool {
+	if c == nil {
+		return false
+	}
+	return c.EffectiveBillable
+}
+
+func (c *CustomerUnitByKey) GetMetadata() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.Metadata
+}
+
+func (c *CustomerUnitByKey) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *CustomerUnitByKey) GetUpdatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.UpdatedAt
+}
+
+func (c *CustomerUnitByKey) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitByKey) UnmarshalJSON(data []byte) error {
+	type embed CustomerUnitByKey
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerUnitByKey(unmarshaler.embed)
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	c.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitByKey) MarshalJSON() ([]byte, error) {
+	type embed CustomerUnitByKey
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+	}{
+		embed:     embed(*c),
+		CreatedAt: internal.NewDateTime(c.CreatedAt),
+		UpdatedAt: internal.NewDateTime(c.UpdatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerUnitByKey) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+type CustomerUnitByKeyStatus string
+
+const (
+	CustomerUnitByKeyStatusActive  CustomerUnitByKeyStatus = "ACTIVE"
+	CustomerUnitByKeyStatusDeleted CustomerUnitByKeyStatus = "DELETED"
+	CustomerUnitByKeyStatusDraft   CustomerUnitByKeyStatus = "DRAFT"
+)
+
+func NewCustomerUnitByKeyStatusFromString(s string) (CustomerUnitByKeyStatus, error) {
+	switch s {
+	case "ACTIVE":
+		return CustomerUnitByKeyStatusActive, nil
+	case "DELETED":
+		return CustomerUnitByKeyStatusDeleted, nil
+	case "DRAFT":
+		return CustomerUnitByKeyStatusDraft, nil
+	}
+	var t CustomerUnitByKeyStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitByKeyStatus) Ptr() *CustomerUnitByKeyStatus {
+	return &c
+}
+
+type CustomerUnitCapEndResponse struct {
+	// Your own id for the unit (its `externalId`), the identifier the unit and cap routes take.
+	ExternalCustomerUnitID string `json:"externalCustomerUnitId" url:"externalCustomerUnitId"`
+	// The Paid display id of the customer the unit belongs to.
+	CustomerID string `json:"customerId" url:"customerId"`
+	// The credits currency this cap limits. The cap's `amount` is in this currency's credits.
+	CreditsCurrencyID string                      `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	Policy            *CustomerUnitCapEndedPolicy `json:"policy,omitempty" url:"policy,omitempty"`
+	// How many versions were closed by this call: the one in force, older overlapping versions still open, and scheduled versions. At least 1.
+	EndedVersions int `json:"endedVersions" url:"endedVersions"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapEndResponse) GetExternalCustomerUnitID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalCustomerUnitID
+}
+
+func (c *CustomerUnitCapEndResponse) GetCustomerID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CustomerID
+}
+
+func (c *CustomerUnitCapEndResponse) GetCreditsCurrencyID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CreditsCurrencyID
+}
+
+func (c *CustomerUnitCapEndResponse) GetPolicy() *CustomerUnitCapEndedPolicy {
+	if c == nil {
+		return nil
+	}
+	return c.Policy
+}
+
+func (c *CustomerUnitCapEndResponse) GetEndedVersions() int {
+	if c == nil {
+		return 0
+	}
+	return c.EndedVersions
+}
+
+func (c *CustomerUnitCapEndResponse) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapEndResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitCapEndResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapEndResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapEndResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// The cap version that was in force at the time of the call, now ended (`effectiveUntil` set). `null` when no version was in force — only scheduled versions were ended.
+type CustomerUnitCapEndedPolicy struct {
+	// The cap, in credits of the currency. JSON number; exact within ±2^53.
+	Amount float64 `json:"amount" url:"amount"`
+	// Monthly UTC periods, with boundaries defined by `schedule`.
+	Frequency CustomerUnitCapEndedPolicyFrequency `json:"frequency" url:"frequency"`
+	Schedule  *CustomerUnitCapSchedule            `json:"schedule" url:"schedule"`
+	// When this cap version started applying. The schedule independently defines its spend window.
+	EffectiveFrom time.Time `json:"effectiveFrom" url:"effectiveFrom"`
+	// When this cap version stopped applying (exclusive).
+	EffectiveUntil time.Time `json:"effectiveUntil" url:"effectiveUntil"`
+	// When this cap version was set.
+	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
+	// Where this cap version was set from.
+	Source string `json:"source" url:"source"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapEndedPolicy) GetAmount() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Amount
+}
+
+func (c *CustomerUnitCapEndedPolicy) GetFrequency() CustomerUnitCapEndedPolicyFrequency {
+	if c == nil {
+		return ""
+	}
+	return c.Frequency
+}
+
+func (c *CustomerUnitCapEndedPolicy) GetSchedule() *CustomerUnitCapSchedule {
+	if c == nil {
+		return nil
+	}
+	return c.Schedule
+}
+
+func (c *CustomerUnitCapEndedPolicy) GetEffectiveFrom() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.EffectiveFrom
+}
+
+func (c *CustomerUnitCapEndedPolicy) GetEffectiveUntil() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.EffectiveUntil
+}
+
+func (c *CustomerUnitCapEndedPolicy) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *CustomerUnitCapEndedPolicy) GetSource() string {
+	if c == nil {
+		return ""
+	}
+	return c.Source
+}
+
+func (c *CustomerUnitCapEndedPolicy) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapEndedPolicy) UnmarshalJSON(data []byte) error {
+	type embed CustomerUnitCapEndedPolicy
+	var unmarshaler = struct {
+		embed
+		EffectiveFrom  *internal.DateTime `json:"effectiveFrom"`
+		EffectiveUntil *internal.DateTime `json:"effectiveUntil"`
+		CreatedAt      *internal.DateTime `json:"createdAt"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapEndedPolicy(unmarshaler.embed)
+	c.EffectiveFrom = unmarshaler.EffectiveFrom.Time()
+	c.EffectiveUntil = unmarshaler.EffectiveUntil.Time()
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapEndedPolicy) MarshalJSON() ([]byte, error) {
+	type embed CustomerUnitCapEndedPolicy
+	var marshaler = struct {
+		embed
+		EffectiveFrom  *internal.DateTime `json:"effectiveFrom"`
+		EffectiveUntil *internal.DateTime `json:"effectiveUntil"`
+		CreatedAt      *internal.DateTime `json:"createdAt"`
+	}{
+		embed:          embed(*c),
+		EffectiveFrom:  internal.NewDateTime(c.EffectiveFrom),
+		EffectiveUntil: internal.NewDateTime(c.EffectiveUntil),
+		CreatedAt:      internal.NewDateTime(c.CreatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerUnitCapEndedPolicy) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Monthly UTC periods, with boundaries defined by `schedule`.
+type CustomerUnitCapEndedPolicyFrequency string
+
+const (
+	CustomerUnitCapEndedPolicyFrequencyMonthly CustomerUnitCapEndedPolicyFrequency = "MONTHLY"
+)
+
+func NewCustomerUnitCapEndedPolicyFrequencyFromString(s string) (CustomerUnitCapEndedPolicyFrequency, error) {
+	switch s {
+	case "MONTHLY":
+		return CustomerUnitCapEndedPolicyFrequencyMonthly, nil
+	}
+	var t CustomerUnitCapEndedPolicyFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitCapEndedPolicyFrequency) Ptr() *CustomerUnitCapEndedPolicyFrequency {
+	return &c
+}
+
+// The cap version in force now.
+type CustomerUnitCapPolicy struct {
+	// The cap, in credits of the currency. JSON number; exact within ±2^53.
+	Amount float64 `json:"amount" url:"amount"`
+	// Monthly UTC periods, with boundaries defined by `schedule`.
+	Frequency CustomerUnitCapPolicyFrequency `json:"frequency" url:"frequency"`
+	Schedule  *CustomerUnitCapSchedule       `json:"schedule" url:"schedule"`
+	// When this cap version started applying. The schedule independently defines its spend window.
+	EffectiveFrom time.Time `json:"effectiveFrom" url:"effectiveFrom"`
+	// When this cap version stopped applying (exclusive). `null` while it is open.
+	EffectiveUntil *time.Time `json:"effectiveUntil,omitempty" url:"effectiveUntil,omitempty"`
+	// When this cap version was set.
+	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
+	// Where this cap version was set from.
+	Source string `json:"source" url:"source"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapPolicy) GetAmount() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Amount
+}
+
+func (c *CustomerUnitCapPolicy) GetFrequency() CustomerUnitCapPolicyFrequency {
+	if c == nil {
+		return ""
+	}
+	return c.Frequency
+}
+
+func (c *CustomerUnitCapPolicy) GetSchedule() *CustomerUnitCapSchedule {
+	if c == nil {
+		return nil
+	}
+	return c.Schedule
+}
+
+func (c *CustomerUnitCapPolicy) GetEffectiveFrom() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.EffectiveFrom
+}
+
+func (c *CustomerUnitCapPolicy) GetEffectiveUntil() *time.Time {
+	if c == nil {
+		return nil
+	}
+	return c.EffectiveUntil
+}
+
+func (c *CustomerUnitCapPolicy) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *CustomerUnitCapPolicy) GetSource() string {
+	if c == nil {
+		return ""
+	}
+	return c.Source
+}
+
+func (c *CustomerUnitCapPolicy) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapPolicy) UnmarshalJSON(data []byte) error {
+	type embed CustomerUnitCapPolicy
+	var unmarshaler = struct {
+		embed
+		EffectiveFrom  *internal.DateTime `json:"effectiveFrom"`
+		EffectiveUntil *internal.DateTime `json:"effectiveUntil,omitempty"`
+		CreatedAt      *internal.DateTime `json:"createdAt"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapPolicy(unmarshaler.embed)
+	c.EffectiveFrom = unmarshaler.EffectiveFrom.Time()
+	c.EffectiveUntil = unmarshaler.EffectiveUntil.TimePtr()
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapPolicy) MarshalJSON() ([]byte, error) {
+	type embed CustomerUnitCapPolicy
+	var marshaler = struct {
+		embed
+		EffectiveFrom  *internal.DateTime `json:"effectiveFrom"`
+		EffectiveUntil *internal.DateTime `json:"effectiveUntil,omitempty"`
+		CreatedAt      *internal.DateTime `json:"createdAt"`
+	}{
+		embed:          embed(*c),
+		EffectiveFrom:  internal.NewDateTime(c.EffectiveFrom),
+		EffectiveUntil: internal.NewOptionalDateTime(c.EffectiveUntil),
+		CreatedAt:      internal.NewDateTime(c.CreatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerUnitCapPolicy) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Monthly UTC periods, with boundaries defined by `schedule`.
+type CustomerUnitCapPolicyFrequency string
+
+const (
+	CustomerUnitCapPolicyFrequencyMonthly CustomerUnitCapPolicyFrequency = "MONTHLY"
+)
+
+func NewCustomerUnitCapPolicyFrequencyFromString(s string) (CustomerUnitCapPolicyFrequency, error) {
+	switch s {
+	case "MONTHLY":
+		return CustomerUnitCapPolicyFrequencyMonthly, nil
+	}
+	var t CustomerUnitCapPolicyFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitCapPolicyFrequency) Ptr() *CustomerUnitCapPolicyFrequency {
+	return &c
+}
+
+type CustomerUnitCapResponse struct {
+	// Your own id for the unit (its `externalId`), the identifier the unit and cap routes take.
+	ExternalCustomerUnitID string `json:"externalCustomerUnitId" url:"externalCustomerUnitId"`
+	// The Paid display id of the customer the unit belongs to.
+	CustomerID string `json:"customerId" url:"customerId"`
+	// The credits currency this response is about: the requested `creditsCurrencyId`, or the organization's only credits currency when it was omitted.
+	CreditsCurrencyID string                        `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	Policy            *CustomerUnitCapPolicy        `json:"policy" url:"policy"`
+	CurrentPeriod     *CustomerUnitCapCurrentPeriod `json:"currentPeriod,omitempty" url:"currentPeriod,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapResponse) GetExternalCustomerUnitID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalCustomerUnitID
+}
+
+func (c *CustomerUnitCapResponse) GetCustomerID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CustomerID
+}
+
+func (c *CustomerUnitCapResponse) GetCreditsCurrencyID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CreditsCurrencyID
+}
+
+func (c *CustomerUnitCapResponse) GetPolicy() *CustomerUnitCapPolicy {
+	if c == nil {
+		return nil
+	}
+	return c.Policy
+}
+
+func (c *CustomerUnitCapResponse) GetCurrentPeriod() *CustomerUnitCapCurrentPeriod {
+	if c == nil {
+		return nil
+	}
+	return c.CurrentPeriod
+}
+
+func (c *CustomerUnitCapResponse) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitCapResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// The new version, or the existing version covering the requested effectiveFrom when changed is false. New versions are open; an existing version may have a finite end.
+type CustomerUnitCapSavedPolicy struct {
+	// The cap, in credits of the currency. JSON number; exact within ±2^53.
+	Amount float64 `json:"amount" url:"amount"`
+	// Monthly UTC periods, with boundaries defined by `schedule`.
+	Frequency CustomerUnitCapSavedPolicyFrequency `json:"frequency" url:"frequency"`
+	Schedule  *CustomerUnitCapSchedule            `json:"schedule" url:"schedule"`
+	// When this cap version started applying. The schedule independently defines its spend window.
+	EffectiveFrom time.Time `json:"effectiveFrom" url:"effectiveFrom"`
+	// When this cap version stopped applying (exclusive). `null` while it is open.
+	EffectiveUntil *time.Time `json:"effectiveUntil,omitempty" url:"effectiveUntil,omitempty"`
+	// When this cap version was set.
+	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
+	// Where this cap version was set from.
+	Source string `json:"source" url:"source"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapSavedPolicy) GetAmount() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Amount
+}
+
+func (c *CustomerUnitCapSavedPolicy) GetFrequency() CustomerUnitCapSavedPolicyFrequency {
+	if c == nil {
+		return ""
+	}
+	return c.Frequency
+}
+
+func (c *CustomerUnitCapSavedPolicy) GetSchedule() *CustomerUnitCapSchedule {
+	if c == nil {
+		return nil
+	}
+	return c.Schedule
+}
+
+func (c *CustomerUnitCapSavedPolicy) GetEffectiveFrom() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.EffectiveFrom
+}
+
+func (c *CustomerUnitCapSavedPolicy) GetEffectiveUntil() *time.Time {
+	if c == nil {
+		return nil
+	}
+	return c.EffectiveUntil
+}
+
+func (c *CustomerUnitCapSavedPolicy) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *CustomerUnitCapSavedPolicy) GetSource() string {
+	if c == nil {
+		return ""
+	}
+	return c.Source
+}
+
+func (c *CustomerUnitCapSavedPolicy) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapSavedPolicy) UnmarshalJSON(data []byte) error {
+	type embed CustomerUnitCapSavedPolicy
+	var unmarshaler = struct {
+		embed
+		EffectiveFrom  *internal.DateTime `json:"effectiveFrom"`
+		EffectiveUntil *internal.DateTime `json:"effectiveUntil,omitempty"`
+		CreatedAt      *internal.DateTime `json:"createdAt"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapSavedPolicy(unmarshaler.embed)
+	c.EffectiveFrom = unmarshaler.EffectiveFrom.Time()
+	c.EffectiveUntil = unmarshaler.EffectiveUntil.TimePtr()
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapSavedPolicy) MarshalJSON() ([]byte, error) {
+	type embed CustomerUnitCapSavedPolicy
+	var marshaler = struct {
+		embed
+		EffectiveFrom  *internal.DateTime `json:"effectiveFrom"`
+		EffectiveUntil *internal.DateTime `json:"effectiveUntil,omitempty"`
+		CreatedAt      *internal.DateTime `json:"createdAt"`
+	}{
+		embed:          embed(*c),
+		EffectiveFrom:  internal.NewDateTime(c.EffectiveFrom),
+		EffectiveUntil: internal.NewOptionalDateTime(c.EffectiveUntil),
+		CreatedAt:      internal.NewDateTime(c.CreatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerUnitCapSavedPolicy) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Monthly UTC periods, with boundaries defined by `schedule`.
+type CustomerUnitCapSavedPolicyFrequency string
+
+const (
+	CustomerUnitCapSavedPolicyFrequencyMonthly CustomerUnitCapSavedPolicyFrequency = "MONTHLY"
+)
+
+func NewCustomerUnitCapSavedPolicyFrequencyFromString(s string) (CustomerUnitCapSavedPolicyFrequency, error) {
+	switch s {
+	case "MONTHLY":
+		return CustomerUnitCapSavedPolicyFrequencyMonthly, nil
+	}
+	var t CustomerUnitCapSavedPolicyFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitCapSavedPolicyFrequency) Ptr() *CustomerUnitCapSavedPolicyFrequency {
+	return &c
+}
+
+// Omit to inherit the schedule in force at effectiveFrom. If none applies, use the creation-time UTC day. An explicit change counts spend from the new schedule’s ordinary period start, including earlier spend.
+type CustomerUnitCapScheduleInput struct {
+	CustomerUnitCapScheduleInputAnchorDay *CustomerUnitCapScheduleInputAnchorDay
+	CustomerUnitCapScheduleInputOne       *CustomerUnitCapScheduleInputOne
+
+	typ string
+}
+
+func (c *CustomerUnitCapScheduleInput) GetCustomerUnitCapScheduleInputAnchorDay() *CustomerUnitCapScheduleInputAnchorDay {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerUnitCapScheduleInputAnchorDay
+}
+
+func (c *CustomerUnitCapScheduleInput) GetCustomerUnitCapScheduleInputOne() *CustomerUnitCapScheduleInputOne {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerUnitCapScheduleInputOne
+}
+
+func (c *CustomerUnitCapScheduleInput) UnmarshalJSON(data []byte) error {
+	valueCustomerUnitCapScheduleInputAnchorDay := new(CustomerUnitCapScheduleInputAnchorDay)
+	if err := json.Unmarshal(data, &valueCustomerUnitCapScheduleInputAnchorDay); err == nil {
+		c.typ = "CustomerUnitCapScheduleInputAnchorDay"
+		c.CustomerUnitCapScheduleInputAnchorDay = valueCustomerUnitCapScheduleInputAnchorDay
+		return nil
+	}
+	valueCustomerUnitCapScheduleInputOne := new(CustomerUnitCapScheduleInputOne)
+	if err := json.Unmarshal(data, &valueCustomerUnitCapScheduleInputOne); err == nil {
+		c.typ = "CustomerUnitCapScheduleInputOne"
+		c.CustomerUnitCapScheduleInputOne = valueCustomerUnitCapScheduleInputOne
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, c)
+}
+
+func (c CustomerUnitCapScheduleInput) MarshalJSON() ([]byte, error) {
+	if c.typ == "CustomerUnitCapScheduleInputAnchorDay" || c.CustomerUnitCapScheduleInputAnchorDay != nil {
+		return json.Marshal(c.CustomerUnitCapScheduleInputAnchorDay)
+	}
+	if c.typ == "CustomerUnitCapScheduleInputOne" || c.CustomerUnitCapScheduleInputOne != nil {
+		return json.Marshal(c.CustomerUnitCapScheduleInputOne)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", c)
+}
+
+type CustomerUnitCapScheduleInputVisitor interface {
+	VisitCustomerUnitCapScheduleInputAnchorDay(*CustomerUnitCapScheduleInputAnchorDay) error
+	VisitCustomerUnitCapScheduleInputOne(*CustomerUnitCapScheduleInputOne) error
+}
+
+func (c *CustomerUnitCapScheduleInput) Accept(visitor CustomerUnitCapScheduleInputVisitor) error {
+	if c.typ == "CustomerUnitCapScheduleInputAnchorDay" || c.CustomerUnitCapScheduleInputAnchorDay != nil {
+		return visitor.VisitCustomerUnitCapScheduleInputAnchorDay(c.CustomerUnitCapScheduleInputAnchorDay)
+	}
+	if c.typ == "CustomerUnitCapScheduleInputOne" || c.CustomerUnitCapScheduleInputOne != nil {
+		return visitor.VisitCustomerUnitCapScheduleInputOne(c.CustomerUnitCapScheduleInputOne)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", c)
+}
+
+type CustomerUnitCapScheduleInputAnchorDay struct {
+	Type CustomerUnitCapScheduleInputAnchorDayType `json:"type" url:"type"`
+	// UTC day of month, clamped to the last day in shorter months.
+	AnchorDay int `json:"anchorDay" url:"anchorDay"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapScheduleInputAnchorDay) GetType() CustomerUnitCapScheduleInputAnchorDayType {
+	if c == nil {
+		return ""
+	}
+	return c.Type
+}
+
+func (c *CustomerUnitCapScheduleInputAnchorDay) GetAnchorDay() int {
+	if c == nil {
+		return 0
+	}
+	return c.AnchorDay
+}
+
+func (c *CustomerUnitCapScheduleInputAnchorDay) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapScheduleInputAnchorDay) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitCapScheduleInputAnchorDay
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapScheduleInputAnchorDay(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapScheduleInputAnchorDay) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerUnitCapScheduleInputAnchorDayType string
+
+const (
+	CustomerUnitCapScheduleInputAnchorDayTypeAnchored CustomerUnitCapScheduleInputAnchorDayType = "ANCHORED"
+)
+
+func NewCustomerUnitCapScheduleInputAnchorDayTypeFromString(s string) (CustomerUnitCapScheduleInputAnchorDayType, error) {
+	switch s {
+	case "ANCHORED":
+		return CustomerUnitCapScheduleInputAnchorDayTypeAnchored, nil
+	}
+	var t CustomerUnitCapScheduleInputAnchorDayType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitCapScheduleInputAnchorDayType) Ptr() *CustomerUnitCapScheduleInputAnchorDayType {
+	return &c
+}
+
+type CustomerUnitCapScheduleInputOne struct {
+	Type CustomerUnitCapScheduleInputOneType `json:"type" url:"type"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapScheduleInputOne) GetType() CustomerUnitCapScheduleInputOneType {
+	if c == nil {
+		return ""
+	}
+	return c.Type
+}
+
+func (c *CustomerUnitCapScheduleInputOne) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapScheduleInputOne) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitCapScheduleInputOne
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapScheduleInputOne(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapScheduleInputOne) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerUnitCapScheduleInputOneType string
+
+const (
+	CustomerUnitCapScheduleInputOneTypeCalendar CustomerUnitCapScheduleInputOneType = "CALENDAR"
+)
+
+func NewCustomerUnitCapScheduleInputOneTypeFromString(s string) (CustomerUnitCapScheduleInputOneType, error) {
+	switch s {
+	case "CALENDAR":
+		return CustomerUnitCapScheduleInputOneTypeCalendar, nil
+	}
+	var t CustomerUnitCapScheduleInputOneType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitCapScheduleInputOneType) Ptr() *CustomerUnitCapScheduleInputOneType {
+	return &c
+}
+
+type CustomerUnitCapSet struct {
+	// The cap, in credits of the currency, per period. Must be positive.
+	Amount float64 `json:"amount" url:"amount"`
+	// Monthly UTC periods, with boundaries defined by `schedule`.
+	Frequency *CustomerUnitCapSetFrequency  `json:"frequency,omitempty" url:"frequency,omitempty"`
+	Schedule  *CustomerUnitCapScheduleInput `json:"schedule,omitempty" url:"schedule,omitempty"`
+	// The credits currency to cap. Omit it only when the organization has exactly one credits currency, which is then used; otherwise it is required.
+	CreditsCurrencyID *string `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	// ISO 8601 timestamp. When the cap starts applying, independently of its schedule. Defaults to now. Spend earlier in the schedule’s current period still counts.
+	EffectiveFrom *time.Time `json:"effectiveFrom,omitempty" url:"effectiveFrom,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapSet) GetAmount() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Amount
+}
+
+func (c *CustomerUnitCapSet) GetFrequency() *CustomerUnitCapSetFrequency {
+	if c == nil {
+		return nil
+	}
+	return c.Frequency
+}
+
+func (c *CustomerUnitCapSet) GetSchedule() *CustomerUnitCapScheduleInput {
+	if c == nil {
+		return nil
+	}
+	return c.Schedule
+}
+
+func (c *CustomerUnitCapSet) GetCreditsCurrencyID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CreditsCurrencyID
+}
+
+func (c *CustomerUnitCapSet) GetEffectiveFrom() *time.Time {
+	if c == nil {
+		return nil
+	}
+	return c.EffectiveFrom
+}
+
+func (c *CustomerUnitCapSet) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapSet) UnmarshalJSON(data []byte) error {
+	type embed CustomerUnitCapSet
+	var unmarshaler = struct {
+		embed
+		EffectiveFrom *internal.DateTime `json:"effectiveFrom,omitempty"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapSet(unmarshaler.embed)
+	c.EffectiveFrom = unmarshaler.EffectiveFrom.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapSet) MarshalJSON() ([]byte, error) {
+	type embed CustomerUnitCapSet
+	var marshaler = struct {
+		embed
+		EffectiveFrom *internal.DateTime `json:"effectiveFrom,omitempty"`
+	}{
+		embed:         embed(*c),
+		EffectiveFrom: internal.NewOptionalDateTime(c.EffectiveFrom),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerUnitCapSet) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Monthly UTC periods, with boundaries defined by `schedule`.
+type CustomerUnitCapSetFrequency string
+
+const (
+	CustomerUnitCapSetFrequencyMonthly CustomerUnitCapSetFrequency = "MONTHLY"
+)
+
+func NewCustomerUnitCapSetFrequencyFromString(s string) (CustomerUnitCapSetFrequency, error) {
+	switch s {
+	case "MONTHLY":
+		return CustomerUnitCapSetFrequencyMonthly, nil
+	}
+	var t CustomerUnitCapSetFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitCapSetFrequency) Ptr() *CustomerUnitCapSetFrequency {
+	return &c
+}
+
+type CustomerUnitCapSetResponse struct {
+	// Your own id for the unit (its `externalId`), the identifier the unit and cap routes take.
+	ExternalCustomerUnitID string `json:"externalCustomerUnitId" url:"externalCustomerUnitId"`
+	// The Paid display id of the customer the unit belongs to.
+	CustomerID string `json:"customerId" url:"customerId"`
+	// The credits currency the cap was set on: the requested `creditsCurrencyId`, or the organization's only credits currency when it was omitted.
+	CreditsCurrencyID string `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	// Whether this save created a policy version. False when the effective timeline was already identical.
+	Changed       bool                          `json:"changed" url:"changed"`
+	Policy        *CustomerUnitCapSavedPolicy   `json:"policy" url:"policy"`
+	CurrentPeriod *CustomerUnitCapCurrentPeriod `json:"currentPeriod,omitempty" url:"currentPeriod,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapSetResponse) GetExternalCustomerUnitID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalCustomerUnitID
+}
+
+func (c *CustomerUnitCapSetResponse) GetCustomerID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CustomerID
+}
+
+func (c *CustomerUnitCapSetResponse) GetCreditsCurrencyID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CreditsCurrencyID
+}
+
+func (c *CustomerUnitCapSetResponse) GetChanged() bool {
+	if c == nil {
+		return false
+	}
+	return c.Changed
+}
+
+func (c *CustomerUnitCapSetResponse) GetPolicy() *CustomerUnitCapSavedPolicy {
+	if c == nil {
+		return nil
+	}
+	return c.Policy
+}
+
+func (c *CustomerUnitCapSetResponse) GetCurrentPeriod() *CustomerUnitCapCurrentPeriod {
+	if c == nil {
+		return nil
+	}
+	return c.CurrentPeriod
+}
+
+func (c *CustomerUnitCapSetResponse) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapSetResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitCapSetResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapSetResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapSetResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerUnitCreate struct {
+	// Your own id for the unit: required, immutable, at most 255 characters, and unique within the organization: no other customer's unit id, external id or alias may be the same, ignoring letter case. Every unit route addresses the unit by it (percent-encode it in the path), and so do signals (`customerUnit.externalCustomerUnitId`). Cannot be `.` or `..`.
+	ExternalID string `json:"externalId" url:"externalId"`
+	// Display name (defaults to the external ID).
+	Name *string `json:"name,omitempty" url:"name,omitempty"`
+	// Your structural vocabulary for the unit (`department`, `tenant`, `team`, ...). Free text; filterable; Paid never branches on it.
+	ExternalType *string `json:"externalType,omitempty" url:"externalType,omitempty"`
+	// Your external ID of the parent unit; omit it to create the root unit.
+	ParentExternalID *string `json:"parentExternalId,omitempty" url:"parentExternalId,omitempty"`
+	// Freeform JSON for your own use.
+	Metadata map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
+	// `false` makes the unit non-billable, together with every unit under it (a dev or QA environment, say). Defaults to `true`. The root unit is always billable (`409 ROOT_UNIT_ALWAYS_BILLABLE`): a customer that should never be billed simply has no order. Sending `false` needs non-billable units enabled for your organization (`403 FEATURE_NOT_ENABLED` otherwise). Usage on a non-billable unit is still recorded but not billed: it burns no credits, adds nothing to invoices or overage, and counts toward no cap, on a price whose usage comes from a meter (read from your events when the invoice closes) too. A meter's derived signal, and a correlation-window meter's window, follow the source event they take their unit from (the window's closing event, else its opening event): they are not billed when that event was not. Usage is still billed when it is sent with a customer API key, and on cost-plus pricing, which bills from costs that carry no unit. Only signals sent to `/api/v2/signals` that resolve to an active unit, by its key or through an alias on it, can be non-billable, and a change applies to signals received afterwards.
+	Billable *bool `json:"billable,omitempty" url:"billable,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCreate) GetExternalID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalID
+}
+
+func (c *CustomerUnitCreate) GetName() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Name
+}
+
+func (c *CustomerUnitCreate) GetExternalType() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ExternalType
+}
+
+func (c *CustomerUnitCreate) GetParentExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ParentExternalID
+}
+
+func (c *CustomerUnitCreate) GetMetadata() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.Metadata
+}
+
+func (c *CustomerUnitCreate) GetBillable() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.Billable
+}
+
+func (c *CustomerUnitCreate) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCreate) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitCreate
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitCreate(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCreate) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerUnitCreatedUnderParent struct {
+	// Your own id for the unit, unique within the customer; the identifier every unit route takes.
+	ExternalID string `json:"externalId" url:"externalId"`
+	// Paid's id of the customer the unit belongs to (`cus_…`). `null` only for a legacy customer that has no Paid id; `customerExternalId` still names it.
+	CustomerID *string `json:"customerId,omitempty" url:"customerId,omitempty"`
+	// Your external id of that customer, when it has one.
+	CustomerExternalID *string `json:"customerExternalId,omitempty" url:"customerExternalId,omitempty"`
+	// Display name. Never used to address the unit.
+	Name string `json:"name" url:"name"`
+	// Your structural vocabulary for the unit.
+	ExternalType *string `json:"externalType,omitempty" url:"externalType,omitempty"`
+	// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+	Status CustomerUnitCreatedUnderParentStatus `json:"status" url:"status"`
+	// `externalId` of the parent unit; `null` only on the customer's root unit.
+	ParentExternalID *string `json:"parentExternalId,omitempty" url:"parentExternalId,omitempty"`
+	// Whether this unit is the customer's root: the one unit without a parent. Derived from the missing parent, not stored. At most one active root per customer; the root cannot be moved, and once deleted a new root can be created.
+	IsRoot bool `json:"isRoot" url:"isRoot"`
+	// The unit's own setting, as last created or updated: `false` marks it, and every unit under it, non-billable. Always `true` on the root. `effectiveBillable` says whether the unit is billable once its ancestors are counted. Usage on a non-billable unit is still recorded but not billed: it burns no credits, adds nothing to invoices or overage, and counts toward no cap, on a price whose usage comes from a meter (read from your events when the invoice closes) too. A meter's derived signal, and a correlation-window meter's window, follow the source event they take their unit from (the window's closing event, else its opening event): they are not billed when that event was not. Usage is still billed when it is sent with a customer API key, and on cost-plus pricing, which bills from costs that carry no unit. Only signals sent to `/api/v2/signals` that resolve to an active unit, by its key or through an alias on it, can be non-billable, and a change applies to signals received afterwards.
+	Billable bool `json:"billable" url:"billable"`
+	// Read-only. Whether the unit is billable in effect: `false` when the unit or any unit above it has `billable: false`. A unit cannot make itself billable under a non-billable ancestor, and moving a unit under one makes it non-billable.
+	EffectiveBillable bool                   `json:"effectiveBillable" url:"effectiveBillable"`
+	Metadata          map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
+	CreatedAt         time.Time              `json:"createdAt" url:"createdAt"`
+	UpdatedAt         time.Time              `json:"updatedAt" url:"updatedAt"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetExternalID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalID
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetCustomerID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerID
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetCustomerExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerExternalID
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetExternalType() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ExternalType
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetStatus() CustomerUnitCreatedUnderParentStatus {
+	if c == nil {
+		return ""
+	}
+	return c.Status
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetParentExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ParentExternalID
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetIsRoot() bool {
+	if c == nil {
+		return false
+	}
+	return c.IsRoot
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetBillable() bool {
+	if c == nil {
+		return false
+	}
+	return c.Billable
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetEffectiveBillable() bool {
+	if c == nil {
+		return false
+	}
+	return c.EffectiveBillable
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetMetadata() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.Metadata
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetCreatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.CreatedAt
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetUpdatedAt() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.UpdatedAt
+}
+
+func (c *CustomerUnitCreatedUnderParent) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCreatedUnderParent) UnmarshalJSON(data []byte) error {
+	type embed CustomerUnitCreatedUnderParent
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerUnitCreatedUnderParent(unmarshaler.embed)
+	c.CreatedAt = unmarshaler.CreatedAt.Time()
+	c.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCreatedUnderParent) MarshalJSON() ([]byte, error) {
+	type embed CustomerUnitCreatedUnderParent
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+	}{
+		embed:     embed(*c),
+		CreatedAt: internal.NewDateTime(c.CreatedAt),
+		UpdatedAt: internal.NewDateTime(c.UpdatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerUnitCreatedUnderParent) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+type CustomerUnitCreatedUnderParentStatus string
+
+const (
+	CustomerUnitCreatedUnderParentStatusActive  CustomerUnitCreatedUnderParentStatus = "ACTIVE"
+	CustomerUnitCreatedUnderParentStatusDeleted CustomerUnitCreatedUnderParentStatus = "DELETED"
+	CustomerUnitCreatedUnderParentStatusDraft   CustomerUnitCreatedUnderParentStatus = "DRAFT"
+)
+
+func NewCustomerUnitCreatedUnderParentStatusFromString(s string) (CustomerUnitCreatedUnderParentStatus, error) {
+	switch s {
+	case "ACTIVE":
+		return CustomerUnitCreatedUnderParentStatusActive, nil
+	case "DELETED":
+		return CustomerUnitCreatedUnderParentStatusDeleted, nil
+	case "DRAFT":
+		return CustomerUnitCreatedUnderParentStatusDraft, nil
+	}
+	var t CustomerUnitCreatedUnderParentStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitCreatedUnderParentStatus) Ptr() *CustomerUnitCreatedUnderParentStatus {
+	return &c
+}
+
+type CustomerUnitListResponse struct {
+	// Flat list ordered by creation time; assemble the tree client-side from `parentExternalId` (`null` on the root).
+	Data       []*CustomerUnit `json:"data" url:"data"`
+	Pagination *Pagination     `json:"pagination" url:"pagination"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitListResponse) GetData() []*CustomerUnit {
+	if c == nil {
+		return nil
+	}
+	return c.Data
+}
+
+func (c *CustomerUnitListResponse) GetPagination() *Pagination {
+	if c == nil {
+		return nil
+	}
+	return c.Pagination
+}
+
+func (c *CustomerUnitListResponse) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitListResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitListResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitListResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitListResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerUnitSpendResponse struct {
+	// Your own id for the unit (its `externalId`), the identifier the unit and cap routes take.
+	ExternalCustomerUnitID string `json:"externalCustomerUnitId" url:"externalCustomerUnitId"`
+	// The Paid display id of the customer the unit belongs to.
+	CustomerID string `json:"customerId" url:"customerId"`
+	// The credits currency this response is about: the requested `creditsCurrencyId`, or the organization's only credits currency when it was omitted.
+	CreditsCurrencyID string                   `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	Window            *CustomerUnitSpendWindow `json:"window" url:"window"`
+	// Credits of this currency spent by this unit and every unit beneath it during the window, net of reversals. Counted whether or not the unit has a cap. JSON number; exact within ±2^53.
+	Spent float64 `json:"spent" url:"spent"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitSpendResponse) GetExternalCustomerUnitID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalCustomerUnitID
+}
+
+func (c *CustomerUnitSpendResponse) GetCustomerID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CustomerID
+}
+
+func (c *CustomerUnitSpendResponse) GetCreditsCurrencyID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CreditsCurrencyID
+}
+
+func (c *CustomerUnitSpendResponse) GetWindow() *CustomerUnitSpendWindow {
+	if c == nil {
+		return nil
+	}
+	return c.Window
+}
+
+func (c *CustomerUnitSpendResponse) GetSpent() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Spent
+}
+
+func (c *CustomerUnitSpendResponse) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitSpendResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitSpendResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitSpendResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitSpendResponse) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// The window `spent` covers: the one requested, or the current calendar month (UTC) when none was given.
+type CustomerUnitSpendWindow struct {
+	// Inclusive start of the window, UTC.
+	Start time.Time `json:"start" url:"start"`
+	// Exclusive end of the window, UTC.
+	End time.Time `json:"end" url:"end"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitSpendWindow) GetStart() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.Start
+}
+
+func (c *CustomerUnitSpendWindow) GetEnd() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.End
+}
+
+func (c *CustomerUnitSpendWindow) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitSpendWindow) UnmarshalJSON(data []byte) error {
+	type embed CustomerUnitSpendWindow
+	var unmarshaler = struct {
+		embed
+		Start *internal.DateTime `json:"start"`
+		End   *internal.DateTime `json:"end"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerUnitSpendWindow(unmarshaler.embed)
+	c.Start = unmarshaler.Start.Time()
+	c.End = unmarshaler.End.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitSpendWindow) MarshalJSON() ([]byte, error) {
+	type embed CustomerUnitSpendWindow
+	var marshaler = struct {
+		embed
+		Start *internal.DateTime `json:"start"`
+		End   *internal.DateTime `json:"end"`
+	}{
+		embed: embed(*c),
+		Start: internal.NewDateTime(c.Start),
+		End:   internal.NewDateTime(c.End),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerUnitSpendWindow) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+type CustomerUnitStatus string
+
+const (
+	CustomerUnitStatusActive  CustomerUnitStatus = "ACTIVE"
+	CustomerUnitStatusDeleted CustomerUnitStatus = "DELETED"
+	CustomerUnitStatusDraft   CustomerUnitStatus = "DRAFT"
+)
+
+func NewCustomerUnitStatusFromString(s string) (CustomerUnitStatus, error) {
+	switch s {
+	case "ACTIVE":
+		return CustomerUnitStatusActive, nil
+	case "DELETED":
+		return CustomerUnitStatusDeleted, nil
+	case "DRAFT":
+		return CustomerUnitStatusDraft, nil
+	}
+	var t CustomerUnitStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitStatus) Ptr() *CustomerUnitStatus {
+	return &c
+}
+
+type CustomerUnitUpdate struct {
+	// Display name. Never used to address the unit.
+	Name *string `json:"name,omitempty" url:"name,omitempty"`
+	// Your structural vocabulary for the unit (`department`, `tenant`, `team`, ...). Free text; filterable; Paid never branches on it.
+	ExternalType *string `json:"externalType,omitempty" url:"externalType,omitempty"`
+	// Your external ID of the new parent unit; moves the unit and its subtree.
+	ParentExternalID *string `json:"parentExternalId,omitempty" url:"parentExternalId,omitempty"`
+	// Freeform JSON for your own use.
+	Metadata map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
+	// Flips the unit's own setting either way. Under a non-billable ancestor the unit stays non-billable in effect (`effectiveBillable`) whatever its own value. Refused on the root unit, which is always billable (`409 ROOT_UNIT_ALWAYS_BILLABLE`). Sending `false` needs non-billable units enabled for your organization (`403 FEATURE_NOT_ENABLED` otherwise). Usage on a non-billable unit is still recorded but not billed: it burns no credits, adds nothing to invoices or overage, and counts toward no cap, on a price whose usage comes from a meter (read from your events when the invoice closes) too. A meter's derived signal, and a correlation-window meter's window, follow the source event they take their unit from (the window's closing event, else its opening event): they are not billed when that event was not. Usage is still billed when it is sent with a customer API key, and on cost-plus pricing, which bills from costs that carry no unit. Only signals sent to `/api/v2/signals` that resolve to an active unit, by its key or through an alias on it, can be non-billable, and a change applies to signals received afterwards.
+	Billable *bool `json:"billable,omitempty" url:"billable,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitUpdate) GetName() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Name
+}
+
+func (c *CustomerUnitUpdate) GetExternalType() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ExternalType
+}
+
+func (c *CustomerUnitUpdate) GetParentExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ParentExternalID
+}
+
+func (c *CustomerUnitUpdate) GetMetadata() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.Metadata
+}
+
+func (c *CustomerUnitUpdate) GetBillable() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.Billable
+}
+
+func (c *CustomerUnitUpdate) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitUpdate) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitUpdate
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitUpdate(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitUpdate) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
 type CustomerUser struct {
 	ID                 string                 `json:"id" url:"id"`
 	ExternalID         string                 `json:"externalId" url:"externalId"`
@@ -2708,7 +5877,7 @@ func (c CustomerUserStatus) Ptr() *CustomerUserStatus {
 }
 
 type GrantCustomerCreditsResponse struct {
-	// True when this request created a new grant.
+	// True when this request created a new grant. False when an earlier request with the same idempotencyKey already created it.
 	Created        bool                 `json:"created" url:"created"`
 	Customer       *CreditGrantCustomer `json:"customer" url:"customer"`
 	CreditCurrency *CreditGrantCurrency `json:"creditCurrency" url:"creditCurrency"`
@@ -2805,8 +5974,10 @@ func (g *GrantCustomerCreditsResponse) String() string {
 }
 
 type PendingCreditConsumption struct {
-	// Number of credits consumed. This is not a monetary amount.
-	Credits        int                               `json:"credits" url:"credits"`
+	// Whole-credit projection of the credits consumed, truncated toward zero. May be 0 for a sub-unit consumption. Exact for values within ±2^53; see creditsDecimal for the exact value at any magnitude. This is not a monetary amount.
+	Credits int `json:"credits" url:"credits"`
+	// Exact number of credits consumed, as a decimal string. Exact at any magnitude, and at the full 6 decimal places.
+	CreditsDecimal string                            `json:"creditsDecimal" url:"creditsDecimal"`
 	CreditCurrency *PendingCreditConsumptionCurrency `json:"creditCurrency,omitempty" url:"creditCurrency,omitempty"`
 	// Paid order display ID the consumption belongs to, if any.
 	OrderID *string `json:"orderId,omitempty" url:"orderId,omitempty"`
@@ -2826,6 +5997,13 @@ func (p *PendingCreditConsumption) GetCredits() int {
 		return 0
 	}
 	return p.Credits
+}
+
+func (p *PendingCreditConsumption) GetCreditsDecimal() string {
+	if p == nil {
+		return ""
+	}
+	return p.CreditsDecimal
 }
 
 func (p *PendingCreditConsumption) GetCreditCurrency() *PendingCreditConsumptionCurrency {
@@ -3221,6 +6399,167 @@ func (u *UpdateCustomerRequest) String() string {
 	return fmt.Sprintf("%#v", u)
 }
 
+type DeleteCustomerUnitAliasByExternalIDResponse struct {
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (d *DeleteCustomerUnitAliasByExternalIDResponse) GetExtraProperties() map[string]interface{} {
+	return d.extraProperties
+}
+
+func (d *DeleteCustomerUnitAliasByExternalIDResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler DeleteCustomerUnitAliasByExternalIDResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*d = DeleteCustomerUnitAliasByExternalIDResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *d)
+	if err != nil {
+		return err
+	}
+	d.extraProperties = extraProperties
+	d.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (d *DeleteCustomerUnitAliasByExternalIDResponse) String() string {
+	if len(d.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(d.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(d); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", d)
+}
+
+type DeleteCustomerUnitAliasByKeyResponse struct {
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (d *DeleteCustomerUnitAliasByKeyResponse) GetExtraProperties() map[string]interface{} {
+	return d.extraProperties
+}
+
+func (d *DeleteCustomerUnitAliasByKeyResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler DeleteCustomerUnitAliasByKeyResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*d = DeleteCustomerUnitAliasByKeyResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *d)
+	if err != nil {
+		return err
+	}
+	d.extraProperties = extraProperties
+	d.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (d *DeleteCustomerUnitAliasByKeyResponse) String() string {
+	if len(d.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(d.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(d); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", d)
+}
+
+type DeleteCustomerUnitAliasResponse struct {
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (d *DeleteCustomerUnitAliasResponse) GetExtraProperties() map[string]interface{} {
+	return d.extraProperties
+}
+
+func (d *DeleteCustomerUnitAliasResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler DeleteCustomerUnitAliasResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*d = DeleteCustomerUnitAliasResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *d)
+	if err != nil {
+		return err
+	}
+	d.extraProperties = extraProperties
+	d.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (d *DeleteCustomerUnitAliasResponse) String() string {
+	if len(d.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(d.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(d); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", d)
+}
+
+type ListCustomerUnitsByExternalIDRequestStatus string
+
+const (
+	ListCustomerUnitsByExternalIDRequestStatusActive  ListCustomerUnitsByExternalIDRequestStatus = "ACTIVE"
+	ListCustomerUnitsByExternalIDRequestStatusDeleted ListCustomerUnitsByExternalIDRequestStatus = "DELETED"
+	ListCustomerUnitsByExternalIDRequestStatusDraft   ListCustomerUnitsByExternalIDRequestStatus = "DRAFT"
+)
+
+func NewListCustomerUnitsByExternalIDRequestStatusFromString(s string) (ListCustomerUnitsByExternalIDRequestStatus, error) {
+	switch s {
+	case "ACTIVE":
+		return ListCustomerUnitsByExternalIDRequestStatusActive, nil
+	case "DELETED":
+		return ListCustomerUnitsByExternalIDRequestStatusDeleted, nil
+	case "DRAFT":
+		return ListCustomerUnitsByExternalIDRequestStatusDraft, nil
+	}
+	var t ListCustomerUnitsByExternalIDRequestStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListCustomerUnitsByExternalIDRequestStatus) Ptr() *ListCustomerUnitsByExternalIDRequestStatus {
+	return &l
+}
+
+type ListCustomerUnitsRequestStatus string
+
+const (
+	ListCustomerUnitsRequestStatusActive  ListCustomerUnitsRequestStatus = "ACTIVE"
+	ListCustomerUnitsRequestStatusDeleted ListCustomerUnitsRequestStatus = "DELETED"
+	ListCustomerUnitsRequestStatusDraft   ListCustomerUnitsRequestStatus = "DRAFT"
+)
+
+func NewListCustomerUnitsRequestStatusFromString(s string) (ListCustomerUnitsRequestStatus, error) {
+	switch s {
+	case "ACTIVE":
+		return ListCustomerUnitsRequestStatusActive, nil
+	case "DELETED":
+		return ListCustomerUnitsRequestStatusDeleted, nil
+	case "DRAFT":
+		return ListCustomerUnitsRequestStatusDraft, nil
+	}
+	var t ListCustomerUnitsRequestStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListCustomerUnitsRequestStatus) Ptr() *ListCustomerUnitsRequestStatus {
+	return &l
+}
+
 type ListCustomersRequestCreationState string
 
 const (
@@ -3300,6 +6639,48 @@ func (u *UpdateCustomerByIDRequest) UnmarshalJSON(data []byte) error {
 }
 
 func (u *UpdateCustomerByIDRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.Body)
+}
+
+type UpdateCustomerUnitRequest struct {
+	// Paid customer display id
+	ID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string              `json:"-" url:"-"`
+	Body                   *CustomerUnitUpdate `json:"-" url:"-"`
+}
+
+func (u *UpdateCustomerUnitRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerUnitUpdate)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	u.Body = body
+	return nil
+}
+
+func (u *UpdateCustomerUnitRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.Body)
+}
+
+type UpdateCustomerUnitByExternalIDRequest struct {
+	// Customer ID from your system, stored on Paid as the customer's `externalId`.
+	ExternalID string `json:"-" url:"-"`
+	// Your own id for the unit (its `externalId`), unique within this customer.
+	ExternalCustomerUnitID string              `json:"-" url:"-"`
+	Body                   *CustomerUnitUpdate `json:"-" url:"-"`
+}
+
+func (u *UpdateCustomerUnitByExternalIDRequest) UnmarshalJSON(data []byte) error {
+	body := new(CustomerUnitUpdate)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	u.Body = body
+	return nil
+}
+
+func (u *UpdateCustomerUnitByExternalIDRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(u.Body)
 }
 

@@ -10,6 +10,10 @@ import (
 )
 
 type CreateCustomViewRequest struct {
+	// Enable customer unit navigation for a customer-scoped view. Setting true requires customer hierarchies to be enabled for your organization, and every query must support unit selection. Existing views default to false.
+	HierarchyEnabled *bool `json:"hierarchyEnabled,omitempty" url:"-"`
+	// Send the customer's unit caps to the render bundle as `context.caps`. Needs `hierarchyEnabled` on a customer-scoped view. Turn it on only for views that draw cap usage: each load then reads cap usage from billing. Caps are spend policy, so an API key also needs `read:billing` to receive them in the data (they are left out otherwise) or to mint this view's embed token. Defaults to false.
+	CapsEnabled *bool `json:"capsEnabled,omitempty" url:"-"`
 	// Human-readable view name (shown in preview + audit log).
 	Name string `json:"name" url:"-"`
 	// Optional longer description of what the view shows.
@@ -20,12 +24,22 @@ type CreateCustomViewRequest struct {
 	RenderBundle string `json:"renderBundle" url:"-"`
 	// Optional default date range. Required if any query uses the `{period_start:DateTime}` / `{period_end:DateTime}` placeholders. Can be changed later in Paid without re-authoring.
 	Period *CreateCustomViewRequestPeriod `json:"period,omitempty" url:"-"`
+	// Optional per-request filter parameters. Required for every {filter_<name>:String} placeholder the queries reference.
+	Filters []*CustomViewFilter `json:"filters,omitempty" url:"-"`
 	// 'customer' (default): data is scoped to one viewing customer and the view is embeddable per-customer. 'organization': data is org-wide; the view is internal-only (visible to org members in Paid, never embeddable).
 	Scope *CreateCustomViewRequestScope `json:"scope,omitempty" url:"-"`
 }
 
 type GetCustomViewRequest struct {
 	DisplayID string `json:"-" url:"-"`
+}
+
+type GetCustomViewCustomerUnitsRequest struct {
+	DisplayID string `json:"-" url:"-"`
+	Limit     *int   `json:"-" url:"limit,omitempty"`
+	Offset    *int   `json:"-" url:"offset,omitempty"`
+	// The customer's external ID, Paid customer ID, or internal ID.
+	CustomerID string `json:"-" url:"customerId"`
 }
 
 type GetCustomViewDataRequest struct {
@@ -42,6 +56,12 @@ type GetCustomViewDataRequest struct {
 	PeriodStart *string `json:"-" url:"periodStart,omitempty"`
 	// absolute override only: inclusive end date (YYYY-MM-DD).
 	PeriodEnd *string `json:"-" url:"periodEnd,omitempty"`
+	// Pass 'true' to also serve a DRAFT view, so you can check its real data before publishing. Without it a DRAFT returns 404. End-customer embeds and share links never serve a DRAFT.
+	IncludeDraft *GetCustomViewDataRequestIncludeDraft `json:"-" url:"includeDraft,omitempty"`
+	// Unit selection for this request. Omit both unit parameters for all customer activity. Shared links instead use their saved starting selection when omitted; pass all to reset a shared link.
+	UnitMode *GetCustomViewDataRequestUnitMode `json:"-" url:"unitMode,omitempty"`
+	// The unit's external ID. Required with direct or subtree, and omitted with all.
+	UnitExternalID *string `json:"-" url:"unitExternalId,omitempty"`
 }
 
 type GetCustomViewEmbedTokenRequest struct {
@@ -57,6 +77,10 @@ type PublishCustomViewRequest struct {
 }
 
 type CustomView struct {
+	// Enable customer unit navigation for a customer-scoped view. Setting true requires customer hierarchies to be enabled for your organization, and every query must support unit selection. Existing views default to false.
+	HierarchyEnabled *bool `json:"hierarchyEnabled,omitempty" url:"hierarchyEnabled,omitempty"`
+	// Send the customer's unit caps to the render bundle as `context.caps`. Needs `hierarchyEnabled` on a customer-scoped view. Turn it on only for views that draw cap usage: each load then reads cap usage from billing. Caps are spend policy, so an API key also needs `read:billing` to receive them in the data (they are left out otherwise) or to mint this view's embed token. Defaults to false.
+	CapsEnabled *bool `json:"capsEnabled,omitempty" url:"capsEnabled,omitempty"`
 	// Stable public identifier used in preview/embed URLs.
 	DisplayID string `json:"displayId" url:"displayId"`
 	Name      string `json:"name" url:"name"`
@@ -69,6 +93,20 @@ type CustomView struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (c *CustomView) GetHierarchyEnabled() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.HierarchyEnabled
+}
+
+func (c *CustomView) GetCapsEnabled() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.CapsEnabled
 }
 
 func (c *CustomView) GetDisplayID() string {
@@ -138,7 +176,502 @@ func (c *CustomView) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
+// A cap in force on one of the customer's units, as the customer unit cap read returns it. `used` covers the unit and every unit under it.
+type CustomViewContextCap struct {
+	// The cap, in credits of the currency. JSON number; exact within ±2^53.
+	Amount float64 `json:"amount" url:"amount"`
+	// Monthly UTC periods, with boundaries defined by `schedule`.
+	Frequency CustomViewContextCapFrequency `json:"frequency" url:"frequency"`
+	Schedule  *CustomerUnitCapSchedule      `json:"schedule" url:"schedule"`
+	// The capped unit's externalId, as in `units`.
+	ExternalID string `json:"externalId" url:"externalId"`
+	// The credits currency this cap limits.
+	CreditsCurrencyID string `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	// That currency's key, such as `agent_credits`.
+	CreditsCurrencyKey string `json:"creditsCurrencyKey" url:"creditsCurrencyKey"`
+	// That currency's display name.
+	CreditsCurrencyName string                        `json:"creditsCurrencyName" url:"creditsCurrencyName"`
+	CurrentPeriod       *CustomerUnitCapCurrentPeriod `json:"currentPeriod,omitempty" url:"currentPeriod,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewContextCap) GetAmount() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Amount
+}
+
+func (c *CustomViewContextCap) GetFrequency() CustomViewContextCapFrequency {
+	if c == nil {
+		return ""
+	}
+	return c.Frequency
+}
+
+func (c *CustomViewContextCap) GetSchedule() *CustomerUnitCapSchedule {
+	if c == nil {
+		return nil
+	}
+	return c.Schedule
+}
+
+func (c *CustomViewContextCap) GetExternalID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalID
+}
+
+func (c *CustomViewContextCap) GetCreditsCurrencyID() string {
+	if c == nil {
+		return ""
+	}
+	return c.CreditsCurrencyID
+}
+
+func (c *CustomViewContextCap) GetCreditsCurrencyKey() string {
+	if c == nil {
+		return ""
+	}
+	return c.CreditsCurrencyKey
+}
+
+func (c *CustomViewContextCap) GetCreditsCurrencyName() string {
+	if c == nil {
+		return ""
+	}
+	return c.CreditsCurrencyName
+}
+
+func (c *CustomViewContextCap) GetCurrentPeriod() *CustomerUnitCapCurrentPeriod {
+	if c == nil {
+		return nil
+	}
+	return c.CurrentPeriod
+}
+
+func (c *CustomViewContextCap) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewContextCap) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewContextCap
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewContextCap(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewContextCap) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Monthly UTC periods, with boundaries defined by `schedule`.
+type CustomViewContextCapFrequency string
+
+const (
+	CustomViewContextCapFrequencyMonthly CustomViewContextCapFrequency = "MONTHLY"
+)
+
+func NewCustomViewContextCapFrequencyFromString(s string) (CustomViewContextCapFrequency, error) {
+	switch s {
+	case "MONTHLY":
+		return CustomViewContextCapFrequencyMonthly, nil
+	}
+	var t CustomViewContextCapFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewContextCapFrequency) Ptr() *CustomViewContextCapFrequency {
+	return &c
+}
+
+type CustomViewCustomerUnit struct {
+	// Your stable identifier for this unit, unique within its customer.
+	ExternalID string `json:"externalId" url:"externalId"`
+	// Display name of the customer unit.
+	Name string `json:"name" url:"name"`
+	// Your label for the kind of unit, such as department or team; null when unset.
+	ExternalType *string `json:"externalType,omitempty" url:"externalType,omitempty"`
+	// The parent customer unit's externalId; null only for the root unit.
+	ParentExternalID *string `json:"parentExternalId,omitempty" url:"parentExternalId,omitempty"`
+	// True when this unit has no parent and is the customer's root unit.
+	IsRoot bool `json:"isRoot" url:"isRoot"`
+	// The unit's own setting. `false` marks it, and every unit under it, non-billable. Always `true` on the root.
+	Billable bool `json:"billable" url:"billable"`
+	// Whether new usage on this unit is billable now, once its ancestors are counted: `false` when the unit or any unit above it is non-billable. A change applies only to signals received afterwards, so it does not describe past usage.
+	EffectiveBillable bool `json:"effectiveBillable" url:"effectiveBillable"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewCustomerUnit) GetExternalID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalID
+}
+
+func (c *CustomViewCustomerUnit) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomViewCustomerUnit) GetExternalType() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ExternalType
+}
+
+func (c *CustomViewCustomerUnit) GetParentExternalID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ParentExternalID
+}
+
+func (c *CustomViewCustomerUnit) GetIsRoot() bool {
+	if c == nil {
+		return false
+	}
+	return c.IsRoot
+}
+
+func (c *CustomViewCustomerUnit) GetBillable() bool {
+	if c == nil {
+		return false
+	}
+	return c.Billable
+}
+
+func (c *CustomViewCustomerUnit) GetEffectiveBillable() bool {
+	if c == nil {
+		return false
+	}
+	return c.EffectiveBillable
+}
+
+func (c *CustomViewCustomerUnit) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewCustomerUnit) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewCustomerUnit
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewCustomerUnit(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewCustomerUnit) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// What these rows were read for. The render bundle receives this object as `context` in the `paid:data` message.
+type CustomViewDataContext struct {
+	// Context version. 2 adds the selected unit's `name`, the unit directory (`units`, `unitsTotal`, `unitsTruncated`) and unit caps (`caps`, `capsTotal`, `capsTruncated`, `capsUnavailable`); absent on version 1. Later versions only add fields.
+	Version       *int                     `json:"version,omitempty" url:"version,omitempty"`
+	UnitSelection *CustomViewUnitSelection `json:"unitSelection" url:"unitSelection"`
+	// Default date range for the view's queries. Use `{period_start:DateTime}` / `{period_end:DateTime}` placeholders in your SQL to make the range adjustable. Either relative (unit+amount) or absolute (start+end).
+	Period *CustomViewDataContextPeriod `json:"period,omitempty" url:"period,omitempty"`
+	// The viewing customer's active units, for labelling rows by name, type, parent and billability. Sent only for hierarchy-enabled, customer-scoped views. At most 1,000, oldest first; see `unitsTruncated`.
+	Units []*CustomViewCustomerUnit `json:"units,omitempty" url:"units,omitempty"`
+	// How many active units the customer has, including any left out of `units`.
+	UnitsTotal *int `json:"unitsTotal,omitempty" url:"unitsTotal,omitempty"`
+	// True when the customer has more than 1,000 active units and `units` holds only the first 1,000. Label any other unit by its externalId.
+	UnitsTruncated *bool `json:"unitsTruncated,omitempty" url:"unitsTruncated,omitempty"`
+	// Caps in force on the customer's active units, one per unit and credits currency, sent with `units`. At most 25, in directory order; see `capsTruncated`. Absent when `capsUnavailable` is true.
+	Caps []*CustomViewContextCap `json:"caps,omitempty" url:"caps,omitempty"`
+	// How many caps are in force, including any left out of `caps`.
+	CapsTotal *int `json:"capsTotal,omitempty" url:"capsTotal,omitempty"`
+	// True when more than 25 caps are in force and `caps` holds only the first 25.
+	CapsTruncated *bool `json:"capsTruncated,omitempty" url:"capsTruncated,omitempty"`
+	// True when cap usage could not be read in time. The view's rows are unaffected; show the view without caps.
+	CapsUnavailable *bool `json:"capsUnavailable,omitempty" url:"capsUnavailable,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewDataContext) GetVersion() *int {
+	if c == nil {
+		return nil
+	}
+	return c.Version
+}
+
+func (c *CustomViewDataContext) GetUnitSelection() *CustomViewUnitSelection {
+	if c == nil {
+		return nil
+	}
+	return c.UnitSelection
+}
+
+func (c *CustomViewDataContext) GetPeriod() *CustomViewDataContextPeriod {
+	if c == nil {
+		return nil
+	}
+	return c.Period
+}
+
+func (c *CustomViewDataContext) GetUnits() []*CustomViewCustomerUnit {
+	if c == nil {
+		return nil
+	}
+	return c.Units
+}
+
+func (c *CustomViewDataContext) GetUnitsTotal() *int {
+	if c == nil {
+		return nil
+	}
+	return c.UnitsTotal
+}
+
+func (c *CustomViewDataContext) GetUnitsTruncated() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.UnitsTruncated
+}
+
+func (c *CustomViewDataContext) GetCaps() []*CustomViewContextCap {
+	if c == nil {
+		return nil
+	}
+	return c.Caps
+}
+
+func (c *CustomViewDataContext) GetCapsTotal() *int {
+	if c == nil {
+		return nil
+	}
+	return c.CapsTotal
+}
+
+func (c *CustomViewDataContext) GetCapsTruncated() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.CapsTruncated
+}
+
+func (c *CustomViewDataContext) GetCapsUnavailable() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.CapsUnavailable
+}
+
+func (c *CustomViewDataContext) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewDataContext) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewDataContext
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewDataContext(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewDataContext) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Default date range for the view's queries. Use `{period_start:DateTime}` / `{period_end:DateTime}` placeholders in your SQL to make the range adjustable. Either relative (unit+amount) or absolute (start+end).
+type CustomViewDataContextPeriod struct {
+	// 'relative' = a rolling window ending today (set `unit` + `amount`); 'absolute' = a fixed calendar range (set `start` + `end`).
+	Kind CustomViewDataContextPeriodKind `json:"kind" url:"kind"`
+	// relative only: the unit of the rolling window.
+	Unit *CustomViewDataContextPeriodUnit `json:"unit,omitempty" url:"unit,omitempty"`
+	// relative only: how many units back from today (e.g. unit 'day', amount 30 = last 30 days).
+	Amount *int `json:"amount,omitempty" url:"amount,omitempty"`
+	// absolute only: inclusive start date (YYYY-MM-DD).
+	Start *string `json:"start,omitempty" url:"start,omitempty"`
+	// absolute only: inclusive end date (YYYY-MM-DD).
+	End *string `json:"end,omitempty" url:"end,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewDataContextPeriod) GetKind() CustomViewDataContextPeriodKind {
+	if c == nil {
+		return ""
+	}
+	return c.Kind
+}
+
+func (c *CustomViewDataContextPeriod) GetUnit() *CustomViewDataContextPeriodUnit {
+	if c == nil {
+		return nil
+	}
+	return c.Unit
+}
+
+func (c *CustomViewDataContextPeriod) GetAmount() *int {
+	if c == nil {
+		return nil
+	}
+	return c.Amount
+}
+
+func (c *CustomViewDataContextPeriod) GetStart() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Start
+}
+
+func (c *CustomViewDataContextPeriod) GetEnd() *string {
+	if c == nil {
+		return nil
+	}
+	return c.End
+}
+
+func (c *CustomViewDataContextPeriod) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewDataContextPeriod) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewDataContextPeriod
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewDataContextPeriod(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewDataContextPeriod) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// 'relative' = a rolling window ending today (set `unit` + `amount`); 'absolute' = a fixed calendar range (set `start` + `end`).
+type CustomViewDataContextPeriodKind string
+
+const (
+	CustomViewDataContextPeriodKindRelative CustomViewDataContextPeriodKind = "relative"
+	CustomViewDataContextPeriodKindAbsolute CustomViewDataContextPeriodKind = "absolute"
+)
+
+func NewCustomViewDataContextPeriodKindFromString(s string) (CustomViewDataContextPeriodKind, error) {
+	switch s {
+	case "relative":
+		return CustomViewDataContextPeriodKindRelative, nil
+	case "absolute":
+		return CustomViewDataContextPeriodKindAbsolute, nil
+	}
+	var t CustomViewDataContextPeriodKind
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewDataContextPeriodKind) Ptr() *CustomViewDataContextPeriodKind {
+	return &c
+}
+
+// relative only: the unit of the rolling window.
+type CustomViewDataContextPeriodUnit string
+
+const (
+	CustomViewDataContextPeriodUnitDay   CustomViewDataContextPeriodUnit = "day"
+	CustomViewDataContextPeriodUnitMonth CustomViewDataContextPeriodUnit = "month"
+	CustomViewDataContextPeriodUnitYear  CustomViewDataContextPeriodUnit = "year"
+)
+
+func NewCustomViewDataContextPeriodUnitFromString(s string) (CustomViewDataContextPeriodUnit, error) {
+	switch s {
+	case "day":
+		return CustomViewDataContextPeriodUnitDay, nil
+	case "month":
+		return CustomViewDataContextPeriodUnitMonth, nil
+	case "year":
+		return CustomViewDataContextPeriodUnitYear, nil
+	}
+	var t CustomViewDataContextPeriodUnit
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewDataContextPeriodUnit) Ptr() *CustomViewDataContextPeriodUnit {
+	return &c
+}
+
 type CustomViewDetail struct {
+	// Enable customer unit navigation for a customer-scoped view. Setting true requires customer hierarchies to be enabled for your organization, and every query must support unit selection. Existing views default to false.
+	HierarchyEnabled *bool `json:"hierarchyEnabled,omitempty" url:"hierarchyEnabled,omitempty"`
+	// Send the customer's unit caps to the render bundle as `context.caps`. Needs `hierarchyEnabled` on a customer-scoped view. Turn it on only for views that draw cap usage: each load then reads cap usage from billing. Caps are spend policy, so an API key also needs `read:billing` to receive them in the data (they are left out otherwise) or to mint this view's embed token. Defaults to false.
+	CapsEnabled *bool                  `json:"capsEnabled,omitempty" url:"capsEnabled,omitempty"`
 	DisplayID   string                 `json:"displayId" url:"displayId"`
 	Name        string                 `json:"name" url:"name"`
 	Description *string                `json:"description,omitempty" url:"description,omitempty"`
@@ -149,11 +682,27 @@ type CustomViewDetail struct {
 	RenderBundle string `json:"renderBundle" url:"renderBundle"`
 	// The view's current default date range, or null if it uses no adjustable period.
 	Period *CustomViewDetailPeriod `json:"period,omitempty" url:"period,omitempty"`
+	// The filter parameters this view accepts per request (pass values as `filter_<name>` query params on the data endpoint), or null if it declares none. Embedding hosts can render controls from the declared values.
+	Filters []*CustomViewFilter `json:"filters,omitempty" url:"filters,omitempty"`
 	// 'customer': data is scoped to one viewing customer and the view is embeddable per-customer. 'organization': data is org-wide and the view is internal-only.
 	Scope CustomViewDetailScope `json:"scope" url:"scope"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewDetail) GetHierarchyEnabled() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.HierarchyEnabled
+}
+
+func (c *CustomViewDetail) GetCapsEnabled() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.CapsEnabled
 }
 
 func (c *CustomViewDetail) GetDisplayID() string {
@@ -203,6 +752,13 @@ func (c *CustomViewDetail) GetPeriod() *CustomViewDetailPeriod {
 		return nil
 	}
 	return c.Period
+}
+
+func (c *CustomViewDetail) GetFilters() []*CustomViewFilter {
+	if c == nil {
+		return nil
+	}
+	return c.Filters
 }
 
 func (c *CustomViewDetail) GetScope() CustomViewDetailScope {
@@ -496,6 +1052,62 @@ func (c *CustomViewEmbedTokenResponse) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
+type CustomViewFilter struct {
+	// Filter name. Reference it in SQL as {filter_<name>:String} and pass values as the `filter_<name>` query parameter. Letters, digits, underscore; must start with a letter; max 32 characters.
+	Name string `json:"name" url:"name"`
+	// Optional closed list of accepted values. When set, any other value is rejected with 400 — and embedding hosts can render a dropdown from it. When omitted, any string up to 256 characters is accepted.
+	Values []string `json:"values,omitempty" url:"values,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewFilter) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomViewFilter) GetValues() []string {
+	if c == nil {
+		return nil
+	}
+	return c.Values
+}
+
+func (c *CustomViewFilter) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewFilter) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewFilter
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewFilter(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewFilter) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
 type CustomViewListResponse struct {
 	Views []*CustomViewSummary `json:"views" url:"views"`
 
@@ -645,6 +1257,10 @@ func (c CustomViewStatus) Ptr() *CustomViewStatus {
 }
 
 type CustomViewSummary struct {
+	// Enable customer unit navigation for a customer-scoped view. Setting true requires customer hierarchies to be enabled for your organization, and every query must support unit selection. Existing views default to false.
+	HierarchyEnabled *bool `json:"hierarchyEnabled,omitempty" url:"hierarchyEnabled,omitempty"`
+	// Send the customer's unit caps to the render bundle as `context.caps`. Needs `hierarchyEnabled` on a customer-scoped view. Turn it on only for views that draw cap usage: each load then reads cap usage from billing. Caps are spend policy, so an API key also needs `read:billing` to receive them in the data (they are left out otherwise) or to mint this view's embed token. Defaults to false.
+	CapsEnabled *bool                   `json:"capsEnabled,omitempty" url:"capsEnabled,omitempty"`
 	DisplayID   string                  `json:"displayId" url:"displayId"`
 	Name        string                  `json:"name" url:"name"`
 	Description *string                 `json:"description,omitempty" url:"description,omitempty"`
@@ -660,6 +1276,20 @@ type CustomViewSummary struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewSummary) GetHierarchyEnabled() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.HierarchyEnabled
+}
+
+func (c *CustomViewSummary) GetCapsEnabled() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.CapsEnabled
 }
 
 func (c *CustomViewSummary) GetDisplayID() string {
@@ -928,6 +1558,319 @@ func (c CustomViewSummaryStatus) Ptr() *CustomViewSummaryStatus {
 	return &c
 }
 
+// All customer activity, one unit's direct activity, or that unit and its current descendants. A display filter within the authorized customer, not an access restriction. In a data context, a selected unit also carries its display name.
+type CustomViewUnitSelection struct {
+	CustomViewUnitSelectionZero *CustomViewUnitSelectionZero
+	CustomViewUnitSelectionOne  *CustomViewUnitSelectionOne
+	CustomViewUnitSelectionMode *CustomViewUnitSelectionMode
+
+	typ string
+}
+
+func (c *CustomViewUnitSelection) GetCustomViewUnitSelectionZero() *CustomViewUnitSelectionZero {
+	if c == nil {
+		return nil
+	}
+	return c.CustomViewUnitSelectionZero
+}
+
+func (c *CustomViewUnitSelection) GetCustomViewUnitSelectionOne() *CustomViewUnitSelectionOne {
+	if c == nil {
+		return nil
+	}
+	return c.CustomViewUnitSelectionOne
+}
+
+func (c *CustomViewUnitSelection) GetCustomViewUnitSelectionMode() *CustomViewUnitSelectionMode {
+	if c == nil {
+		return nil
+	}
+	return c.CustomViewUnitSelectionMode
+}
+
+func (c *CustomViewUnitSelection) UnmarshalJSON(data []byte) error {
+	valueCustomViewUnitSelectionZero := new(CustomViewUnitSelectionZero)
+	if err := json.Unmarshal(data, &valueCustomViewUnitSelectionZero); err == nil {
+		c.typ = "CustomViewUnitSelectionZero"
+		c.CustomViewUnitSelectionZero = valueCustomViewUnitSelectionZero
+		return nil
+	}
+	valueCustomViewUnitSelectionOne := new(CustomViewUnitSelectionOne)
+	if err := json.Unmarshal(data, &valueCustomViewUnitSelectionOne); err == nil {
+		c.typ = "CustomViewUnitSelectionOne"
+		c.CustomViewUnitSelectionOne = valueCustomViewUnitSelectionOne
+		return nil
+	}
+	valueCustomViewUnitSelectionMode := new(CustomViewUnitSelectionMode)
+	if err := json.Unmarshal(data, &valueCustomViewUnitSelectionMode); err == nil {
+		c.typ = "CustomViewUnitSelectionMode"
+		c.CustomViewUnitSelectionMode = valueCustomViewUnitSelectionMode
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, c)
+}
+
+func (c CustomViewUnitSelection) MarshalJSON() ([]byte, error) {
+	if c.typ == "CustomViewUnitSelectionZero" || c.CustomViewUnitSelectionZero != nil {
+		return json.Marshal(c.CustomViewUnitSelectionZero)
+	}
+	if c.typ == "CustomViewUnitSelectionOne" || c.CustomViewUnitSelectionOne != nil {
+		return json.Marshal(c.CustomViewUnitSelectionOne)
+	}
+	if c.typ == "CustomViewUnitSelectionMode" || c.CustomViewUnitSelectionMode != nil {
+		return json.Marshal(c.CustomViewUnitSelectionMode)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", c)
+}
+
+type CustomViewUnitSelectionVisitor interface {
+	VisitCustomViewUnitSelectionZero(*CustomViewUnitSelectionZero) error
+	VisitCustomViewUnitSelectionOne(*CustomViewUnitSelectionOne) error
+	VisitCustomViewUnitSelectionMode(*CustomViewUnitSelectionMode) error
+}
+
+func (c *CustomViewUnitSelection) Accept(visitor CustomViewUnitSelectionVisitor) error {
+	if c.typ == "CustomViewUnitSelectionZero" || c.CustomViewUnitSelectionZero != nil {
+		return visitor.VisitCustomViewUnitSelectionZero(c.CustomViewUnitSelectionZero)
+	}
+	if c.typ == "CustomViewUnitSelectionOne" || c.CustomViewUnitSelectionOne != nil {
+		return visitor.VisitCustomViewUnitSelectionOne(c.CustomViewUnitSelectionOne)
+	}
+	if c.typ == "CustomViewUnitSelectionMode" || c.CustomViewUnitSelectionMode != nil {
+		return visitor.VisitCustomViewUnitSelectionMode(c.CustomViewUnitSelectionMode)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", c)
+}
+
+type CustomViewUnitSelectionMode struct {
+	Mode       CustomViewUnitSelectionModeMode `json:"mode" url:"mode"`
+	ExternalID string                          `json:"externalId" url:"externalId"`
+	// Display name of the selected unit, resolved when the data was read. Absent on version 1 contexts.
+	Name *string `json:"name,omitempty" url:"name,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewUnitSelectionMode) GetMode() CustomViewUnitSelectionModeMode {
+	if c == nil {
+		return ""
+	}
+	return c.Mode
+}
+
+func (c *CustomViewUnitSelectionMode) GetExternalID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalID
+}
+
+func (c *CustomViewUnitSelectionMode) GetName() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Name
+}
+
+func (c *CustomViewUnitSelectionMode) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewUnitSelectionMode) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewUnitSelectionMode
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewUnitSelectionMode(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewUnitSelectionMode) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomViewUnitSelectionModeMode string
+
+const (
+	CustomViewUnitSelectionModeModeSubtree CustomViewUnitSelectionModeMode = "subtree"
+)
+
+func NewCustomViewUnitSelectionModeModeFromString(s string) (CustomViewUnitSelectionModeMode, error) {
+	switch s {
+	case "subtree":
+		return CustomViewUnitSelectionModeModeSubtree, nil
+	}
+	var t CustomViewUnitSelectionModeMode
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewUnitSelectionModeMode) Ptr() *CustomViewUnitSelectionModeMode {
+	return &c
+}
+
+type CustomViewUnitSelectionOne struct {
+	Mode       CustomViewUnitSelectionOneMode `json:"mode" url:"mode"`
+	ExternalID string                         `json:"externalId" url:"externalId"`
+	// Display name of the selected unit, resolved when the data was read. Absent on version 1 contexts.
+	Name *string `json:"name,omitempty" url:"name,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewUnitSelectionOne) GetMode() CustomViewUnitSelectionOneMode {
+	if c == nil {
+		return ""
+	}
+	return c.Mode
+}
+
+func (c *CustomViewUnitSelectionOne) GetExternalID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalID
+}
+
+func (c *CustomViewUnitSelectionOne) GetName() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Name
+}
+
+func (c *CustomViewUnitSelectionOne) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewUnitSelectionOne) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewUnitSelectionOne
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewUnitSelectionOne(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewUnitSelectionOne) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomViewUnitSelectionOneMode string
+
+const (
+	CustomViewUnitSelectionOneModeDirect CustomViewUnitSelectionOneMode = "direct"
+)
+
+func NewCustomViewUnitSelectionOneModeFromString(s string) (CustomViewUnitSelectionOneMode, error) {
+	switch s {
+	case "direct":
+		return CustomViewUnitSelectionOneModeDirect, nil
+	}
+	var t CustomViewUnitSelectionOneMode
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewUnitSelectionOneMode) Ptr() *CustomViewUnitSelectionOneMode {
+	return &c
+}
+
+type CustomViewUnitSelectionZero struct {
+	Mode CustomViewUnitSelectionZeroMode `json:"mode" url:"mode"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewUnitSelectionZero) GetMode() CustomViewUnitSelectionZeroMode {
+	if c == nil {
+		return ""
+	}
+	return c.Mode
+}
+
+func (c *CustomViewUnitSelectionZero) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewUnitSelectionZero) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewUnitSelectionZero
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewUnitSelectionZero(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewUnitSelectionZero) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomViewUnitSelectionZeroMode string
+
+const (
+	CustomViewUnitSelectionZeroModeAll CustomViewUnitSelectionZeroMode = "all"
+)
+
+func NewCustomViewUnitSelectionZeroModeFromString(s string) (CustomViewUnitSelectionZeroMode, error) {
+	switch s {
+	case "all":
+		return CustomViewUnitSelectionZeroModeAll, nil
+	}
+	var t CustomViewUnitSelectionZeroMode
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewUnitSelectionZeroMode) Ptr() *CustomViewUnitSelectionZeroMode {
+	return &c
+}
+
 type RenderBundleEdit struct {
 	// Exact text to find in the CURRENT stored bundle (fetch it via getCustomViewAuthoring first — it may have been hand-edited). Must match exactly once unless `replaceAll` is true; include enough surrounding context to make it unique.
 	OldText string `json:"oldText" url:"oldText"`
@@ -993,12 +1936,83 @@ func (r *RenderBundleEdit) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
+type ViewCustomerUnitsResponse struct {
+	// Whether this customer has an active non-root unit, regardless of the requested page or usage.
+	HasHierarchy bool                      `json:"hasHierarchy" url:"hasHierarchy"`
+	Data         []*CustomViewCustomerUnit `json:"data" url:"data"`
+	Pagination   *Pagination               `json:"pagination" url:"pagination"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ViewCustomerUnitsResponse) GetHasHierarchy() bool {
+	if v == nil {
+		return false
+	}
+	return v.HasHierarchy
+}
+
+func (v *ViewCustomerUnitsResponse) GetData() []*CustomViewCustomerUnit {
+	if v == nil {
+		return nil
+	}
+	return v.Data
+}
+
+func (v *ViewCustomerUnitsResponse) GetPagination() *Pagination {
+	if v == nil {
+		return nil
+	}
+	return v.Pagination
+}
+
+func (v *ViewCustomerUnitsResponse) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ViewCustomerUnitsResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler ViewCustomerUnitsResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ViewCustomerUnitsResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ViewCustomerUnitsResponse) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
 type ViewDataResponse struct {
+	Context *CustomViewDataContext `json:"context,omitempty" url:"context,omitempty"`
 	// Result sets keyed by query id. Each value is an array of row objects (column name → value); 64-bit integers are returned as JSON strings to preserve precision.
 	Data map[string][]map[string]interface{} `json:"data" url:"data"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (v *ViewDataResponse) GetContext() *CustomViewDataContext {
+	if v == nil {
+		return nil
+	}
+	return v.Context
 }
 
 func (v *ViewDataResponse) GetData() map[string][]map[string]interface{} {
@@ -1196,6 +2210,28 @@ func (c CreateCustomViewRequestScope) Ptr() *CreateCustomViewRequestScope {
 	return &c
 }
 
+type GetCustomViewDataRequestIncludeDraft string
+
+const (
+	GetCustomViewDataRequestIncludeDraftTrue  GetCustomViewDataRequestIncludeDraft = "true"
+	GetCustomViewDataRequestIncludeDraftFalse GetCustomViewDataRequestIncludeDraft = "false"
+)
+
+func NewGetCustomViewDataRequestIncludeDraftFromString(s string) (GetCustomViewDataRequestIncludeDraft, error) {
+	switch s {
+	case "true":
+		return GetCustomViewDataRequestIncludeDraftTrue, nil
+	case "false":
+		return GetCustomViewDataRequestIncludeDraftFalse, nil
+	}
+	var t GetCustomViewDataRequestIncludeDraft
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (g GetCustomViewDataRequestIncludeDraft) Ptr() *GetCustomViewDataRequestIncludeDraft {
+	return &g
+}
+
 type GetCustomViewDataRequestPeriodKind string
 
 const (
@@ -1240,6 +2276,31 @@ func NewGetCustomViewDataRequestPeriodUnitFromString(s string) (GetCustomViewDat
 }
 
 func (g GetCustomViewDataRequestPeriodUnit) Ptr() *GetCustomViewDataRequestPeriodUnit {
+	return &g
+}
+
+type GetCustomViewDataRequestUnitMode string
+
+const (
+	GetCustomViewDataRequestUnitModeAll     GetCustomViewDataRequestUnitMode = "all"
+	GetCustomViewDataRequestUnitModeDirect  GetCustomViewDataRequestUnitMode = "direct"
+	GetCustomViewDataRequestUnitModeSubtree GetCustomViewDataRequestUnitMode = "subtree"
+)
+
+func NewGetCustomViewDataRequestUnitModeFromString(s string) (GetCustomViewDataRequestUnitMode, error) {
+	switch s {
+	case "all":
+		return GetCustomViewDataRequestUnitModeAll, nil
+	case "direct":
+		return GetCustomViewDataRequestUnitModeDirect, nil
+	case "subtree":
+		return GetCustomViewDataRequestUnitModeSubtree, nil
+	}
+	var t GetCustomViewDataRequestUnitMode
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (g GetCustomViewDataRequestUnitMode) Ptr() *GetCustomViewDataRequestUnitMode {
 	return &g
 }
 
@@ -1378,6 +2439,10 @@ func (u UpdateCustomViewPeriodRequestPeriodUnit) Ptr() *UpdateCustomViewPeriodRe
 
 type UpdateCustomViewRequest struct {
 	DisplayID string `json:"-" url:"-"`
+	// Enable customer unit navigation for a customer-scoped view. Setting true requires customer hierarchies to be enabled for your organization, and every query must support unit selection. Existing views default to false.
+	HierarchyEnabled *bool `json:"hierarchyEnabled,omitempty" url:"-"`
+	// Send the customer's unit caps to the render bundle as `context.caps`. Needs `hierarchyEnabled` on a customer-scoped view. Turn it on only for views that draw cap usage: each load then reads cap usage from billing. Caps are spend policy, so an API key also needs `read:billing` to receive them in the data (they are left out otherwise) or to mint this view's embed token. Defaults to false.
+	CapsEnabled *bool `json:"capsEnabled,omitempty" url:"-"`
 	// New human-readable view name.
 	Name *string `json:"name,omitempty" url:"-"`
 	// New description; pass null to clear it.
@@ -1392,6 +2457,8 @@ type UpdateCustomViewRequest struct {
 	QueryUpserts []*CustomViewQuery `json:"queryUpserts,omitempty" url:"-"`
 	// Ids of stored queries to remove (applied before `queryUpserts`). Rejected if an id does not exist. Cannot be combined with `queries`.
 	QueryRemovals []string `json:"queryRemovals,omitempty" url:"-"`
+	// Full replacement of the view's declared filter parameters; pass null to remove them all. Every {filter_<name>:String} placeholder the (resulting) queries reference must stay declared.
+	Filters []*CustomViewFilter `json:"filters,omitempty" url:"-"`
 }
 
 type UpdateCustomViewPeriodRequest struct {

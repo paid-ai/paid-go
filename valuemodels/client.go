@@ -80,7 +80,7 @@ func (c *Client) GetCurrentValueModel(
 	return response, nil
 }
 
-// Uploads a new value model version. Validates the content, creates a new version, archives the previous active version, syncs to ClickHouse, and triggers a backfill of all historical signals.
+// Uploads a new value model version. Validates the content, creates a new version, archives the previous active version, and syncs to ClickHouse. This updates how value is calculated going forward — new signals are valued under the new model. It does NOT re-rate historical signals; run POST /api/v2/value-models/backfill to re-rate history as a separate, explicit action. Any unpublished draft saved in the Paid app is discarded. Send expectedActiveVersion to get a 409 instead of overwriting a version published since you read it.
 func (c *Client) UpdateValueModel(
 	ctx context.Context,
 	request *paidgo.ValueModelUploadRequest,
@@ -101,6 +101,11 @@ func (c *Client) UpdateValueModel(
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
 			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &paidgo.ConflictError{
 				APIError: apiError,
 			}
 		},
@@ -237,7 +242,7 @@ func (c *Client) GetValueModelVersion(
 	return response, nil
 }
 
-// Manually triggers a recalculation of all ClickHouse rows against the current value model.
+// Manually triggers a recalculation of all ClickHouse rows against the current value model. Returns 422 when the backfill would scan more signals than the ceiling allows — that is deterministic, so retrying without narrowing the scope will not help.
 func (c *Client) RefreshValueModelBackfill(
 	ctx context.Context,
 	request *paidgo.RefreshValueModelBackfillRequest,
@@ -258,6 +263,11 @@ func (c *Client) RefreshValueModelBackfill(
 	errorCodes := internal.ErrorCodes{
 		404: func(apiError *core.APIError) error {
 			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		422: func(apiError *core.APIError) error {
+			return &paidgo.UnprocessableEntityError{
 				APIError: apiError,
 			}
 		},

@@ -98,7 +98,7 @@ func (c *Client) ListPaymentAllocations(
 	return response, nil
 }
 
-// Allocates a payment across one or more invoice lines. When an invoice becomes fully paid, its credit entitlements are processed.
+// Allocates a payment across one or more invoice lines of posted invoices, in the payment's currency. When an invoice becomes fully paid, its credit entitlements are processed. Returns 409 when a concurrent allocation has already spent the balance.
 func (c *Client) CreatePaymentAllocation(
 	ctx context.Context,
 	request *paidgo.CreatePaymentAllocationRequest,
@@ -129,6 +129,11 @@ func (c *Client) CreatePaymentAllocation(
 		},
 		404: func(apiError *core.APIError) error {
 			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &paidgo.ConflictError{
 				APIError: apiError,
 			}
 		},

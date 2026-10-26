@@ -31,7 +31,214 @@ func NewClient(opts ...option.RequestOption) *Client {
 	}
 }
 
-// Create multiple signals (usage events) in a single request. Each signal must include a customer attribution (either customerId or externalCustomerId) and a product attribution (either productId or externalProductId).
+// Returns ingested signals (usage events) for your organization, newest first. Filter by signal name, customer, product, and creation date range.
+func (c *Client) ListSignals(
+	ctx context.Context,
+	request *paidgo.ListSignalsRequest,
+	opts ...option.RequestOption,
+) (*paidgo.SignalListResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := baseURL + "/signals/"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		408: func(apiError *core.APIError) error {
+			return &paidgo.RequestTimeoutError{
+				APIError: apiError,
+			}
+		},
+		429: func(apiError *core.APIError) error {
+			return &paidgo.TooManyRequestsError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.SignalListResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Get a single ingested signal (usage event) by its ID, including the data payload submitted at ingest.
+func (c *Client) GetSignalByID(
+	ctx context.Context,
+	request *paidgo.GetSignalByIDRequest,
+	opts ...option.RequestOption,
+) (*paidgo.SignalListItem, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/signals/%v",
+		request.ID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		408: func(apiError *core.APIError) error {
+			return &paidgo.RequestTimeoutError{
+				APIError: apiError,
+			}
+		},
+		429: func(apiError *core.APIError) error {
+			return &paidgo.TooManyRequestsError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.SignalListItem
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Fetch up to 500 ingested signals (usage events) by ID in one request, each with the data payload submitted at ingest. Use it to resolve the `signalId` values on a page of credit transactions, or the signals behind one run or ticket, instead of calling `GET /api/v2/signals/{id}` once per signal. Signals are returned in request order; IDs that match nothing in your organization are listed under `notFound` rather than failing the request. This is a read-only operation: it requires the `read:usage` scope and is not available to customer API keys.
+func (c *Client) GetSignalsByIDs(
+	ctx context.Context,
+	request *paidgo.SignalLookupRequest,
+	opts ...option.RequestOption,
+) (*paidgo.SignalLookupResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := baseURL + "/signals/lookup"
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	headers.Set("Content-Type", "application/json")
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		429: func(apiError *core.APIError) error {
+			return &paidgo.TooManyRequestsError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.SignalLookupResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Create multiple signals (usage events) in a single request. Each signal names its customer (`customerId` or `externalCustomerId`; an alias of the customer resolves too), its customer unit (`externalCustomerUnitId`: the unit's key, or an alias that points at a unit), or both, plus an optional product attribution (`productId` or `externalProductId`). A unit alone derives the customer from the unit. A unit sent with a customer must belong to it, else the batch is refused with `400 CUSTOMER_UNIT_MISMATCH`. A unit is never named by Paid's unit id. A key or alias that matches nothing is stored without a customer, keeping the id, so it can be pointed at a unit later. An identifier is matched as a unit key first, then a customer external id, then an alias. Unit attribution is enabled per organization: where it is not, a `customerUnit` sent next to a `customer` is accepted and ignored rather than checked, as before, while a unit named alone still derives its customer. Authenticate with your organization API key, or with a customer API key (prefixed `paid_ck_live_` or `paid_ck_test_`, created with `POST /api/v2/customers/{id}/api-keys`) so a customer's own runtime can report its usage without holding your organization key. A customer API key can call this endpoint only, and only for its own customer: if any signal names another customer, or one Paid does not know, the whole batch is refused with `403` `CUSTOMER_MISMATCH` and nothing is stored. Its idempotency keys are scoped to that customer. See [Send signals with a customer API key](/documentation/signals/send-signals-with-a-customer-api-key).
 func (c *Client) CreateSignals(
 	ctx context.Context,
 	request *paidgo.BulkSignalsRequest,
@@ -60,6 +267,11 @@ func (c *Client) CreateSignals(
 				APIError: apiError,
 			}
 		},
+		429: func(apiError *core.APIError) error {
+			return &paidgo.TooManyRequestsError{
+				APIError: apiError,
+			}
+		},
 		500: func(apiError *core.APIError) error {
 			return &paidgo.InternalServerError{
 				APIError: apiError,
@@ -79,6 +291,225 @@ func (c *Client) CreateSignals(
 			QueryParameters: options.QueryParameters,
 			Client:          options.HTTPClient,
 			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Produces a usage summary file: one row per customer per month, with columns broken down by the signal payload fields you name. Choose `format` to get JSON or a wide CSV; JSON is the default. The export runs in the background, so this returns immediately with a pending export and the file appears on it once it succeeds. Give `spec` to describe the columns, or `copyFrom` with an earlier export's id to reuse that export's columns over a new window. The spec is stored on the export, so an old file can always be explained by the export that produced it. Signals are bucketed by month in UTC on their effective timestamp, the same basis billing uses, so the totals reconcile with invoices. One export runs per organization at a time.
+func (c *Client) CreateSignalSummaryExport(
+	ctx context.Context,
+	request *paidgo.CreateSignalSummaryExportRequest,
+	opts ...option.RequestOption,
+) (*paidgo.SignalSummaryExport, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := baseURL + "/signals/summary/batch/"
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	headers.Set("Content-Type", "application/json")
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &paidgo.ConflictError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.SignalSummaryExport
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Returns one export with its status and the shape it ran. While it is succeeded and unexpired, each read issues a fresh short-lived download link.
+func (c *Client) GetSignalSummaryExport(
+	ctx context.Context,
+	request *paidgo.GetSignalSummaryExportRequest,
+	opts ...option.RequestOption,
+) (*paidgo.SignalSummaryExport, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/signals/summary/batch/%v",
+		request.ID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.SignalSummaryExport
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Counts signals into period buckets. Use it to chart signal volume over time, split by signal name or by a signal-payload key such as team_id.
+//
+// Signals count against their effective timestamp in UTC. This is the same basis billing uses, so these figures reconcile with an invoice.
+//
+// The endpoint reads a pre-aggregated hourly rollup, not the raw signals. An hour is therefore the finest interval. One request may span at most 250 periods.
+//
+// A grouped request keeps the 100 groups with the most signals. It sums the rest under the key "other". Each period total stays complete, but a group inside "other" loses its own figure. Read groups.truncated to learn how many groups lost it. Zero means every group kept its own figure.
+//
+// Results are paged with limit and cursor. A page is never truncated in silence.
+//
+// To download the series as a file, call this endpoint over HTTP with format=csv. It returns the same points as a text/csv table with a single header row. A CSV cannot carry a cursor, so a result that does not fit one page returns 400 rather than a file that is missing rows.
+//
+// For a wide per-customer spreadsheet over arbitrary payload fields, use the batch export at /signals/summary/batch instead.
+func (c *Client) GetSignalSummary(
+	ctx context.Context,
+	request *paidgo.GetSignalSummaryRequest,
+	opts ...option.RequestOption,
+) (*paidgo.SignalSummaryResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := baseURL + "/signals/summary/"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		408: func(apiError *core.APIError) error {
+			return &paidgo.RequestTimeoutError{
+				APIError: apiError,
+			}
+		},
+		429: func(apiError *core.APIError) error {
+			return &paidgo.TooManyRequestsError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.SignalSummaryResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
 			Response:        &response,
 			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
 		},

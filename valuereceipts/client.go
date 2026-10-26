@@ -31,8 +31,65 @@ func NewClient(opts ...option.RequestOption) *Client {
 	}
 }
 
-// Find or create a value receipt by natural key (customer + product/order + dates), then populate it with current data inline. Returns the ID, status, and public URL. Posted (sealed) VRs are returned as-is without re-populating.
-func (c *Client) SyncValueReceipt(
+// List value receipts for the organization
+func (c *Client) ListValueReceipts(
+	ctx context.Context,
+	request *paidgo.ListValueReceiptsRequest,
+	opts ...option.RequestOption,
+) (*paidgo.ValueReceiptListResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := baseURL + "/value-receipts/"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.ValueReceiptListResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Creates a value receipt for a customer and date range, optionally scoped to a product or an order. Every call creates a receipt, so calling twice for the same period gives the customer two. The date range must have ended; a range with nothing delivered in it reports zero. Returns the receipt's ID and public URL.
+func (c *Client) CreateValueReceipt(
 	ctx context.Context,
 	request *paidgo.SyncValueReceiptRequest,
 	opts ...option.RequestOption,
@@ -43,7 +100,7 @@ func (c *Client) SyncValueReceipt(
 		c.baseURL,
 		"https://api.agentpaid.io/api/v2",
 	)
-	endpointURL := baseURL + "/value-receipts/sync"
+	endpointURL := baseURL + "/value-receipts/"
 	headers := internal.MergeHeaders(
 		c.header.Clone(),
 		options.ToHeader(),
@@ -52,6 +109,11 @@ func (c *Client) SyncValueReceipt(
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
 			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
 				APIError: apiError,
 			}
 		},
@@ -88,115 +150,10 @@ func (c *Client) SyncValueReceipt(
 	return response, nil
 }
 
-// List value receipts for the organization
-func (c *Client) ListValueReceipts(
+// Deprecated — use POST /value-receipts. Returns the receipt this customer already has for the date range (200), and creates one only if there is none (201), so calling twice does not give the customer two receipts. A receipt does not change after it is created, so a repeated call reports the same figures. Create a new receipt to report the period again with newer data.
+func (c *Client) SyncValueReceipt(
 	ctx context.Context,
-	request *paidgo.ListValueReceiptsRequest,
-	opts ...option.RequestOption,
-) (*paidgo.ValueReceiptListResponse, error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v2",
-	)
-	endpointURL := baseURL + "/value-receipts/"
-	queryParams, err := internal.QueryValues(request)
-	if err != nil {
-		return nil, err
-	}
-	if len(queryParams) > 0 {
-		endpointURL += "?" + queryParams.Encode()
-	}
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-	errorCodes := internal.ErrorCodes{
-		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
-				APIError: apiError,
-			}
-		},
-	}
-
-	var response *paidgo.ValueReceiptListResponse
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodGet,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Response:        &response,
-			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
-		},
-	); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-// Get a value receipt by ID, including its publish/share state.
-func (c *Client) GetValueReceiptByID(
-	ctx context.Context,
-	request *paidgo.GetValueReceiptByIDRequest,
-	opts ...option.RequestOption,
-) (*paidgo.ValueReceiptDetail, error) {
-	options := core.NewRequestOptions(opts...)
-	baseURL := internal.ResolveBaseURL(
-		options.BaseURL,
-		c.baseURL,
-		"https://api.agentpaid.io/api/v2",
-	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/value-receipts/%v",
-		request.ID,
-	)
-	headers := internal.MergeHeaders(
-		c.header.Clone(),
-		options.ToHeader(),
-	)
-	errorCodes := internal.ErrorCodes{
-		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
-				APIError: apiError,
-			}
-		},
-		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
-				APIError: apiError,
-			}
-		},
-	}
-
-	var response *paidgo.ValueReceiptDetail
-	if err := c.caller.Call(
-		ctx,
-		&internal.CallParams{
-			URL:             endpointURL,
-			Method:          http.MethodGet,
-			Headers:         headers,
-			MaxAttempts:     options.MaxAttempts,
-			BodyProperties:  options.BodyProperties,
-			QueryParameters: options.QueryParameters,
-			Client:          options.HTTPClient,
-			Response:        &response,
-			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
-		},
-	); err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-// Re-populate an existing draft value receipt with current data inline. Returns the slim sync response. Sealed VRs cannot be refreshed.
-func (c *Client) RefreshValueReceipt(
-	ctx context.Context,
-	request *paidgo.RefreshValueReceiptRequest,
+	request *paidgo.SyncValueReceiptRequest,
 	opts ...option.RequestOption,
 ) (*paidgo.ValueReceiptSyncResponse, error) {
 	options := core.NewRequestOptions(opts...)
@@ -205,10 +162,7 @@ func (c *Client) RefreshValueReceipt(
 		c.baseURL,
 		"https://api.agentpaid.io/api/v2",
 	)
-	endpointURL := internal.EncodeURL(
-		baseURL+"/value-receipts/%v/refresh",
-		request.ID,
-	)
+	endpointURL := baseURL + "/value-receipts/sync"
 	headers := internal.MergeHeaders(
 		c.header.Clone(),
 		options.ToHeader(),
@@ -217,6 +171,11 @@ func (c *Client) RefreshValueReceipt(
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
 			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
 				APIError: apiError,
 			}
 		},
@@ -258,7 +217,135 @@ func (c *Client) RefreshValueReceipt(
 	return response, nil
 }
 
-// Transition a draft value receipt to sealed (posted) status. Sealed VRs are immutable — they cannot be updated or re-populated.
+// Get a value receipt by ID, including its publish/share state.
+func (c *Client) GetValueReceiptByID(
+	ctx context.Context,
+	request *paidgo.GetValueReceiptByIDRequest,
+	opts ...option.RequestOption,
+) (*paidgo.ValueReceiptDetail, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/value-receipts/%v",
+		request.ID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.ValueReceiptDetail
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodGet,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Deprecated. A value receipt is immutable from creation, so it cannot be re-populated. A receipt you own answers 409, and one that does not exist or belongs to another organization answers 404. To get current data, create a new receipt for the period with `POST /value-receipts`.
+func (c *Client) RefreshValueReceipt(
+	ctx context.Context,
+	request *paidgo.RefreshValueReceiptRequest,
+	opts ...option.RequestOption,
+) (*paidgo.ValueReceiptSyncResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/value-receipts/%v/refresh",
+		request.ID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	headers.Set("Content-Type", "application/json")
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &paidgo.ConflictError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.ValueReceiptSyncResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Deprecated. A value receipt is immutable from creation, so it is already sealed and this call has nothing to do. It answers 200 for any receipt the organization owns.
 func (c *Client) SealValueReceipt(
 	ctx context.Context,
 	request *paidgo.SealValueReceiptRequest,
@@ -280,6 +367,11 @@ func (c *Client) SealValueReceipt(
 	)
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
 		404: func(apiError *core.APIError) error {
 			return &paidgo.NotFoundError{
 				APIError: apiError,
@@ -340,6 +432,11 @@ func (c *Client) ArchiveValueReceipt(
 	)
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
 		404: func(apiError *core.APIError) error {
 			return &paidgo.NotFoundError{
 				APIError: apiError,
@@ -373,7 +470,7 @@ func (c *Client) ArchiveValueReceipt(
 	return response, nil
 }
 
-// Restore an archived value receipt.
+// Restore an archived value receipt. A receipt with no content, or one that failed to build, stays archived and answers 409. So does one whose period another value receipt now covers.
 func (c *Client) UnarchiveValueReceipt(
 	ctx context.Context,
 	request *paidgo.UnarchiveValueReceiptRequest,
@@ -395,8 +492,18 @@ func (c *Client) UnarchiveValueReceipt(
 	)
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
 		404: func(apiError *core.APIError) error {
 			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &paidgo.ConflictError{
 				APIError: apiError,
 			}
 		},
@@ -428,7 +535,7 @@ func (c *Client) UnarchiveValueReceipt(
 	return response, nil
 }
 
-// Make a value receipt publicly accessible via URL.
+// Make a value receipt publicly accessible via URL. An archived receipt is rejected with 409 — unarchive it first. So is one with no content, which has nothing to show.
 func (c *Client) PublishValueReceipt(
 	ctx context.Context,
 	request *paidgo.PublishValueReceiptBody,
@@ -450,8 +557,18 @@ func (c *Client) PublishValueReceipt(
 	)
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
 		404: func(apiError *core.APIError) error {
 			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &paidgo.ConflictError{
 				APIError: apiError,
 			}
 		},
@@ -483,7 +600,7 @@ func (c *Client) PublishValueReceipt(
 	return response, nil
 }
 
-// Revoke public access to a value receipt.
+// Revoke public access to a value receipt. Available for archived receipts too, so a live link can always be revoked.
 func (c *Client) UnpublishValueReceipt(
 	ctx context.Context,
 	request *paidgo.UnpublishValueReceiptRequest,
@@ -505,6 +622,11 @@ func (c *Client) UnpublishValueReceipt(
 	)
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
 		404: func(apiError *core.APIError) error {
 			return &paidgo.NotFoundError{
 				APIError: apiError,

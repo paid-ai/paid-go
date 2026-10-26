@@ -17,14 +17,19 @@ type CreateCheckoutRequest struct {
 	Products   []*CheckoutProductInput `json:"products,omitempty" url:"-"`
 	CustomerID *string                 `json:"customerId,omitempty" url:"-"`
 	// External customer identifier. Creates the customer on first use, resolves to the existing customer on subsequent uses.
-	ExternalCustomerID *string                `json:"externalCustomerId,omitempty" url:"-"`
-	SuccessURL         string                 `json:"successUrl" url:"-"`
-	CancelURL          *string                `json:"cancelUrl,omitempty" url:"-"`
-	ExpiresAt          *time.Time             `json:"expiresAt,omitempty" url:"-"`
-	Metadata           map[string]interface{} `json:"metadata,omitempty" url:"-"`
-	CollectAddress     *bool                  `json:"collectAddress,omitempty" url:"-"`
-	CollectPhone       *bool                  `json:"collectPhone,omitempty" url:"-"`
-	SingleUse          *bool                  `json:"singleUse,omitempty" url:"-"`
+	ExternalCustomerID *string `json:"externalCustomerId,omitempty" url:"-"`
+	SuccessURL         string  `json:"successUrl" url:"-"`
+	CancelURL          *string `json:"cancelUrl,omitempty" url:"-"`
+	// When the checkout link expires. Must be in the future. Defaults to 24 hours after creation.
+	ExpiresAt      *time.Time             `json:"expiresAt,omitempty" url:"-"`
+	Metadata       map[string]interface{} `json:"metadata,omitempty" url:"-"`
+	CollectAddress *bool                  `json:"collectAddress,omitempty" url:"-"`
+	CollectPhone   *bool                  `json:"collectPhone,omitempty" url:"-"`
+	// Heading on the confirmation screen the customer sees after completing checkout, shown instead of "Payment successful". Plain text, up to 80 characters. Omit it to keep the default.
+	SuccessTitle *string `json:"successTitle,omitempty" url:"-"`
+	// Text under the heading on the confirmation screen, shown instead of "Thank you for your purchase!". Plain text, up to 500 characters. Omit it to keep the default. Right after checkout, the page still adds "You will be redirected shortly." before sending the customer to `successUrl`.
+	SuccessMessage *string `json:"successMessage,omitempty" url:"-"`
+	SingleUse      *bool   `json:"singleUse,omitempty" url:"-"`
 	// Lock checkout to a specific currency. Omit to allow all currencies supported by the selected plans. If the checkout is for a customer with an active subscription, the currency must match that subscription's currency — subscriptions cannot change currency.
 	Currency *string `json:"currency,omitempty" url:"-"`
 	// Additional informational pricing cards rendered alongside the plans.
@@ -76,8 +81,12 @@ type Checkout struct {
 	Metadata           map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
 	CollectAddress     bool                   `json:"collectAddress" url:"collectAddress"`
 	CollectPhone       bool                   `json:"collectPhone" url:"collectPhone"`
-	SingleUse          bool                   `json:"singleUse" url:"singleUse"`
-	AllowedCurrencies  []string               `json:"allowedCurrencies" url:"allowedCurrencies"`
+	// Heading on the confirmation screen after checkout. Null when the checkout shows the default, "Payment successful".
+	SuccessTitle *string `json:"successTitle,omitempty" url:"successTitle,omitempty"`
+	// Text under the heading on the confirmation screen. Null when the checkout shows the default, "Thank you for your purchase!".
+	SuccessMessage    *string  `json:"successMessage,omitempty" url:"successMessage,omitempty"`
+	SingleUse         bool     `json:"singleUse" url:"singleUse"`
+	AllowedCurrencies []string `json:"allowedCurrencies" url:"allowedCurrencies"`
 	// Additional informational pricing cards rendered alongside the plans.
 	CustomCards []*CheckoutCustomCard `json:"customCards,omitempty" url:"customCards,omitempty"`
 	CreatedAt   time.Time             `json:"createdAt" url:"createdAt"`
@@ -169,6 +178,20 @@ func (c *Checkout) GetCollectPhone() bool {
 		return false
 	}
 	return c.CollectPhone
+}
+
+func (c *Checkout) GetSuccessTitle() *string {
+	if c == nil {
+		return nil
+	}
+	return c.SuccessTitle
+}
+
+func (c *Checkout) GetSuccessMessage() *string {
+	if c == nil {
+		return nil
+	}
+	return c.SuccessMessage
 }
 
 func (c *Checkout) GetSingleUse() bool {
@@ -425,8 +448,12 @@ type CheckoutDetails struct {
 	Metadata           map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
 	CollectAddress     bool                   `json:"collectAddress" url:"collectAddress"`
 	CollectPhone       bool                   `json:"collectPhone" url:"collectPhone"`
-	SingleUse          bool                   `json:"singleUse" url:"singleUse"`
-	AllowedCurrencies  []string               `json:"allowedCurrencies" url:"allowedCurrencies"`
+	// Heading on the confirmation screen after checkout. Null when the checkout shows the default, "Payment successful".
+	SuccessTitle *string `json:"successTitle,omitempty" url:"successTitle,omitempty"`
+	// Text under the heading on the confirmation screen. Null when the checkout shows the default, "Thank you for your purchase!".
+	SuccessMessage    *string  `json:"successMessage,omitempty" url:"successMessage,omitempty"`
+	SingleUse         bool     `json:"singleUse" url:"singleUse"`
+	AllowedCurrencies []string `json:"allowedCurrencies" url:"allowedCurrencies"`
 	// Additional informational pricing cards rendered alongside the plans.
 	CustomCards []*CheckoutCustomCard `json:"customCards,omitempty" url:"customCards,omitempty"`
 	CreatedAt   time.Time             `json:"createdAt" url:"createdAt"`
@@ -521,6 +548,20 @@ func (c *CheckoutDetails) GetCollectPhone() bool {
 		return false
 	}
 	return c.CollectPhone
+}
+
+func (c *CheckoutDetails) GetSuccessTitle() *string {
+	if c == nil {
+		return nil
+	}
+	return c.SuccessTitle
+}
+
+func (c *CheckoutDetails) GetSuccessMessage() *string {
+	if c == nil {
+		return nil
+	}
+	return c.SuccessMessage
 }
 
 func (c *CheckoutDetails) GetSingleUse() bool {

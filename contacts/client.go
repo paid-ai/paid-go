@@ -208,7 +208,7 @@ func (c *Client) GetContactByID(
 	return response, nil
 }
 
-// Update a contact by its ID
+// Update a contact by its ID. A contact can move to another customer only if no orders or invoices reference it; otherwise a different `customerId` returns 400 `CONTACT_CUSTOMER_IMMUTABLE`.
 func (c *Client) UpdateContactByID(
 	ctx context.Context,
 	request *paidgo.UpdateContactByIDRequest,
@@ -273,7 +273,7 @@ func (c *Client) UpdateContactByID(
 	return response, nil
 }
 
-// Delete a contact by its ID
+// Delete a contact by its ID. A contact referenced by an order or an unsettled invoice cannot be deleted (409 `CONTACT_HAS_ASSOCIATIONS`). Posted paid invoices, voided invoices and canceled invoices do not block deletion.
 func (c *Client) DeleteContactByID(
 	ctx context.Context,
 	request *paidgo.DeleteContactByIDRequest,
@@ -301,6 +301,11 @@ func (c *Client) DeleteContactByID(
 		},
 		404: func(apiError *core.APIError) error {
 			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &paidgo.ConflictError{
 				APIError: apiError,
 			}
 		},
@@ -389,7 +394,7 @@ func (c *Client) GetContactByExternalID(
 	return response, nil
 }
 
-// Update a contact by its external ID
+// Update a contact by its external ID. A contact can move to another customer only if no orders or invoices reference it; otherwise a different `customerId` returns 400 `CONTACT_CUSTOMER_IMMUTABLE`.
 func (c *Client) UpdateContactByExternalID(
 	ctx context.Context,
 	request *paidgo.UpdateContactByExternalIDRequest,
@@ -454,7 +459,7 @@ func (c *Client) UpdateContactByExternalID(
 	return response, nil
 }
 
-// Delete a contact by its external ID
+// Delete a contact by its external ID. A contact referenced by an order or an unsettled invoice cannot be deleted (409 `CONTACT_HAS_ASSOCIATIONS`). Posted paid invoices, voided invoices and canceled invoices do not block deletion.
 func (c *Client) DeleteContactByExternalID(
 	ctx context.Context,
 	request *paidgo.DeleteContactByExternalIDRequest,
@@ -482,6 +487,11 @@ func (c *Client) DeleteContactByExternalID(
 		},
 		404: func(apiError *core.APIError) error {
 			return &paidgo.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &paidgo.ConflictError{
 				APIError: apiError,
 			}
 		},

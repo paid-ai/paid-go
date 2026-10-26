@@ -141,7 +141,7 @@ func (c *Client) GetPricing(
 	return response, nil
 }
 
-// Updates pricing on an existing product attribute. If creditBenefits is provided, it fully replaces existing benefits. If omitted, existing benefits are preserved.
+// Updates pricing on an existing product attribute. To create a new attribute, use the update product endpoint (updateProductById), which upserts productAttributes. If creditBenefits is provided, it fully replaces existing benefits. If omitted, existing benefits are preserved.
 func (c *Client) UpdatePricing(
 	ctx context.Context,
 	request *paidgo.UpdatePricingRequest,
