@@ -6,9 +6,562 @@ import (
 	json "encoding/json"
 	fmt "fmt"
 	internal "github.com/paid-ai/paid-go/internal"
+	time "time"
 )
 
+type AmendmentErrorResponse struct {
+	Error   string  `json:"error" url:"error"`
+	Code    *string `json:"code,omitempty" url:"code,omitempty"`
+	Details *string `json:"details,omitempty" url:"details,omitempty"`
+	// Index of the intent in the request that caused the error, when the failure is attributable to one intent.
+	IntentIndex *int `json:"intentIndex,omitempty" url:"intentIndex,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (a *AmendmentErrorResponse) GetError() string {
+	if a == nil {
+		return ""
+	}
+	return a.Error
+}
+
+func (a *AmendmentErrorResponse) GetCode() *string {
+	if a == nil {
+		return nil
+	}
+	return a.Code
+}
+
+func (a *AmendmentErrorResponse) GetDetails() *string {
+	if a == nil {
+		return nil
+	}
+	return a.Details
+}
+
+func (a *AmendmentErrorResponse) GetIntentIndex() *int {
+	if a == nil {
+		return nil
+	}
+	return a.IntentIndex
+}
+
+func (a *AmendmentErrorResponse) GetExtraProperties() map[string]interface{} {
+	return a.extraProperties
+}
+
+func (a *AmendmentErrorResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler AmendmentErrorResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*a = AmendmentErrorResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *a)
+	if err != nil {
+		return err
+	}
+	a.extraProperties = extraProperties
+	a.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (a *AmendmentErrorResponse) String() string {
+	if len(a.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(a.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(a); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", a)
+}
+
+type AnalyticsColumn struct {
+	Name string `json:"name" url:"name"`
+	// ClickHouse column type
+	Type string `json:"type" url:"type"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (a *AnalyticsColumn) GetName() string {
+	if a == nil {
+		return ""
+	}
+	return a.Name
+}
+
+func (a *AnalyticsColumn) GetType() string {
+	if a == nil {
+		return ""
+	}
+	return a.Type
+}
+
+func (a *AnalyticsColumn) GetExtraProperties() map[string]interface{} {
+	return a.extraProperties
+}
+
+func (a *AnalyticsColumn) UnmarshalJSON(data []byte) error {
+	type unmarshaler AnalyticsColumn
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*a = AnalyticsColumn(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *a)
+	if err != nil {
+		return err
+	}
+	a.extraProperties = extraProperties
+	a.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (a *AnalyticsColumn) String() string {
+	if len(a.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(a.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(a); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", a)
+}
+
+type AnalyticsQueryRequest struct {
+	// A single ClickHouse SELECT (or WITH ... SELECT) statement against the analytics views. Results are automatically scoped to your organization. See GET /schema for the available views and columns.
+	Query string `json:"query" url:"query"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (a *AnalyticsQueryRequest) GetQuery() string {
+	if a == nil {
+		return ""
+	}
+	return a.Query
+}
+
+func (a *AnalyticsQueryRequest) GetExtraProperties() map[string]interface{} {
+	return a.extraProperties
+}
+
+func (a *AnalyticsQueryRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler AnalyticsQueryRequest
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*a = AnalyticsQueryRequest(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *a)
+	if err != nil {
+		return err
+	}
+	a.extraProperties = extraProperties
+	a.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (a *AnalyticsQueryRequest) String() string {
+	if len(a.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(a.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(a); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", a)
+}
+
+type AnalyticsQueryResponse struct {
+	Columns []*AnalyticsColumn `json:"columns" url:"columns"`
+	// Result rows; values are ordered to match `columns`. 64-bit integers (UInt64/Int64 — counts, sums, amounts in cents, ids) are returned as JSON strings to preserve precision; parse them client-side as needed. Decimal columns (fractional cents, and credit amounts and balances) are returned as JSON numbers rather than strings, so a value beyond 2^53 is already rounded in this response. Select toString(col) for exact digits.
+	Rows [][]interface{}             `json:"rows" url:"rows"`
+	Meta *AnalyticsQueryResponseMeta `json:"meta" url:"meta"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (a *AnalyticsQueryResponse) GetColumns() []*AnalyticsColumn {
+	if a == nil {
+		return nil
+	}
+	return a.Columns
+}
+
+func (a *AnalyticsQueryResponse) GetRows() [][]interface{} {
+	if a == nil {
+		return nil
+	}
+	return a.Rows
+}
+
+func (a *AnalyticsQueryResponse) GetMeta() *AnalyticsQueryResponseMeta {
+	if a == nil {
+		return nil
+	}
+	return a.Meta
+}
+
+func (a *AnalyticsQueryResponse) GetExtraProperties() map[string]interface{} {
+	return a.extraProperties
+}
+
+func (a *AnalyticsQueryResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler AnalyticsQueryResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*a = AnalyticsQueryResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *a)
+	if err != nil {
+		return err
+	}
+	a.extraProperties = extraProperties
+	a.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (a *AnalyticsQueryResponse) String() string {
+	if len(a.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(a.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(a); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", a)
+}
+
+type AnalyticsQueryResponseMeta struct {
+	RowCount  int     `json:"rowCount" url:"rowCount"`
+	ElapsedMs float64 `json:"elapsedMs" url:"elapsedMs"`
+	// True when the result hit the row cap and was truncated. Narrow the query (shorter date range, LIMIT, coarser grouping) to see the rest.
+	Truncated bool `json:"truncated" url:"truncated"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (a *AnalyticsQueryResponseMeta) GetRowCount() int {
+	if a == nil {
+		return 0
+	}
+	return a.RowCount
+}
+
+func (a *AnalyticsQueryResponseMeta) GetElapsedMs() float64 {
+	if a == nil {
+		return 0
+	}
+	return a.ElapsedMs
+}
+
+func (a *AnalyticsQueryResponseMeta) GetTruncated() bool {
+	if a == nil {
+		return false
+	}
+	return a.Truncated
+}
+
+func (a *AnalyticsQueryResponseMeta) GetExtraProperties() map[string]interface{} {
+	return a.extraProperties
+}
+
+func (a *AnalyticsQueryResponseMeta) UnmarshalJSON(data []byte) error {
+	type unmarshaler AnalyticsQueryResponseMeta
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*a = AnalyticsQueryResponseMeta(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *a)
+	if err != nil {
+		return err
+	}
+	a.extraProperties = extraProperties
+	a.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (a *AnalyticsQueryResponseMeta) String() string {
+	if len(a.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(a.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(a); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", a)
+}
+
+type AnalyticsSchemaColumn struct {
+	Name string `json:"name" url:"name"`
+	// ClickHouse column type
+	Type    string `json:"type" url:"type"`
+	Comment string `json:"comment" url:"comment"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (a *AnalyticsSchemaColumn) GetName() string {
+	if a == nil {
+		return ""
+	}
+	return a.Name
+}
+
+func (a *AnalyticsSchemaColumn) GetType() string {
+	if a == nil {
+		return ""
+	}
+	return a.Type
+}
+
+func (a *AnalyticsSchemaColumn) GetComment() string {
+	if a == nil {
+		return ""
+	}
+	return a.Comment
+}
+
+func (a *AnalyticsSchemaColumn) GetExtraProperties() map[string]interface{} {
+	return a.extraProperties
+}
+
+func (a *AnalyticsSchemaColumn) UnmarshalJSON(data []byte) error {
+	type unmarshaler AnalyticsSchemaColumn
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*a = AnalyticsSchemaColumn(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *a)
+	if err != nil {
+		return err
+	}
+	a.extraProperties = extraProperties
+	a.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (a *AnalyticsSchemaColumn) String() string {
+	if len(a.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(a.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(a); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", a)
+}
+
+type AnalyticsSchemaResponse struct {
+	Views []*AnalyticsSchemaView `json:"views" url:"views"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (a *AnalyticsSchemaResponse) GetViews() []*AnalyticsSchemaView {
+	if a == nil {
+		return nil
+	}
+	return a.Views
+}
+
+func (a *AnalyticsSchemaResponse) GetExtraProperties() map[string]interface{} {
+	return a.extraProperties
+}
+
+func (a *AnalyticsSchemaResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler AnalyticsSchemaResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*a = AnalyticsSchemaResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *a)
+	if err != nil {
+		return err
+	}
+	a.extraProperties = extraProperties
+	a.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (a *AnalyticsSchemaResponse) String() string {
+	if len(a.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(a.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(a); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", a)
+}
+
+type AnalyticsSchemaView struct {
+	Name    string                   `json:"name" url:"name"`
+	Comment string                   `json:"comment" url:"comment"`
+	Columns []*AnalyticsSchemaColumn `json:"columns" url:"columns"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (a *AnalyticsSchemaView) GetName() string {
+	if a == nil {
+		return ""
+	}
+	return a.Name
+}
+
+func (a *AnalyticsSchemaView) GetComment() string {
+	if a == nil {
+		return ""
+	}
+	return a.Comment
+}
+
+func (a *AnalyticsSchemaView) GetColumns() []*AnalyticsSchemaColumn {
+	if a == nil {
+		return nil
+	}
+	return a.Columns
+}
+
+func (a *AnalyticsSchemaView) GetExtraProperties() map[string]interface{} {
+	return a.extraProperties
+}
+
+func (a *AnalyticsSchemaView) UnmarshalJSON(data []byte) error {
+	type unmarshaler AnalyticsSchemaView
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*a = AnalyticsSchemaView(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *a)
+	if err != nil {
+		return err
+	}
+	a.extraProperties = extraProperties
+	a.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (a *AnalyticsSchemaView) String() string {
+	if len(a.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(a.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(a); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", a)
+}
+
+type ContactBillingAddress struct {
+	Street  *string `json:"street,omitempty" url:"street,omitempty"`
+	City    *string `json:"city,omitempty" url:"city,omitempty"`
+	State   *string `json:"state,omitempty" url:"state,omitempty"`
+	Country *string `json:"country,omitempty" url:"country,omitempty"`
+	ZipCode *string `json:"zipCode,omitempty" url:"zipCode,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *ContactBillingAddress) GetStreet() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Street
+}
+
+func (c *ContactBillingAddress) GetCity() *string {
+	if c == nil {
+		return nil
+	}
+	return c.City
+}
+
+func (c *ContactBillingAddress) GetState() *string {
+	if c == nil {
+		return nil
+	}
+	return c.State
+}
+
+func (c *ContactBillingAddress) GetCountry() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Country
+}
+
+func (c *ContactBillingAddress) GetZipCode() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ZipCode
+}
+
+func (c *ContactBillingAddress) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *ContactBillingAddress) UnmarshalJSON(data []byte) error {
+	type unmarshaler ContactBillingAddress
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = ContactBillingAddress(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *ContactBillingAddress) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
 type CustomViewAuthoringDetail struct {
+	// Enable customer unit navigation for a customer-scoped view. Setting true requires customer hierarchies to be enabled for your organization, and every query must support unit selection. Existing views default to false.
+	HierarchyEnabled *bool `json:"hierarchyEnabled,omitempty" url:"hierarchyEnabled,omitempty"`
+	// Send the customer's unit caps to the render bundle as `context.caps`. Needs `hierarchyEnabled` on a customer-scoped view. Turn it on only for views that draw cap usage: each load then reads cap usage from billing. Caps are spend policy, so an API key also needs `read:billing` to receive them in the data (they are left out otherwise) or to mint this view's embed token. Defaults to false.
+	CapsEnabled *bool                           `json:"capsEnabled,omitempty" url:"capsEnabled,omitempty"`
 	DisplayID   string                          `json:"displayId" url:"displayId"`
 	Name        string                          `json:"name" url:"name"`
 	Description *string                         `json:"description,omitempty" url:"description,omitempty"`
@@ -19,6 +572,8 @@ type CustomViewAuthoringDetail struct {
 	RenderBundle string `json:"renderBundle" url:"renderBundle"`
 	// The view's current default date range, or null if it uses no adjustable period.
 	Period *CustomViewAuthoringDetailPeriod `json:"period,omitempty" url:"period,omitempty"`
+	// The filter parameters this view accepts per request (pass values as `filter_<name>` query params on the data endpoint), or null if it declares none. Embedding hosts can render controls from the declared values.
+	Filters []*CustomViewFilter `json:"filters,omitempty" url:"filters,omitempty"`
 	// 'customer': data is scoped to one viewing customer and the view is embeddable per-customer. 'organization': data is org-wide and the view is internal-only.
 	Scope         CustomViewAuthoringDetailScope `json:"scope" url:"scope"`
 	Queries       []*CustomViewQuery             `json:"queries" url:"queries"`
@@ -33,6 +588,20 @@ type CustomViewAuthoringDetail struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewAuthoringDetail) GetHierarchyEnabled() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.HierarchyEnabled
+}
+
+func (c *CustomViewAuthoringDetail) GetCapsEnabled() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.CapsEnabled
 }
 
 func (c *CustomViewAuthoringDetail) GetDisplayID() string {
@@ -82,6 +651,13 @@ func (c *CustomViewAuthoringDetail) GetPeriod() *CustomViewAuthoringDetailPeriod
 		return nil
 	}
 	return c.Period
+}
+
+func (c *CustomViewAuthoringDetail) GetFilters() []*CustomViewFilter {
+	if c == nil {
+		return nil
+	}
+	return c.Filters
 }
 
 func (c *CustomViewAuthoringDetail) GetScope() CustomViewAuthoringDetailScope {
@@ -453,18 +1029,111 @@ func (c *CustomViewPreviewHarness) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
+type CustomViewPreviewHarnessColumn struct {
+	// Column name exactly as your SQL aliases it (the `AS` name).
+	Name string `json:"name" url:"name"`
+	// Coarse column type used to fabricate plausible values.
+	Type CustomViewPreviewHarnessColumnType `json:"type" url:"type"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewPreviewHarnessColumn) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CustomViewPreviewHarnessColumn) GetType() CustomViewPreviewHarnessColumnType {
+	if c == nil {
+		return ""
+	}
+	return c.Type
+}
+
+func (c *CustomViewPreviewHarnessColumn) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomViewPreviewHarnessColumn) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomViewPreviewHarnessColumn
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomViewPreviewHarnessColumn(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomViewPreviewHarnessColumn) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Coarse column type used to fabricate plausible values.
+type CustomViewPreviewHarnessColumnType string
+
+const (
+	CustomViewPreviewHarnessColumnTypeDate    CustomViewPreviewHarnessColumnType = "date"
+	CustomViewPreviewHarnessColumnTypeNumber  CustomViewPreviewHarnessColumnType = "number"
+	CustomViewPreviewHarnessColumnTypeString  CustomViewPreviewHarnessColumnType = "string"
+	CustomViewPreviewHarnessColumnTypeBoolean CustomViewPreviewHarnessColumnType = "boolean"
+)
+
+func NewCustomViewPreviewHarnessColumnTypeFromString(s string) (CustomViewPreviewHarnessColumnType, error) {
+	switch s {
+	case "date":
+		return CustomViewPreviewHarnessColumnTypeDate, nil
+	case "number":
+		return CustomViewPreviewHarnessColumnTypeNumber, nil
+	case "string":
+		return CustomViewPreviewHarnessColumnTypeString, nil
+	case "boolean":
+		return CustomViewPreviewHarnessColumnTypeBoolean, nil
+	}
+	var t CustomViewPreviewHarnessColumnType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomViewPreviewHarnessColumnType) Ptr() *CustomViewPreviewHarnessColumnType {
+	return &c
+}
+
 type CustomViewPreviewHarnessRequest struct {
+	Context *CustomViewDataContext `json:"context,omitempty" url:"context,omitempty"`
 	// The raw, self-contained HTML render bundle to preview — the SAME string you would pass to createCustomView. Pass it verbatim; do NOT escape `</script>`, backticks, or quotes yourself (that is exactly what this endpoint does for you).
 	RenderBundle string `json:"renderBundle" url:"renderBundle"`
-	// Optional sample data keyed by query id (as getCustomViewData returns it), e.g. `{ "usage": [{ "day": "2026-01-01", "signals": "42" }] }`. Delivered to the bundle via the same `paid:data` message the real embed sends. Omit to preview the empty state. If these rows are fabricated (a data-restricted org), also set `sampleData: true` so the harness is marked with a sample-data banner.
+	// Optional sample data keyed by query id (the `data` field of a getCustomViewData response), e.g. `{ "usage": [{ "day": "2026-01-01", "signals": "42" }] }`. Delivered to the bundle via the same `paid:data` message the real embed sends. Omit to preview the empty state. If these rows are fabricated (a data-restricted org), also set `sampleData: true` so the harness is marked with a sample-data banner.
 	Data map[string][]map[string]interface{} `json:"data,omitempty" url:"data,omitempty"`
 	// For data-restricted orgs (API key without read:analytics, so the real data endpoints are blocked): a per-query column contract, keyed by query id, describing the columns each SQL returns. The server fabricates deterministic sample rows from it — no query runs, so no customer data is used — and marks the preview as sample data. Mutually exclusive with `data`.
-	Synthetic map[string][]*CustomViewPreviewHarnessRequestSyntheticValueItem `json:"synthetic,omitempty" url:"synthetic,omitempty"`
+	Synthetic map[string][]*CustomViewPreviewHarnessColumn `json:"synthetic,omitempty" url:"synthetic,omitempty"`
 	// Set to true when the `data` you pass is fabricated sample data, not real customer rows — e.g. a data-restricted org where you brought your own realistic rows instead of the server's `synthetic` ramp. The harness is then marked with the same sample-data banner as the server-fabricated `synthetic` path. Ignored on the `synthetic` path (already marked) and when previewing real data.
 	SampleData *bool `json:"sampleData,omitempty" url:"sampleData,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewPreviewHarnessRequest) GetContext() *CustomViewDataContext {
+	if c == nil {
+		return nil
+	}
+	return c.Context
 }
 
 func (c *CustomViewPreviewHarnessRequest) GetRenderBundle() string {
@@ -481,7 +1150,7 @@ func (c *CustomViewPreviewHarnessRequest) GetData() map[string][]map[string]inte
 	return c.Data
 }
 
-func (c *CustomViewPreviewHarnessRequest) GetSynthetic() map[string][]*CustomViewPreviewHarnessRequestSyntheticValueItem {
+func (c *CustomViewPreviewHarnessRequest) GetSynthetic() map[string][]*CustomViewPreviewHarnessColumn {
 	if c == nil {
 		return nil
 	}
@@ -525,91 +1194,6 @@ func (c *CustomViewPreviewHarnessRequest) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", c)
-}
-
-type CustomViewPreviewHarnessRequestSyntheticValueItem struct {
-	// Column name exactly as your SQL aliases it (the `AS` name).
-	Name string `json:"name" url:"name"`
-	// Coarse column type used to fabricate plausible values.
-	Type CustomViewPreviewHarnessRequestSyntheticValueItemType `json:"type" url:"type"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (c *CustomViewPreviewHarnessRequestSyntheticValueItem) GetName() string {
-	if c == nil {
-		return ""
-	}
-	return c.Name
-}
-
-func (c *CustomViewPreviewHarnessRequestSyntheticValueItem) GetType() CustomViewPreviewHarnessRequestSyntheticValueItemType {
-	if c == nil {
-		return ""
-	}
-	return c.Type
-}
-
-func (c *CustomViewPreviewHarnessRequestSyntheticValueItem) GetExtraProperties() map[string]interface{} {
-	return c.extraProperties
-}
-
-func (c *CustomViewPreviewHarnessRequestSyntheticValueItem) UnmarshalJSON(data []byte) error {
-	type unmarshaler CustomViewPreviewHarnessRequestSyntheticValueItem
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*c = CustomViewPreviewHarnessRequestSyntheticValueItem(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *c)
-	if err != nil {
-		return err
-	}
-	c.extraProperties = extraProperties
-	c.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (c *CustomViewPreviewHarnessRequestSyntheticValueItem) String() string {
-	if len(c.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(c); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", c)
-}
-
-// Coarse column type used to fabricate plausible values.
-type CustomViewPreviewHarnessRequestSyntheticValueItemType string
-
-const (
-	CustomViewPreviewHarnessRequestSyntheticValueItemTypeDate    CustomViewPreviewHarnessRequestSyntheticValueItemType = "date"
-	CustomViewPreviewHarnessRequestSyntheticValueItemTypeNumber  CustomViewPreviewHarnessRequestSyntheticValueItemType = "number"
-	CustomViewPreviewHarnessRequestSyntheticValueItemTypeString  CustomViewPreviewHarnessRequestSyntheticValueItemType = "string"
-	CustomViewPreviewHarnessRequestSyntheticValueItemTypeBoolean CustomViewPreviewHarnessRequestSyntheticValueItemType = "boolean"
-)
-
-func NewCustomViewPreviewHarnessRequestSyntheticValueItemTypeFromString(s string) (CustomViewPreviewHarnessRequestSyntheticValueItemType, error) {
-	switch s {
-	case "date":
-		return CustomViewPreviewHarnessRequestSyntheticValueItemTypeDate, nil
-	case "number":
-		return CustomViewPreviewHarnessRequestSyntheticValueItemTypeNumber, nil
-	case "string":
-		return CustomViewPreviewHarnessRequestSyntheticValueItemTypeString, nil
-	case "boolean":
-		return CustomViewPreviewHarnessRequestSyntheticValueItemTypeBoolean, nil
-	}
-	var t CustomViewPreviewHarnessRequestSyntheticValueItemType
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (c CustomViewPreviewHarnessRequestSyntheticValueItemType) Ptr() *CustomViewPreviewHarnessRequestSyntheticValueItemType {
-	return &c
 }
 
 type CustomViewValidationFinding struct {
@@ -677,6 +1261,7 @@ func (c *CustomViewValidationFinding) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
+// The customer, by Paid ID (`customerId`) or by your external ID (`externalCustomerId`).
 type CustomerAttribution struct {
 	CustomerByID         *CustomerByID
 	CustomerByExternalID *CustomerByExternalID
@@ -737,6 +1322,92 @@ func (c *CustomerAttribution) Accept(visitor CustomerAttributionVisitor) error {
 		return visitor.VisitCustomerByExternalID(c.CustomerByExternalID)
 	}
 	return fmt.Errorf("type %T does not include a non-empty union type", c)
+}
+
+type CustomerBillingAddressInput struct {
+	Line1   *string `json:"line1,omitempty" url:"line1,omitempty"`
+	Line2   *string `json:"line2,omitempty" url:"line2,omitempty"`
+	City    *string `json:"city,omitempty" url:"city,omitempty"`
+	State   *string `json:"state,omitempty" url:"state,omitempty"`
+	ZipCode *string `json:"zipCode,omitempty" url:"zipCode,omitempty"`
+	Country *string `json:"country,omitempty" url:"country,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerBillingAddressInput) GetLine1() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Line1
+}
+
+func (c *CustomerBillingAddressInput) GetLine2() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Line2
+}
+
+func (c *CustomerBillingAddressInput) GetCity() *string {
+	if c == nil {
+		return nil
+	}
+	return c.City
+}
+
+func (c *CustomerBillingAddressInput) GetState() *string {
+	if c == nil {
+		return nil
+	}
+	return c.State
+}
+
+func (c *CustomerBillingAddressInput) GetZipCode() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ZipCode
+}
+
+func (c *CustomerBillingAddressInput) GetCountry() *string {
+	if c == nil {
+		return nil
+	}
+	return c.Country
+}
+
+func (c *CustomerBillingAddressInput) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerBillingAddressInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerBillingAddressInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerBillingAddressInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerBillingAddressInput) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
 }
 
 type CustomerByExternalID struct {
@@ -831,6 +1502,351 @@ func (c *CustomerByID) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", c)
+}
+
+// Usage in the current period, when the returned version is in force now and usage is available; otherwise `null`.
+type CustomerUnitCapCurrentPeriod struct {
+	Window *CustomerUnitCapPeriod `json:"window" url:"window"`
+	// Credits of this currency spent by this unit and its descendants during the window. JSON number; exact within ±2^53.
+	Used float64 `json:"used" url:"used"`
+	// `amount - used`; negative once the cap is exceeded. Advisory: spend may land between this read and the next burn.
+	Remaining float64 `json:"remaining" url:"remaining"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapCurrentPeriod) GetWindow() *CustomerUnitCapPeriod {
+	if c == nil {
+		return nil
+	}
+	return c.Window
+}
+
+func (c *CustomerUnitCapCurrentPeriod) GetUsed() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Used
+}
+
+func (c *CustomerUnitCapCurrentPeriod) GetRemaining() float64 {
+	if c == nil {
+		return 0
+	}
+	return c.Remaining
+}
+
+func (c *CustomerUnitCapCurrentPeriod) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapCurrentPeriod) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitCapCurrentPeriod
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapCurrentPeriod(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapCurrentPeriod) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerUnitCapPeriod struct {
+	// Inclusive start of the period, UTC.
+	Start time.Time `json:"start" url:"start"`
+	// Exclusive end of the period, UTC.
+	End time.Time `json:"end" url:"end"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapPeriod) GetStart() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.Start
+}
+
+func (c *CustomerUnitCapPeriod) GetEnd() time.Time {
+	if c == nil {
+		return time.Time{}
+	}
+	return c.End
+}
+
+func (c *CustomerUnitCapPeriod) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapPeriod) UnmarshalJSON(data []byte) error {
+	type embed CustomerUnitCapPeriod
+	var unmarshaler = struct {
+		embed
+		Start *internal.DateTime `json:"start"`
+		End   *internal.DateTime `json:"end"`
+	}{
+		embed: embed(*c),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapPeriod(unmarshaler.embed)
+	c.Start = unmarshaler.Start.Time()
+	c.End = unmarshaler.End.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapPeriod) MarshalJSON() ([]byte, error) {
+	type embed CustomerUnitCapPeriod
+	var marshaler = struct {
+		embed
+		Start *internal.DateTime `json:"start"`
+		End   *internal.DateTime `json:"end"`
+	}{
+		embed: embed(*c),
+		Start: internal.NewDateTime(c.Start),
+		End:   internal.NewDateTime(c.End),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (c *CustomerUnitCapPeriod) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Monthly UTC boundaries: an anchored day, or the first of each calendar month.
+type CustomerUnitCapSchedule struct {
+	CustomerUnitCapScheduleAnchorDay *CustomerUnitCapScheduleAnchorDay
+	CustomerUnitCapScheduleOne       *CustomerUnitCapScheduleOne
+
+	typ string
+}
+
+func (c *CustomerUnitCapSchedule) GetCustomerUnitCapScheduleAnchorDay() *CustomerUnitCapScheduleAnchorDay {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerUnitCapScheduleAnchorDay
+}
+
+func (c *CustomerUnitCapSchedule) GetCustomerUnitCapScheduleOne() *CustomerUnitCapScheduleOne {
+	if c == nil {
+		return nil
+	}
+	return c.CustomerUnitCapScheduleOne
+}
+
+func (c *CustomerUnitCapSchedule) UnmarshalJSON(data []byte) error {
+	valueCustomerUnitCapScheduleAnchorDay := new(CustomerUnitCapScheduleAnchorDay)
+	if err := json.Unmarshal(data, &valueCustomerUnitCapScheduleAnchorDay); err == nil {
+		c.typ = "CustomerUnitCapScheduleAnchorDay"
+		c.CustomerUnitCapScheduleAnchorDay = valueCustomerUnitCapScheduleAnchorDay
+		return nil
+	}
+	valueCustomerUnitCapScheduleOne := new(CustomerUnitCapScheduleOne)
+	if err := json.Unmarshal(data, &valueCustomerUnitCapScheduleOne); err == nil {
+		c.typ = "CustomerUnitCapScheduleOne"
+		c.CustomerUnitCapScheduleOne = valueCustomerUnitCapScheduleOne
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, c)
+}
+
+func (c CustomerUnitCapSchedule) MarshalJSON() ([]byte, error) {
+	if c.typ == "CustomerUnitCapScheduleAnchorDay" || c.CustomerUnitCapScheduleAnchorDay != nil {
+		return json.Marshal(c.CustomerUnitCapScheduleAnchorDay)
+	}
+	if c.typ == "CustomerUnitCapScheduleOne" || c.CustomerUnitCapScheduleOne != nil {
+		return json.Marshal(c.CustomerUnitCapScheduleOne)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", c)
+}
+
+type CustomerUnitCapScheduleVisitor interface {
+	VisitCustomerUnitCapScheduleAnchorDay(*CustomerUnitCapScheduleAnchorDay) error
+	VisitCustomerUnitCapScheduleOne(*CustomerUnitCapScheduleOne) error
+}
+
+func (c *CustomerUnitCapSchedule) Accept(visitor CustomerUnitCapScheduleVisitor) error {
+	if c.typ == "CustomerUnitCapScheduleAnchorDay" || c.CustomerUnitCapScheduleAnchorDay != nil {
+		return visitor.VisitCustomerUnitCapScheduleAnchorDay(c.CustomerUnitCapScheduleAnchorDay)
+	}
+	if c.typ == "CustomerUnitCapScheduleOne" || c.CustomerUnitCapScheduleOne != nil {
+		return visitor.VisitCustomerUnitCapScheduleOne(c.CustomerUnitCapScheduleOne)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", c)
+}
+
+type CustomerUnitCapScheduleAnchorDay struct {
+	Type CustomerUnitCapScheduleAnchorDayType `json:"type" url:"type"`
+	// UTC day of month, clamped to the last day in shorter months.
+	AnchorDay int `json:"anchorDay" url:"anchorDay"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapScheduleAnchorDay) GetType() CustomerUnitCapScheduleAnchorDayType {
+	if c == nil {
+		return ""
+	}
+	return c.Type
+}
+
+func (c *CustomerUnitCapScheduleAnchorDay) GetAnchorDay() int {
+	if c == nil {
+		return 0
+	}
+	return c.AnchorDay
+}
+
+func (c *CustomerUnitCapScheduleAnchorDay) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapScheduleAnchorDay) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitCapScheduleAnchorDay
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapScheduleAnchorDay(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapScheduleAnchorDay) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerUnitCapScheduleAnchorDayType string
+
+const (
+	CustomerUnitCapScheduleAnchorDayTypeAnchored CustomerUnitCapScheduleAnchorDayType = "ANCHORED"
+)
+
+func NewCustomerUnitCapScheduleAnchorDayTypeFromString(s string) (CustomerUnitCapScheduleAnchorDayType, error) {
+	switch s {
+	case "ANCHORED":
+		return CustomerUnitCapScheduleAnchorDayTypeAnchored, nil
+	}
+	var t CustomerUnitCapScheduleAnchorDayType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitCapScheduleAnchorDayType) Ptr() *CustomerUnitCapScheduleAnchorDayType {
+	return &c
+}
+
+type CustomerUnitCapScheduleOne struct {
+	Type CustomerUnitCapScheduleOneType `json:"type" url:"type"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitCapScheduleOne) GetType() CustomerUnitCapScheduleOneType {
+	if c == nil {
+		return ""
+	}
+	return c.Type
+}
+
+func (c *CustomerUnitCapScheduleOne) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitCapScheduleOne) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitCapScheduleOne
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitCapScheduleOne(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitCapScheduleOne) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+type CustomerUnitCapScheduleOneType string
+
+const (
+	CustomerUnitCapScheduleOneTypeCalendar CustomerUnitCapScheduleOneType = "CALENDAR"
+)
+
+func NewCustomerUnitCapScheduleOneTypeFromString(s string) (CustomerUnitCapScheduleOneType, error) {
+	switch s {
+	case "CALENDAR":
+		return CustomerUnitCapScheduleOneTypeCalendar, nil
+	}
+	var t CustomerUnitCapScheduleOneType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CustomerUnitCapScheduleOneType) Ptr() *CustomerUnitCapScheduleOneType {
+	return &c
 }
 
 type EmptyResponse struct {
@@ -1097,19 +2113,31 @@ func (p *ProductByID) String() string {
 }
 
 type ProductCreditBenefitInput struct {
-	CreditsCurrencyID    string                                      `json:"creditsCurrencyId" url:"creditsCurrencyId"`
-	Amount               float64                                     `json:"amount" url:"amount"`
-	Recipient            *ProductCreditBenefitInputRecipient         `json:"recipient,omitempty" url:"recipient,omitempty"`
-	IsInfiniteTotal      *bool                                       `json:"isInfiniteTotal,omitempty" url:"isInfiniteTotal,omitempty"`
-	AllocationCadence    *ProductCreditBenefitInputAllocationCadence `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
-	CreditGrantTiming    *ProductCreditBenefitInputCreditGrantTiming `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
-	OverageUnitPrice     *float64                                    `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
-	RolloverAmount       *float64                                    `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
-	RolloverDuration     *float64                                    `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
-	RolloverDurationUnit *string                                     `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
+	ID                *string `json:"id,omitempty" url:"id,omitempty"`
+	CreditsCurrencyID string  `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	// Credit amount, exact to at most 6 decimal places.
+	Amount            float64                                     `json:"amount" url:"amount"`
+	Recipient         *ProductCreditBenefitInputRecipient         `json:"recipient,omitempty" url:"recipient,omitempty"`
+	IsInfiniteTotal   *bool                                       `json:"isInfiniteTotal,omitempty" url:"isInfiniteTotal,omitempty"`
+	AllocationCadence *ProductCreditBenefitInputAllocationCadence `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
+	CreditGrantTiming *ProductCreditBenefitInputCreditGrantTiming `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
+	OverageUnitPrice  *int                                        `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
+	RolloverAmount       *float64 `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	RolloverDuration     *int     `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDurationUnit *string  `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (p *ProductCreditBenefitInput) GetID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.ID
 }
 
 func (p *ProductCreditBenefitInput) GetCreditsCurrencyID() string {
@@ -1154,11 +2182,18 @@ func (p *ProductCreditBenefitInput) GetCreditGrantTiming() *ProductCreditBenefit
 	return p.CreditGrantTiming
 }
 
-func (p *ProductCreditBenefitInput) GetOverageUnitPrice() *float64 {
+func (p *ProductCreditBenefitInput) GetOverageUnitPrice() *int {
 	if p == nil {
 		return nil
 	}
 	return p.OverageUnitPrice
+}
+
+func (p *ProductCreditBenefitInput) GetOverageUnitPrices() map[string]*int {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrices
 }
 
 func (p *ProductCreditBenefitInput) GetRolloverAmount() *float64 {
@@ -1168,7 +2203,7 @@ func (p *ProductCreditBenefitInput) GetRolloverAmount() *float64 {
 	return p.RolloverAmount
 }
 
-func (p *ProductCreditBenefitInput) GetRolloverDuration() *float64 {
+func (p *ProductCreditBenefitInput) GetRolloverDuration() *int {
 	if p == nil {
 		return nil
 	}
@@ -1217,8 +2252,10 @@ func (p *ProductCreditBenefitInput) String() string {
 type ProductCreditBenefitInputAllocationCadence string
 
 const (
-	ProductCreditBenefitInputAllocationCadenceUpfront ProductCreditBenefitInputAllocationCadence = "upfront"
-	ProductCreditBenefitInputAllocationCadenceMonthly ProductCreditBenefitInputAllocationCadence = "monthly"
+	ProductCreditBenefitInputAllocationCadenceUpfront      ProductCreditBenefitInputAllocationCadence = "upfront"
+	ProductCreditBenefitInputAllocationCadenceMonthly      ProductCreditBenefitInputAllocationCadence = "monthly"
+	ProductCreditBenefitInputAllocationCadenceQuarterly    ProductCreditBenefitInputAllocationCadence = "quarterly"
+	ProductCreditBenefitInputAllocationCadenceSemiAnnually ProductCreditBenefitInputAllocationCadence = "semi_annually"
 )
 
 func NewProductCreditBenefitInputAllocationCadenceFromString(s string) (ProductCreditBenefitInputAllocationCadence, error) {
@@ -1227,6 +2264,10 @@ func NewProductCreditBenefitInputAllocationCadenceFromString(s string) (ProductC
 		return ProductCreditBenefitInputAllocationCadenceUpfront, nil
 	case "monthly":
 		return ProductCreditBenefitInputAllocationCadenceMonthly, nil
+	case "quarterly":
+		return ProductCreditBenefitInputAllocationCadenceQuarterly, nil
+	case "semi_annually":
+		return ProductCreditBenefitInputAllocationCadenceSemiAnnually, nil
 	}
 	var t ProductCreditBenefitInputAllocationCadence
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -2574,9 +3615,13 @@ func (p ProductSeatBasedPerUnitInputBillingType) Ptr() *ProductSeatBasedPerUnitI
 }
 
 type ProductSeatBasedPrepaidCreditsInput struct {
-	CreditsCurrencyID            string                                              `json:"creditsCurrencyId" url:"creditsCurrencyId"`
-	CreditCost                   float64                                             `json:"creditCost" url:"creditCost"`
-	UnitValue                    *float64                                            `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	CreditsCurrencyID string `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	// Credit amount, exact to at most 6 decimal places.
+	CreditCost       float64  `json:"creditCost" url:"creditCost"`
+	UnitValue        *float64 `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	OverageUnitPrice *int     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices            map[string]*int                                     `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
 	BillingFrequency             ProductSeatBasedPrepaidCreditsInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
 	BillingFrequencyCustomMonths *int                                                `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
 	BillingType                  *ProductSeatBasedPrepaidCreditsInputBillingType     `json:"billingType,omitempty" url:"billingType,omitempty"`
@@ -2605,6 +3650,20 @@ func (p *ProductSeatBasedPrepaidCreditsInput) GetUnitValue() *float64 {
 		return nil
 	}
 	return p.UnitValue
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetOverageUnitPrice() *int {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrice
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetOverageUnitPrices() map[string]*int {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrices
 }
 
 func (p *ProductSeatBasedPrepaidCreditsInput) GetBillingFrequency() ProductSeatBasedPrepaidCreditsInputBillingFrequency {
@@ -2845,11 +3904,11 @@ func (p ProductSeatBasedVolumeInputBillingType) Ptr() *ProductSeatBasedVolumeInp
 
 type ProductSimplePricePoint struct {
 	Currency         string                              `json:"currency" url:"currency"`
-	UnitPrice        float64                             `json:"unitPrice" url:"unitPrice"`
+	UnitPrice        int                                 `json:"unitPrice" url:"unitPrice"`
 	Tiers            []*ProductSimplePricePointTiersItem `json:"tiers,omitempty" url:"tiers,omitempty"`
-	MinQuantity      *float64                            `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
-	MaxQuantity      *float64                            `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
-	IncludedQuantity *float64                            `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+	MinQuantity      *int                                `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	MaxQuantity      *int                                `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
+	IncludedQuantity *int                                `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -2862,7 +3921,7 @@ func (p *ProductSimplePricePoint) GetCurrency() string {
 	return p.Currency
 }
 
-func (p *ProductSimplePricePoint) GetUnitPrice() float64 {
+func (p *ProductSimplePricePoint) GetUnitPrice() int {
 	if p == nil {
 		return 0
 	}
@@ -2876,21 +3935,21 @@ func (p *ProductSimplePricePoint) GetTiers() []*ProductSimplePricePointTiersItem
 	return p.Tiers
 }
 
-func (p *ProductSimplePricePoint) GetMinQuantity() *float64 {
+func (p *ProductSimplePricePoint) GetMinQuantity() *int {
 	if p == nil {
 		return nil
 	}
 	return p.MinQuantity
 }
 
-func (p *ProductSimplePricePoint) GetMaxQuantity() *float64 {
+func (p *ProductSimplePricePoint) GetMaxQuantity() *int {
 	if p == nil {
 		return nil
 	}
 	return p.MaxQuantity
 }
 
-func (p *ProductSimplePricePoint) GetIncludedQuantity() *float64 {
+func (p *ProductSimplePricePoint) GetIncludedQuantity() *int {
 	if p == nil {
 		return nil
 	}
@@ -2930,19 +3989,19 @@ func (p *ProductSimplePricePoint) String() string {
 }
 
 type ProductSimplePricePointTiersItem struct {
-	FlatAmount      *float64                                         `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	FlatAmount      *int                                             `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
 	Index           *float64                                         `json:"index,omitempty" url:"index,omitempty"`
-	LowerBound      float64                                          `json:"lowerBound" url:"lowerBound"`
-	Number          *float64                                         `json:"number,omitempty" url:"number,omitempty"`
+	LowerBound      int                                              `json:"lowerBound" url:"lowerBound"`
+	Number          *int                                             `json:"number,omitempty" url:"number,omitempty"`
 	TierBillingType *ProductSimplePricePointTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
-	UnitAmount      *float64                                         `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
-	UpperBound      *float64                                         `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+	UnitAmount      *int                                             `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound      *int                                             `json:"upperBound,omitempty" url:"upperBound,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (p *ProductSimplePricePointTiersItem) GetFlatAmount() *float64 {
+func (p *ProductSimplePricePointTiersItem) GetFlatAmount() *int {
 	if p == nil {
 		return nil
 	}
@@ -2956,14 +4015,14 @@ func (p *ProductSimplePricePointTiersItem) GetIndex() *float64 {
 	return p.Index
 }
 
-func (p *ProductSimplePricePointTiersItem) GetLowerBound() float64 {
+func (p *ProductSimplePricePointTiersItem) GetLowerBound() int {
 	if p == nil {
 		return 0
 	}
 	return p.LowerBound
 }
 
-func (p *ProductSimplePricePointTiersItem) GetNumber() *float64 {
+func (p *ProductSimplePricePointTiersItem) GetNumber() *int {
 	if p == nil {
 		return nil
 	}
@@ -2977,14 +4036,14 @@ func (p *ProductSimplePricePointTiersItem) GetTierBillingType() *ProductSimplePr
 	return p.TierBillingType
 }
 
-func (p *ProductSimplePricePointTiersItem) GetUnitAmount() *float64 {
+func (p *ProductSimplePricePointTiersItem) GetUnitAmount() *int {
 	if p == nil {
 		return nil
 	}
 	return p.UnitAmount
 }
 
-func (p *ProductSimplePricePointTiersItem) GetUpperBound() *float64 {
+func (p *ProductSimplePricePointTiersItem) GetUpperBound() *int {
 	if p == nil {
 		return nil
 	}
@@ -3047,11 +4106,11 @@ func (p ProductSimplePricePointTiersItemTierBillingType) Ptr() *ProductSimplePri
 
 type ProductTieredPricePoint struct {
 	Currency         string                              `json:"currency" url:"currency"`
-	UnitPrice        float64                             `json:"unitPrice" url:"unitPrice"`
+	UnitPrice        int                                 `json:"unitPrice" url:"unitPrice"`
 	Tiers            []*ProductTieredPricePointTiersItem `json:"tiers" url:"tiers"`
-	MinQuantity      *float64                            `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
-	MaxQuantity      *float64                            `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
-	IncludedQuantity *float64                            `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+	MinQuantity      *int                                `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	MaxQuantity      *int                                `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
+	IncludedQuantity *int                                `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3064,7 +4123,7 @@ func (p *ProductTieredPricePoint) GetCurrency() string {
 	return p.Currency
 }
 
-func (p *ProductTieredPricePoint) GetUnitPrice() float64 {
+func (p *ProductTieredPricePoint) GetUnitPrice() int {
 	if p == nil {
 		return 0
 	}
@@ -3078,21 +4137,21 @@ func (p *ProductTieredPricePoint) GetTiers() []*ProductTieredPricePointTiersItem
 	return p.Tiers
 }
 
-func (p *ProductTieredPricePoint) GetMinQuantity() *float64 {
+func (p *ProductTieredPricePoint) GetMinQuantity() *int {
 	if p == nil {
 		return nil
 	}
 	return p.MinQuantity
 }
 
-func (p *ProductTieredPricePoint) GetMaxQuantity() *float64 {
+func (p *ProductTieredPricePoint) GetMaxQuantity() *int {
 	if p == nil {
 		return nil
 	}
 	return p.MaxQuantity
 }
 
-func (p *ProductTieredPricePoint) GetIncludedQuantity() *float64 {
+func (p *ProductTieredPricePoint) GetIncludedQuantity() *int {
 	if p == nil {
 		return nil
 	}
@@ -3132,19 +4191,19 @@ func (p *ProductTieredPricePoint) String() string {
 }
 
 type ProductTieredPricePointTiersItem struct {
-	FlatAmount      *float64                                         `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	FlatAmount      *int                                             `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
 	Index           *float64                                         `json:"index,omitempty" url:"index,omitempty"`
-	LowerBound      float64                                          `json:"lowerBound" url:"lowerBound"`
-	Number          *float64                                         `json:"number,omitempty" url:"number,omitempty"`
+	LowerBound      int                                              `json:"lowerBound" url:"lowerBound"`
+	Number          *int                                             `json:"number,omitempty" url:"number,omitempty"`
 	TierBillingType *ProductTieredPricePointTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
-	UnitAmount      *float64                                         `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
-	UpperBound      *float64                                         `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+	UnitAmount      *int                                             `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound      *int                                             `json:"upperBound,omitempty" url:"upperBound,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (p *ProductTieredPricePointTiersItem) GetFlatAmount() *float64 {
+func (p *ProductTieredPricePointTiersItem) GetFlatAmount() *int {
 	if p == nil {
 		return nil
 	}
@@ -3158,14 +4217,14 @@ func (p *ProductTieredPricePointTiersItem) GetIndex() *float64 {
 	return p.Index
 }
 
-func (p *ProductTieredPricePointTiersItem) GetLowerBound() float64 {
+func (p *ProductTieredPricePointTiersItem) GetLowerBound() int {
 	if p == nil {
 		return 0
 	}
 	return p.LowerBound
 }
 
-func (p *ProductTieredPricePointTiersItem) GetNumber() *float64 {
+func (p *ProductTieredPricePointTiersItem) GetNumber() *int {
 	if p == nil {
 		return nil
 	}
@@ -3179,14 +4238,14 @@ func (p *ProductTieredPricePointTiersItem) GetTierBillingType() *ProductTieredPr
 	return p.TierBillingType
 }
 
-func (p *ProductTieredPricePointTiersItem) GetUnitAmount() *float64 {
+func (p *ProductTieredPricePointTiersItem) GetUnitAmount() *int {
 	if p == nil {
 		return nil
 	}
 	return p.UnitAmount
 }
 
-func (p *ProductTieredPricePointTiersItem) GetUpperBound() *float64 {
+func (p *ProductTieredPricePointTiersItem) GetUpperBound() *int {
 	if p == nil {
 		return nil
 	}
@@ -3248,18 +4307,22 @@ func (p ProductTieredPricePointTiersItemTierBillingType) Ptr() *ProductTieredPri
 }
 
 type ProductUsageBracketedPrepaidCreditsInput struct {
-	EventName                    string                                                            `json:"eventName" url:"eventName"`
-	SignalType                   *ProductUsageBracketedPrepaidCreditsInputSignalType               `json:"signalType,omitempty" url:"signalType,omitempty"`
-	CreditsCurrencyID            *string                                                           `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
-	UnitValue                    *float64                                                          `json:"unitValue,omitempty" url:"unitValue,omitempty"`
-	OverageUnitPrice             *float64                                                          `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	EventName         string                                              `json:"eventName" url:"eventName"`
+	SignalType        *ProductUsageBracketedPrepaidCreditsInputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
+	CreditsCurrencyID *string                                             `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	UnitValue         *float64                                            `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	OverageUnitPrice  *int                                                `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
 	CreditRolloverAmount         *float64                                                          `json:"creditRolloverAmount,omitempty" url:"creditRolloverAmount,omitempty"`
 	PricingInput                 *ProductUsageBracketedPrepaidCreditsInputPricingInput             `json:"pricingInput" url:"pricingInput"`
 	CreditUnitBrackets           []*ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem `json:"creditUnitBrackets" url:"creditUnitBrackets"`
 	BillingFrequency             *ProductUsageBracketedPrepaidCreditsInputBillingFrequency         `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                                              `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *ProductUsageBracketedPrepaidCreditsInputBillingType              `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*ProductSimplePricePoint                                        `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *ProductUsageBracketedPrepaidCreditsInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*ProductSimplePricePoint                           `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3293,11 +4356,18 @@ func (p *ProductUsageBracketedPrepaidCreditsInput) GetUnitValue() *float64 {
 	return p.UnitValue
 }
 
-func (p *ProductUsageBracketedPrepaidCreditsInput) GetOverageUnitPrice() *float64 {
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetOverageUnitPrice() *int {
 	if p == nil {
 		return nil
 	}
 	return p.OverageUnitPrice
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetOverageUnitPrices() map[string]*int {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrices
 }
 
 func (p *ProductUsageBracketedPrepaidCreditsInput) GetCreditRolloverAmount() *float64 {
@@ -3412,6 +4482,7 @@ func (p ProductUsageBracketedPrepaidCreditsInputBillingFrequency) Ptr() *Product
 	return &p
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type ProductUsageBracketedPrepaidCreditsInputBillingType string
 
 const (
@@ -3435,8 +4506,11 @@ func (p ProductUsageBracketedPrepaidCreditsInputBillingType) Ptr() *ProductUsage
 }
 
 type ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem struct {
-	UpTo        *int `json:"upTo,omitempty" url:"upTo,omitempty"`
-	CreditUnits int  `json:"creditUnits" url:"creditUnits"`
+	UpTo *int `json:"upTo,omitempty" url:"upTo,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
+	CreditUnits float64 `json:"creditUnits" url:"creditUnits"`
+	// Credits burned per unit in this band (graduated), instead of the flat creditUnits per signal. Brackets must be all flat or all graduated. Requires the graduated-credit-brackets flag.
+	CreditUnitsPerUnit *float64 `json:"creditUnitsPerUnit,omitempty" url:"creditUnitsPerUnit,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3449,11 +4523,18 @@ func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetUpTo
 	return p.UpTo
 }
 
-func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnits() int {
+func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnits() float64 {
 	if p == nil {
 		return 0
 	}
 	return p.CreditUnits
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnitsPerUnit() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.CreditUnitsPerUnit
 }
 
 func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetExtraProperties() map[string]interface{} {
@@ -3589,8 +4670,9 @@ type ProductUsageCostPlusInput struct {
 	SignalType                   *ProductUsageCostPlusInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
 	BillingFrequency             *ProductUsageCostPlusInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                       `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *ProductUsageCostPlusInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*ProductSimplePricePoint                 `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *ProductUsageCostPlusInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*ProductSimplePricePoint            `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3701,6 +4783,7 @@ func (p ProductUsageCostPlusInputBillingFrequency) Ptr() *ProductUsageCostPlusIn
 	return &p
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type ProductUsageCostPlusInputBillingType string
 
 const (
@@ -3750,8 +4833,9 @@ type ProductUsageGraduatedInput struct {
 	SignalType                   *ProductUsageGraduatedInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
 	BillingFrequency             *ProductUsageGraduatedInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                        `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *ProductUsageGraduatedInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*ProductTieredPricePoint                  `json:"pricePoints" url:"pricePoints"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *ProductUsageGraduatedInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*ProductTieredPricePoint             `json:"pricePoints" url:"pricePoints"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3862,6 +4946,7 @@ func (p ProductUsageGraduatedInputBillingFrequency) Ptr() *ProductUsageGraduated
 	return &p
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type ProductUsageGraduatedInputBillingType string
 
 const (
@@ -3911,8 +4996,9 @@ type ProductUsagePerUnitInput struct {
 	SignalType                   *ProductUsagePerUnitInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
 	BillingFrequency             *ProductUsagePerUnitInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                      `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *ProductUsagePerUnitInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*ProductSimplePricePoint                `json:"pricePoints" url:"pricePoints"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *ProductUsagePerUnitInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*ProductSimplePricePoint           `json:"pricePoints" url:"pricePoints"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -4023,6 +5109,7 @@ func (p ProductUsagePerUnitInputBillingFrequency) Ptr() *ProductUsagePerUnitInpu
 	return &p
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type ProductUsagePerUnitInputBillingType string
 
 const (
@@ -4068,15 +5155,21 @@ func (p ProductUsagePerUnitInputSignalType) Ptr() *ProductUsagePerUnitInputSigna
 }
 
 type ProductUsagePrepaidCreditsInput struct {
-	EventName                    string                                           `json:"eventName" url:"eventName"`
-	SignalType                   *ProductUsagePrepaidCreditsInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
-	CreditsCurrencyID            string                                           `json:"creditsCurrencyId" url:"creditsCurrencyId"`
-	CreditCost                   float64                                          `json:"creditCost" url:"creditCost"`
-	UnitValue                    *float64                                         `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	EventName         string                                     `json:"eventName" url:"eventName"`
+	SignalType        *ProductUsagePrepaidCreditsInputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
+	CreditsCurrencyID string                                     `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	// Credit amount, exact to at most 6 decimal places.
+	CreditCost       float64  `json:"creditCost" url:"creditCost"`
+	UnitValue        *float64 `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	OverageUnitPrice *int     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices            map[string]*int                                  `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	PricingInput                 *ProductUsagePrepaidCreditsInputPricingInput     `json:"pricingInput,omitempty" url:"pricingInput,omitempty"`
 	BillingFrequency             *ProductUsagePrepaidCreditsInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                             `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *ProductUsagePrepaidCreditsInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*ProductSimplePricePoint                       `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *ProductUsagePrepaidCreditsInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*ProductSimplePricePoint                  `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -4115,6 +5208,27 @@ func (p *ProductUsagePrepaidCreditsInput) GetUnitValue() *float64 {
 		return nil
 	}
 	return p.UnitValue
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetOverageUnitPrice() *int {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrice
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetOverageUnitPrices() map[string]*int {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrices
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetPricingInput() *ProductUsagePrepaidCreditsInputPricingInput {
+	if p == nil {
+		return nil
+	}
+	return p.PricingInput
 }
 
 func (p *ProductUsagePrepaidCreditsInput) GetBillingFrequency() *ProductUsagePrepaidCreditsInputBillingFrequency {
@@ -4208,6 +5322,7 @@ func (p ProductUsagePrepaidCreditsInputBillingFrequency) Ptr() *ProductUsagePrep
 	return &p
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type ProductUsagePrepaidCreditsInputBillingType string
 
 const (
@@ -4227,6 +5342,80 @@ func NewProductUsagePrepaidCreditsInputBillingTypeFromString(s string) (ProductU
 }
 
 func (p ProductUsagePrepaidCreditsInputBillingType) Ptr() *ProductUsagePrepaidCreditsInputBillingType {
+	return &p
+}
+
+type ProductUsagePrepaidCreditsInputPricingInput struct {
+	Kind ProductUsagePrepaidCreditsInputPricingInputKind `json:"kind" url:"kind"`
+	// Key in the signal's data payload that supplies the quantity multiplied by creditCost — for a signal with data {"rooms": 3}, use rooms. Dots address nested fields, for example dimensions.pages. Defaults to the top-level quantity field.
+	Path *string `json:"path,omitempty" url:"path,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductUsagePrepaidCreditsInputPricingInput) GetKind() ProductUsagePrepaidCreditsInputPricingInputKind {
+	if p == nil {
+		return ""
+	}
+	return p.Kind
+}
+
+func (p *ProductUsagePrepaidCreditsInputPricingInput) GetPath() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Path
+}
+
+func (p *ProductUsagePrepaidCreditsInputPricingInput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductUsagePrepaidCreditsInputPricingInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductUsagePrepaidCreditsInputPricingInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductUsagePrepaidCreditsInputPricingInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductUsagePrepaidCreditsInputPricingInput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductUsagePrepaidCreditsInputPricingInputKind string
+
+const (
+	ProductUsagePrepaidCreditsInputPricingInputKindSignalQuantity ProductUsagePrepaidCreditsInputPricingInputKind = "signalQuantity"
+)
+
+func NewProductUsagePrepaidCreditsInputPricingInputKindFromString(s string) (ProductUsagePrepaidCreditsInputPricingInputKind, error) {
+	switch s {
+	case "signalQuantity":
+		return ProductUsagePrepaidCreditsInputPricingInputKindSignalQuantity, nil
+	}
+	var t ProductUsagePrepaidCreditsInputPricingInputKind
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductUsagePrepaidCreditsInputPricingInputKind) Ptr() *ProductUsagePrepaidCreditsInputPricingInputKind {
 	return &p
 }
 
@@ -4257,8 +5446,9 @@ type ProductUsageVolumeInput struct {
 	SignalType                   *ProductUsageVolumeInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
 	BillingFrequency             *ProductUsageVolumeInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                     `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *ProductUsageVolumeInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*ProductTieredPricePoint               `json:"pricePoints" url:"pricePoints"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *ProductUsageVolumeInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*ProductTieredPricePoint          `json:"pricePoints" url:"pricePoints"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -4369,6 +5559,7 @@ func (p ProductUsageVolumeInputBillingFrequency) Ptr() *ProductUsageVolumeInputB
 	return &p
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type ProductUsageVolumeInputBillingType string
 
 const (
@@ -4413,18 +5604,355 @@ func (p ProductUsageVolumeInputSignalType) Ptr() *ProductUsageVolumeInputSignalT
 	return &p
 }
 
+type SignalsMetadataResponse struct {
+	Signals []*SignalsMetadataResponseSignalsItem `json:"signals" url:"signals"`
+	Meta    *SignalsMetadataResponseMeta          `json:"meta" url:"meta"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalsMetadataResponse) GetSignals() []*SignalsMetadataResponseSignalsItem {
+	if s == nil {
+		return nil
+	}
+	return s.Signals
+}
+
+func (s *SignalsMetadataResponse) GetMeta() *SignalsMetadataResponseMeta {
+	if s == nil {
+		return nil
+	}
+	return s.Meta
+}
+
+func (s *SignalsMetadataResponse) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalsMetadataResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalsMetadataResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalsMetadataResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalsMetadataResponse) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalsMetadataResponseMeta struct {
+	FromDate string `json:"fromDate" url:"fromDate"`
+	ToDate   string `json:"toDate" url:"toDate"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalsMetadataResponseMeta) GetFromDate() string {
+	if s == nil {
+		return ""
+	}
+	return s.FromDate
+}
+
+func (s *SignalsMetadataResponseMeta) GetToDate() string {
+	if s == nil {
+		return ""
+	}
+	return s.ToDate
+}
+
+func (s *SignalsMetadataResponseMeta) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalsMetadataResponseMeta) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalsMetadataResponseMeta
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalsMetadataResponseMeta(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalsMetadataResponseMeta) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalsMetadataResponseSignalsItem struct {
+	SignalName string                                         `json:"signalName" url:"signalName"`
+	Paths      []*SignalsMetadataResponseSignalsItemPathsItem `json:"paths" url:"paths"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalsMetadataResponseSignalsItem) GetSignalName() string {
+	if s == nil {
+		return ""
+	}
+	return s.SignalName
+}
+
+func (s *SignalsMetadataResponseSignalsItem) GetPaths() []*SignalsMetadataResponseSignalsItemPathsItem {
+	if s == nil {
+		return nil
+	}
+	return s.Paths
+}
+
+func (s *SignalsMetadataResponseSignalsItem) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalsMetadataResponseSignalsItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalsMetadataResponseSignalsItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalsMetadataResponseSignalsItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalsMetadataResponseSignalsItem) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalsMetadataResponseSignalsItemPathsItem struct {
+	// JSON path inside the signal `data` payload, usable in queries as e.g. `data.<path>::String`.
+	Path string `json:"path" url:"path"`
+	// ClickHouse dynamic types observed for this path within the window.
+	Types []string `json:"types" url:"types"`
+	// True when this key is declared as a grouping dimension for your organization. Declared keys are listed first.
+	Declared bool `json:"declared" url:"declared"`
+	// The dimension slot a declared key fills. Present only when `declared` is true.
+	Slot *SignalsMetadataResponseSignalsItemPathsItemSlot `json:"slot,omitempty" url:"slot,omitempty"`
+	// When a signal carrying this path was first received, across all time rather than only the window. Omitted when not available.
+	FirstSeen *time.Time `json:"firstSeen,omitempty" url:"firstSeen,omitempty"`
+	// When a signal carrying this path was last received, across all time rather than only the window. Omitted when not available.
+	LastSeen *time.Time `json:"lastSeen,omitempty" url:"lastSeen,omitempty"`
+	// How many times a signal of this name has been received carrying this path, across all time rather than only the window. Each revision of an edited signal counts again and deleted signals stay counted, so read it as a measure of use rather than a count of distinct or live signals. Omitted when not available.
+	Signals *int `json:"signals,omitempty" url:"signals,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) GetPath() string {
+	if s == nil {
+		return ""
+	}
+	return s.Path
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) GetTypes() []string {
+	if s == nil {
+		return nil
+	}
+	return s.Types
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) GetDeclared() bool {
+	if s == nil {
+		return false
+	}
+	return s.Declared
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) GetSlot() *SignalsMetadataResponseSignalsItemPathsItemSlot {
+	if s == nil {
+		return nil
+	}
+	return s.Slot
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) GetFirstSeen() *time.Time {
+	if s == nil {
+		return nil
+	}
+	return s.FirstSeen
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) GetLastSeen() *time.Time {
+	if s == nil {
+		return nil
+	}
+	return s.LastSeen
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) GetSignals() *int {
+	if s == nil {
+		return nil
+	}
+	return s.Signals
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) UnmarshalJSON(data []byte) error {
+	type embed SignalsMetadataResponseSignalsItemPathsItem
+	var unmarshaler = struct {
+		embed
+		FirstSeen *internal.DateTime `json:"firstSeen,omitempty"`
+		LastSeen  *internal.DateTime `json:"lastSeen,omitempty"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*s = SignalsMetadataResponseSignalsItemPathsItem(unmarshaler.embed)
+	s.FirstSeen = unmarshaler.FirstSeen.TimePtr()
+	s.LastSeen = unmarshaler.LastSeen.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) MarshalJSON() ([]byte, error) {
+	type embed SignalsMetadataResponseSignalsItemPathsItem
+	var marshaler = struct {
+		embed
+		FirstSeen *internal.DateTime `json:"firstSeen,omitempty"`
+		LastSeen  *internal.DateTime `json:"lastSeen,omitempty"`
+	}{
+		embed:     embed(*s),
+		FirstSeen: internal.NewOptionalDateTime(s.FirstSeen),
+		LastSeen:  internal.NewOptionalDateTime(s.LastSeen),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (s *SignalsMetadataResponseSignalsItemPathsItem) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// The dimension slot a declared key fills. Present only when `declared` is true.
+type SignalsMetadataResponseSignalsItemPathsItemSlot string
+
+const (
+	SignalsMetadataResponseSignalsItemPathsItemSlotDim1 SignalsMetadataResponseSignalsItemPathsItemSlot = "dim_1"
+	SignalsMetadataResponseSignalsItemPathsItemSlotDim2 SignalsMetadataResponseSignalsItemPathsItemSlot = "dim_2"
+	SignalsMetadataResponseSignalsItemPathsItemSlotDim3 SignalsMetadataResponseSignalsItemPathsItemSlot = "dim_3"
+	SignalsMetadataResponseSignalsItemPathsItemSlotDim4 SignalsMetadataResponseSignalsItemPathsItemSlot = "dim_4"
+	SignalsMetadataResponseSignalsItemPathsItemSlotDim5 SignalsMetadataResponseSignalsItemPathsItemSlot = "dim_5"
+)
+
+func NewSignalsMetadataResponseSignalsItemPathsItemSlotFromString(s string) (SignalsMetadataResponseSignalsItemPathsItemSlot, error) {
+	switch s {
+	case "dim_1":
+		return SignalsMetadataResponseSignalsItemPathsItemSlotDim1, nil
+	case "dim_2":
+		return SignalsMetadataResponseSignalsItemPathsItemSlotDim2, nil
+	case "dim_3":
+		return SignalsMetadataResponseSignalsItemPathsItemSlotDim3, nil
+	case "dim_4":
+		return SignalsMetadataResponseSignalsItemPathsItemSlotDim4, nil
+	case "dim_5":
+		return SignalsMetadataResponseSignalsItemPathsItemSlotDim5, nil
+	}
+	var t SignalsMetadataResponseSignalsItemPathsItemSlot
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SignalsMetadataResponseSignalsItemPathsItemSlot) Ptr() *SignalsMetadataResponseSignalsItemPathsItemSlot {
+	return &s
+}
+
 type ValidateCustomViewRequest struct {
+	// Enable customer unit navigation for a customer-scoped view. Setting true requires customer hierarchies to be enabled for your organization, and every query must support unit selection. Existing views default to false.
+	HierarchyEnabled *bool `json:"hierarchyEnabled,omitempty" url:"hierarchyEnabled,omitempty"`
+	// Send the customer's unit caps to the render bundle as `context.caps`. Needs `hierarchyEnabled` on a customer-scoped view. Turn it on only for views that draw cap usage: each load then reads cap usage from billing. Caps are spend policy, so an API key also needs `read:billing` to receive them in the data (they are left out otherwise) or to mint this view's embed token. Defaults to false.
+	CapsEnabled *bool `json:"capsEnabled,omitempty" url:"capsEnabled,omitempty"`
 	// Query list to validate (same shape and gates as createCustomView).
 	Queries []*CustomViewQuery `json:"queries,omitempty" url:"queries,omitempty"`
 	// Render bundle to validate (same gates as createCustomView: size cap, self-contained, not truncated, paid:data listener).
 	RenderBundle *string `json:"renderBundle,omitempty" url:"renderBundle,omitempty"`
 	// Period to validate together with the queries (required when a query uses the {period_start}/{period_end} placeholders).
 	Period *ValidateCustomViewRequestPeriod `json:"period,omitempty" url:"period,omitempty"`
+	// Filter declarations to validate together with the queries (required for every {filter_<name>:String} placeholder they reference).
+	Filters []*CustomViewFilter `json:"filters,omitempty" url:"filters,omitempty"`
 	// The scope the view will be created with (default 'customer'). Customer-scoped SQL is compiled against the per-customer analytics views (which cannot read org-wide analytics.* directly), matching how it runs at embed time; pass 'organization' for an org-wide view.
 	Scope *ValidateCustomViewRequestScope `json:"scope,omitempty" url:"scope,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (v *ValidateCustomViewRequest) GetHierarchyEnabled() *bool {
+	if v == nil {
+		return nil
+	}
+	return v.HierarchyEnabled
+}
+
+func (v *ValidateCustomViewRequest) GetCapsEnabled() *bool {
+	if v == nil {
+		return nil
+	}
+	return v.CapsEnabled
 }
 
 func (v *ValidateCustomViewRequest) GetQueries() []*CustomViewQuery {
@@ -4446,6 +5974,13 @@ func (v *ValidateCustomViewRequest) GetPeriod() *ValidateCustomViewRequestPeriod
 		return nil
 	}
 	return v.Period
+}
+
+func (v *ValidateCustomViewRequest) GetFilters() []*CustomViewFilter {
+	if v == nil {
+		return nil
+	}
+	return v.Filters
 }
 
 func (v *ValidateCustomViewRequest) GetScope() *ValidateCustomViewRequestScope {
@@ -4688,6 +6223,589 @@ func (v *ValidateCustomViewResponse) UnmarshalJSON(data []byte) error {
 }
 
 func (v *ValidateCustomViewResponse) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueMetricFormulaVariable struct {
+	ID          string                          `json:"id" url:"id"`
+	Label       string                          `json:"label" url:"label"`
+	Type        *ValueMetricFormulaVariableType `json:"type,omitempty" url:"type,omitempty"`
+	Description *string                         `json:"description,omitempty" url:"description,omitempty"`
+	// Display-only hint. 'percent' renders a stored 0.02 as 2%. 'duration' requires formatUnit. Calculations always use the stored raw value.
+	Format     *ValueMetricFormulaVariableFormat     `json:"format,omitempty" url:"format,omitempty"`
+	FormatUnit *ValueMetricFormulaVariableFormatUnit `json:"formatUnit,omitempty" url:"formatUnit,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueMetricFormulaVariable) GetID() string {
+	if v == nil {
+		return ""
+	}
+	return v.ID
+}
+
+func (v *ValueMetricFormulaVariable) GetLabel() string {
+	if v == nil {
+		return ""
+	}
+	return v.Label
+}
+
+func (v *ValueMetricFormulaVariable) GetType() *ValueMetricFormulaVariableType {
+	if v == nil {
+		return nil
+	}
+	return v.Type
+}
+
+func (v *ValueMetricFormulaVariable) GetDescription() *string {
+	if v == nil {
+		return nil
+	}
+	return v.Description
+}
+
+func (v *ValueMetricFormulaVariable) GetFormat() *ValueMetricFormulaVariableFormat {
+	if v == nil {
+		return nil
+	}
+	return v.Format
+}
+
+func (v *ValueMetricFormulaVariable) GetFormatUnit() *ValueMetricFormulaVariableFormatUnit {
+	if v == nil {
+		return nil
+	}
+	return v.FormatUnit
+}
+
+func (v *ValueMetricFormulaVariable) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueMetricFormulaVariable) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueMetricFormulaVariable
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueMetricFormulaVariable(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueMetricFormulaVariable) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Display-only hint. 'percent' renders a stored 0.02 as 2%. 'duration' requires formatUnit. Calculations always use the stored raw value.
+type ValueMetricFormulaVariableFormat string
+
+const (
+	ValueMetricFormulaVariableFormatPercent  ValueMetricFormulaVariableFormat = "percent"
+	ValueMetricFormulaVariableFormatDuration ValueMetricFormulaVariableFormat = "duration"
+)
+
+func NewValueMetricFormulaVariableFormatFromString(s string) (ValueMetricFormulaVariableFormat, error) {
+	switch s {
+	case "percent":
+		return ValueMetricFormulaVariableFormatPercent, nil
+	case "duration":
+		return ValueMetricFormulaVariableFormatDuration, nil
+	}
+	var t ValueMetricFormulaVariableFormat
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueMetricFormulaVariableFormat) Ptr() *ValueMetricFormulaVariableFormat {
+	return &v
+}
+
+type ValueMetricFormulaVariableFormatUnit string
+
+const (
+	ValueMetricFormulaVariableFormatUnitSeconds ValueMetricFormulaVariableFormatUnit = "seconds"
+	ValueMetricFormulaVariableFormatUnitMinutes ValueMetricFormulaVariableFormatUnit = "minutes"
+	ValueMetricFormulaVariableFormatUnitHours   ValueMetricFormulaVariableFormatUnit = "hours"
+	ValueMetricFormulaVariableFormatUnitDays    ValueMetricFormulaVariableFormatUnit = "days"
+)
+
+func NewValueMetricFormulaVariableFormatUnitFromString(s string) (ValueMetricFormulaVariableFormatUnit, error) {
+	switch s {
+	case "seconds":
+		return ValueMetricFormulaVariableFormatUnitSeconds, nil
+	case "minutes":
+		return ValueMetricFormulaVariableFormatUnitMinutes, nil
+	case "hours":
+		return ValueMetricFormulaVariableFormatUnitHours, nil
+	case "days":
+		return ValueMetricFormulaVariableFormatUnitDays, nil
+	}
+	var t ValueMetricFormulaVariableFormatUnit
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueMetricFormulaVariableFormatUnit) Ptr() *ValueMetricFormulaVariableFormatUnit {
+	return &v
+}
+
+type ValueMetricFormulaVariableType string
+
+const (
+	ValueMetricFormulaVariableTypeNumber   ValueMetricFormulaVariableType = "number"
+	ValueMetricFormulaVariableTypeString   ValueMetricFormulaVariableType = "string"
+	ValueMetricFormulaVariableTypeBoolean  ValueMetricFormulaVariableType = "boolean"
+	ValueMetricFormulaVariableTypeDuration ValueMetricFormulaVariableType = "duration"
+)
+
+func NewValueMetricFormulaVariableTypeFromString(s string) (ValueMetricFormulaVariableType, error) {
+	switch s {
+	case "number":
+		return ValueMetricFormulaVariableTypeNumber, nil
+	case "string":
+		return ValueMetricFormulaVariableTypeString, nil
+	case "boolean":
+		return ValueMetricFormulaVariableTypeBoolean, nil
+	case "duration":
+		return ValueMetricFormulaVariableTypeDuration, nil
+	}
+	var t ValueMetricFormulaVariableType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueMetricFormulaVariableType) Ptr() *ValueMetricFormulaVariableType {
+	return &v
+}
+
+type ValueMetricUnit struct {
+	// 'monetary' = already a currency amount; 'duration' = a length of time (set durationUnit); 'custom' = a user-defined unit (set unit + unitDisplay).
+	Type ValueMetricUnitType `json:"type" url:"type"`
+	// Duration only: the time unit measured.
+	DurationUnit *ValueMetricUnitDurationUnit `json:"durationUnit,omitempty" url:"durationUnit,omitempty"`
+	// Custom only: the machine-readable unit name, e.g. 'tickets'.
+	Unit *string `json:"unit,omitempty" url:"unit,omitempty"`
+	// Custom only: the customer-facing label shown on value receipts.
+	UnitDisplay *string `json:"unitDisplay,omitempty" url:"unitDisplay,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueMetricUnit) GetType() ValueMetricUnitType {
+	if v == nil {
+		return ""
+	}
+	return v.Type
+}
+
+func (v *ValueMetricUnit) GetDurationUnit() *ValueMetricUnitDurationUnit {
+	if v == nil {
+		return nil
+	}
+	return v.DurationUnit
+}
+
+func (v *ValueMetricUnit) GetUnit() *string {
+	if v == nil {
+		return nil
+	}
+	return v.Unit
+}
+
+func (v *ValueMetricUnit) GetUnitDisplay() *string {
+	if v == nil {
+		return nil
+	}
+	return v.UnitDisplay
+}
+
+func (v *ValueMetricUnit) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueMetricUnit) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueMetricUnit
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueMetricUnit(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueMetricUnit) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Duration only: the time unit measured.
+type ValueMetricUnitDurationUnit string
+
+const (
+	ValueMetricUnitDurationUnitSeconds ValueMetricUnitDurationUnit = "seconds"
+	ValueMetricUnitDurationUnitMinutes ValueMetricUnitDurationUnit = "minutes"
+	ValueMetricUnitDurationUnitHours   ValueMetricUnitDurationUnit = "hours"
+	ValueMetricUnitDurationUnitDays    ValueMetricUnitDurationUnit = "days"
+)
+
+func NewValueMetricUnitDurationUnitFromString(s string) (ValueMetricUnitDurationUnit, error) {
+	switch s {
+	case "seconds":
+		return ValueMetricUnitDurationUnitSeconds, nil
+	case "minutes":
+		return ValueMetricUnitDurationUnitMinutes, nil
+	case "hours":
+		return ValueMetricUnitDurationUnitHours, nil
+	case "days":
+		return ValueMetricUnitDurationUnitDays, nil
+	}
+	var t ValueMetricUnitDurationUnit
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueMetricUnitDurationUnit) Ptr() *ValueMetricUnitDurationUnit {
+	return &v
+}
+
+// 'monetary' = already a currency amount; 'duration' = a length of time (set durationUnit); 'custom' = a user-defined unit (set unit + unitDisplay).
+type ValueMetricUnitType string
+
+const (
+	ValueMetricUnitTypeMonetary ValueMetricUnitType = "monetary"
+	ValueMetricUnitTypeDuration ValueMetricUnitType = "duration"
+	ValueMetricUnitTypeCustom   ValueMetricUnitType = "custom"
+)
+
+func NewValueMetricUnitTypeFromString(s string) (ValueMetricUnitType, error) {
+	switch s {
+	case "monetary":
+		return ValueMetricUnitTypeMonetary, nil
+	case "duration":
+		return ValueMetricUnitTypeDuration, nil
+	case "custom":
+		return ValueMetricUnitTypeCustom, nil
+	}
+	var t ValueMetricUnitType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueMetricUnitType) Ptr() *ValueMetricUnitType {
+	return &v
+}
+
+type ValueMetricValidationResponse struct {
+	Valid  bool                                       `json:"valid" url:"valid"`
+	Errors []*ValueMetricValidationResponseErrorsItem `json:"errors" url:"errors"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueMetricValidationResponse) GetValid() bool {
+	if v == nil {
+		return false
+	}
+	return v.Valid
+}
+
+func (v *ValueMetricValidationResponse) GetErrors() []*ValueMetricValidationResponseErrorsItem {
+	if v == nil {
+		return nil
+	}
+	return v.Errors
+}
+
+func (v *ValueMetricValidationResponse) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueMetricValidationResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueMetricValidationResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueMetricValidationResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueMetricValidationResponse) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueMetricValidationResponseErrorsItem struct {
+	Path    string `json:"path" url:"path"`
+	Message string `json:"message" url:"message"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueMetricValidationResponseErrorsItem) GetPath() string {
+	if v == nil {
+		return ""
+	}
+	return v.Path
+}
+
+func (v *ValueMetricValidationResponseErrorsItem) GetMessage() string {
+	if v == nil {
+		return ""
+	}
+	return v.Message
+}
+
+func (v *ValueMetricValidationResponseErrorsItem) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueMetricValidationResponseErrorsItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueMetricValidationResponseErrorsItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueMetricValidationResponseErrorsItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueMetricValidationResponseErrorsItem) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelAuthoringGuide struct {
+	Overview           string                                  `json:"overview" url:"overview"`
+	Workflow           []string                                `json:"workflow" url:"workflow"`
+	Categories         map[string]string                       `json:"categories" url:"categories"`
+	Units              string                                  `json:"units" url:"units"`
+	Formulas           []string                                `json:"formulas" url:"formulas"`
+	SignalBinding      string                                  `json:"signalBinding" url:"signalBinding"`
+	MonetaryConversion string                                  `json:"monetaryConversion" url:"monetaryConversion"`
+	Concurrency        string                                  `json:"concurrency" url:"concurrency"`
+	Limitations        []string                                `json:"limitations" url:"limitations"`
+	Examples           []*ValueModelAuthoringGuideExamplesItem `json:"examples" url:"examples"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelAuthoringGuide) GetOverview() string {
+	if v == nil {
+		return ""
+	}
+	return v.Overview
+}
+
+func (v *ValueModelAuthoringGuide) GetWorkflow() []string {
+	if v == nil {
+		return nil
+	}
+	return v.Workflow
+}
+
+func (v *ValueModelAuthoringGuide) GetCategories() map[string]string {
+	if v == nil {
+		return nil
+	}
+	return v.Categories
+}
+
+func (v *ValueModelAuthoringGuide) GetUnits() string {
+	if v == nil {
+		return ""
+	}
+	return v.Units
+}
+
+func (v *ValueModelAuthoringGuide) GetFormulas() []string {
+	if v == nil {
+		return nil
+	}
+	return v.Formulas
+}
+
+func (v *ValueModelAuthoringGuide) GetSignalBinding() string {
+	if v == nil {
+		return ""
+	}
+	return v.SignalBinding
+}
+
+func (v *ValueModelAuthoringGuide) GetMonetaryConversion() string {
+	if v == nil {
+		return ""
+	}
+	return v.MonetaryConversion
+}
+
+func (v *ValueModelAuthoringGuide) GetConcurrency() string {
+	if v == nil {
+		return ""
+	}
+	return v.Concurrency
+}
+
+func (v *ValueModelAuthoringGuide) GetLimitations() []string {
+	if v == nil {
+		return nil
+	}
+	return v.Limitations
+}
+
+func (v *ValueModelAuthoringGuide) GetExamples() []*ValueModelAuthoringGuideExamplesItem {
+	if v == nil {
+		return nil
+	}
+	return v.Examples
+}
+
+func (v *ValueModelAuthoringGuide) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelAuthoringGuide) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelAuthoringGuide
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueModelAuthoringGuide(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelAuthoringGuide) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelAuthoringGuideExamplesItem struct {
+	Title       string                 `json:"title" url:"title"`
+	Explanation string                 `json:"explanation" url:"explanation"`
+	Request     map[string]interface{} `json:"request" url:"request"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelAuthoringGuideExamplesItem) GetTitle() string {
+	if v == nil {
+		return ""
+	}
+	return v.Title
+}
+
+func (v *ValueModelAuthoringGuideExamplesItem) GetExplanation() string {
+	if v == nil {
+		return ""
+	}
+	return v.Explanation
+}
+
+func (v *ValueModelAuthoringGuideExamplesItem) GetRequest() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.Request
+}
+
+func (v *ValueModelAuthoringGuideExamplesItem) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelAuthoringGuideExamplesItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelAuthoringGuideExamplesItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueModelAuthoringGuideExamplesItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelAuthoringGuideExamplesItem) String() string {
 	if len(v.rawJSON) > 0 {
 		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
 			return value

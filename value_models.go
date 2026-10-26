@@ -75,7 +75,7 @@ func (b *BackfillResponse) String() string {
 	return fmt.Sprintf("%#v", b)
 }
 
-// Full value model configuration: value types, formulas, signals, and overrides.
+// Full value model configuration: value types, formulas, events, and overrides.
 type ValueModelContent struct {
 	Currency      string                                `json:"currency" url:"currency"`
 	ValueTypes    []*ValueModelContentValueTypesItem    `json:"valueTypes" url:"valueTypes"`
@@ -629,10 +629,14 @@ func (v ValueModelContentFormulasItemDefaultResultType) Ptr() *ValueModelContent
 }
 
 type ValueModelContentFormulasItemVariablesItem struct {
-	ID          string                                                 `json:"id" url:"id"`
-	Label       string                                                 `json:"label" url:"label"`
-	Type        *ValueModelContentFormulasItemVariablesItemType        `json:"type,omitempty" url:"type,omitempty"`
-	Description *string                                                `json:"description,omitempty" url:"description,omitempty"`
+	ID          string                                          `json:"id" url:"id"`
+	Label       string                                          `json:"label" url:"label"`
+	Type        *ValueModelContentFormulasItemVariablesItemType `json:"type,omitempty" url:"type,omitempty"`
+	Description *string                                         `json:"description,omitempty" url:"description,omitempty"`
+	// Display-only formatting hint. "percent" renders the variable as a percentage (a stored 0.02 displays as 2%). "duration" renders it as a length of time, stepping down to the largest whole unit (0.75 with formatUnit "hours" displays as "45 minutes") and requires formatUnit. Calculations always use the stored raw value.
+	Format *ValueModelContentFormulasItemVariablesItemFormat `json:"format,omitempty" url:"format,omitempty"`
+	// The time unit the stored value is expressed in. Required when format is "duration"; ignored otherwise.
+	FormatUnit  *ValueModelContentFormulasItemVariablesItemFormatUnit  `json:"formatUnit,omitempty" url:"formatUnit,omitempty"`
 	DerivedFrom *ValueModelContentFormulasItemVariablesItemDerivedFrom `json:"derivedFrom,omitempty" url:"derivedFrom,omitempty"`
 
 	extraProperties map[string]interface{}
@@ -665,6 +669,20 @@ func (v *ValueModelContentFormulasItemVariablesItem) GetDescription() *string {
 		return nil
 	}
 	return v.Description
+}
+
+func (v *ValueModelContentFormulasItemVariablesItem) GetFormat() *ValueModelContentFormulasItemVariablesItemFormat {
+	if v == nil {
+		return nil
+	}
+	return v.Format
+}
+
+func (v *ValueModelContentFormulasItemVariablesItem) GetFormatUnit() *ValueModelContentFormulasItemVariablesItemFormatUnit {
+	if v == nil {
+		return nil
+	}
+	return v.FormatUnit
 }
 
 func (v *ValueModelContentFormulasItemVariablesItem) GetDerivedFrom() *ValueModelContentFormulasItemVariablesItemDerivedFrom {
@@ -709,6 +727,10 @@ func (v *ValueModelContentFormulasItemVariablesItem) String() string {
 type ValueModelContentFormulasItemVariablesItemDerivedFrom struct {
 	SourceField string                                                          `json:"sourceField" url:"sourceField"`
 	TargetUnit  ValueModelContentFormulasItemVariablesItemDerivedFromTargetUnit `json:"targetUnit" url:"targetUnit"`
+	// Fixed source unit the signal field reports its value in; the engine converts it into the metric's duration unit (targetUnit). Used as the fallback when sourceUnitFromSignal is set but the companion field is missing/invalid. Requires a duration value type.
+	SourceUnit *ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit `json:"sourceUnit,omitempty" url:"sourceUnit,omitempty"`
+	// When true, each event names its own source unit in a "<sourceField>_unit" companion field (e.g. sourceField "time_spent" reads "time_spent_unit"), which must be one of seconds|minutes|hours|days. Takes precedence over sourceUnit; if the companion is absent or invalid it falls back to sourceUnit. If neither resolves, the payload value is discarded and the variable's default is used (the default is stored in the metric's unit and is never converted); the value is never silently treated as seconds. Requires a duration value type.
+	SourceUnitFromSignal *bool `json:"sourceUnitFromSignal,omitempty" url:"sourceUnitFromSignal,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -726,6 +748,20 @@ func (v *ValueModelContentFormulasItemVariablesItemDerivedFrom) GetTargetUnit() 
 		return ""
 	}
 	return v.TargetUnit
+}
+
+func (v *ValueModelContentFormulasItemVariablesItemDerivedFrom) GetSourceUnit() *ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit {
+	if v == nil {
+		return nil
+	}
+	return v.SourceUnit
+}
+
+func (v *ValueModelContentFormulasItemVariablesItemDerivedFrom) GetSourceUnitFromSignal() *bool {
+	if v == nil {
+		return nil
+	}
+	return v.SourceUnitFromSignal
 }
 
 func (v *ValueModelContentFormulasItemVariablesItemDerivedFrom) GetExtraProperties() map[string]interface{} {
@@ -760,6 +796,35 @@ func (v *ValueModelContentFormulasItemVariablesItemDerivedFrom) String() string 
 	return fmt.Sprintf("%#v", v)
 }
 
+// Fixed source unit the signal field reports its value in; the engine converts it into the metric's duration unit (targetUnit). Used as the fallback when sourceUnitFromSignal is set but the companion field is missing/invalid. Requires a duration value type.
+type ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit string
+
+const (
+	ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnitSeconds ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit = "seconds"
+	ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnitMinutes ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit = "minutes"
+	ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnitHours   ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit = "hours"
+	ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnitDays    ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit = "days"
+)
+
+func NewValueModelContentFormulasItemVariablesItemDerivedFromSourceUnitFromString(s string) (ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit, error) {
+	switch s {
+	case "seconds":
+		return ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnitSeconds, nil
+	case "minutes":
+		return ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnitMinutes, nil
+	case "hours":
+		return ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnitHours, nil
+	case "days":
+		return ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnitDays, nil
+	}
+	var t ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit) Ptr() *ValueModelContentFormulasItemVariablesItemDerivedFromSourceUnit {
+	return &v
+}
+
 type ValueModelContentFormulasItemVariablesItemDerivedFromTargetUnit string
 
 const (
@@ -785,6 +850,58 @@ func NewValueModelContentFormulasItemVariablesItemDerivedFromTargetUnitFromStrin
 }
 
 func (v ValueModelContentFormulasItemVariablesItemDerivedFromTargetUnit) Ptr() *ValueModelContentFormulasItemVariablesItemDerivedFromTargetUnit {
+	return &v
+}
+
+// Display-only formatting hint. "percent" renders the variable as a percentage (a stored 0.02 displays as 2%). "duration" renders it as a length of time, stepping down to the largest whole unit (0.75 with formatUnit "hours" displays as "45 minutes") and requires formatUnit. Calculations always use the stored raw value.
+type ValueModelContentFormulasItemVariablesItemFormat string
+
+const (
+	ValueModelContentFormulasItemVariablesItemFormatPercent  ValueModelContentFormulasItemVariablesItemFormat = "percent"
+	ValueModelContentFormulasItemVariablesItemFormatDuration ValueModelContentFormulasItemVariablesItemFormat = "duration"
+)
+
+func NewValueModelContentFormulasItemVariablesItemFormatFromString(s string) (ValueModelContentFormulasItemVariablesItemFormat, error) {
+	switch s {
+	case "percent":
+		return ValueModelContentFormulasItemVariablesItemFormatPercent, nil
+	case "duration":
+		return ValueModelContentFormulasItemVariablesItemFormatDuration, nil
+	}
+	var t ValueModelContentFormulasItemVariablesItemFormat
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueModelContentFormulasItemVariablesItemFormat) Ptr() *ValueModelContentFormulasItemVariablesItemFormat {
+	return &v
+}
+
+// The time unit the stored value is expressed in. Required when format is "duration"; ignored otherwise.
+type ValueModelContentFormulasItemVariablesItemFormatUnit string
+
+const (
+	ValueModelContentFormulasItemVariablesItemFormatUnitSeconds ValueModelContentFormulasItemVariablesItemFormatUnit = "seconds"
+	ValueModelContentFormulasItemVariablesItemFormatUnitMinutes ValueModelContentFormulasItemVariablesItemFormatUnit = "minutes"
+	ValueModelContentFormulasItemVariablesItemFormatUnitHours   ValueModelContentFormulasItemVariablesItemFormatUnit = "hours"
+	ValueModelContentFormulasItemVariablesItemFormatUnitDays    ValueModelContentFormulasItemVariablesItemFormatUnit = "days"
+)
+
+func NewValueModelContentFormulasItemVariablesItemFormatUnitFromString(s string) (ValueModelContentFormulasItemVariablesItemFormatUnit, error) {
+	switch s {
+	case "seconds":
+		return ValueModelContentFormulasItemVariablesItemFormatUnitSeconds, nil
+	case "minutes":
+		return ValueModelContentFormulasItemVariablesItemFormatUnitMinutes, nil
+	case "hours":
+		return ValueModelContentFormulasItemVariablesItemFormatUnitHours, nil
+	case "days":
+		return ValueModelContentFormulasItemVariablesItemFormatUnitDays, nil
+	}
+	var t ValueModelContentFormulasItemVariablesItemFormatUnit
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueModelContentFormulasItemVariablesItemFormatUnit) Ptr() *ValueModelContentFormulasItemVariablesItemFormatUnit {
 	return &v
 }
 
@@ -817,11 +934,12 @@ func (v ValueModelContentFormulasItemVariablesItemType) Ptr() *ValueModelContent
 }
 
 type ValueModelContentOverridesItem struct {
-	ID                          string                                                                     `json:"id" url:"id"`
-	Label                       string                                                                     `json:"label" url:"label"`
-	Scope                       *ValueModelContentOverridesItemScope                                       `json:"scope" url:"scope"`
-	Currency                    *string                                                                    `json:"currency,omitempty" url:"currency,omitempty"`
-	SignalOverrides             map[string]*ValueModelContentOverridesItemSignalOverridesValue             `json:"signalOverrides,omitempty" url:"signalOverrides,omitempty"`
+	ID       string                               `json:"id" url:"id"`
+	Label    string                               `json:"label" url:"label"`
+	Scope    *ValueModelContentOverridesItemScope `json:"scope" url:"scope"`
+	Currency *string                              `json:"currency,omitempty" url:"currency,omitempty"`
+	// Per-value-metric formula variable overrides, keyed by value type slug. Scoped to the named metric's formulas only, so a binding event shared with other metrics does not leak these values into them.
+	ValueTypeOverrides          map[string]*ValueModelContentOverridesItemValueTypeOverridesValue          `json:"valueTypeOverrides,omitempty" url:"valueTypeOverrides,omitempty"`
 	AdditionalSignals           []*ValueModelContentOverridesItemAdditionalSignalsItem                     `json:"additionalSignals,omitempty" url:"additionalSignals,omitempty"`
 	MonetaryConversionOverrides map[string]*ValueModelContentOverridesItemMonetaryConversionOverridesValue `json:"monetaryConversionOverrides,omitempty" url:"monetaryConversionOverrides,omitempty"`
 
@@ -857,11 +975,11 @@ func (v *ValueModelContentOverridesItem) GetCurrency() *string {
 	return v.Currency
 }
 
-func (v *ValueModelContentOverridesItem) GetSignalOverrides() map[string]*ValueModelContentOverridesItemSignalOverridesValue {
+func (v *ValueModelContentOverridesItem) GetValueTypeOverrides() map[string]*ValueModelContentOverridesItemValueTypeOverridesValue {
 	if v == nil {
 		return nil
 	}
-	return v.SignalOverrides
+	return v.ValueTypeOverrides
 }
 
 func (v *ValueModelContentOverridesItem) GetAdditionalSignals() []*ValueModelContentOverridesItemAdditionalSignalsItem {
@@ -1129,8 +1247,7 @@ func (v *ValueModelContentOverridesItemMonetaryConversionOverridesValue) String(
 }
 
 type ValueModelContentOverridesItemScope struct {
-	CustomerIDs      []string `json:"customerIds,omitempty" url:"customerIds,omitempty"`
-	CustomerGroupIDs []string `json:"customerGroupIds,omitempty" url:"customerGroupIds,omitempty"`
+	CustomerIDs []string `json:"customerIds" url:"customerIds"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -1141,13 +1258,6 @@ func (v *ValueModelContentOverridesItemScope) GetCustomerIDs() []string {
 		return nil
 	}
 	return v.CustomerIDs
-}
-
-func (v *ValueModelContentOverridesItemScope) GetCustomerGroupIDs() []string {
-	if v == nil {
-		return nil
-	}
-	return v.CustomerGroupIDs
 }
 
 func (v *ValueModelContentOverridesItemScope) GetExtraProperties() map[string]interface{} {
@@ -1182,31 +1292,32 @@ func (v *ValueModelContentOverridesItemScope) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-type ValueModelContentOverridesItemSignalOverridesValue struct {
-	Defaults map[string]*ValueModelContentOverridesItemSignalOverridesValueDefaultsValue `json:"defaults,omitempty" url:"defaults,omitempty"`
+type ValueModelContentOverridesItemValueTypeOverridesValue struct {
+	// Formula variable values to apply for this scope's customers, keyed by variable id. Each key must be a variable declared by one of this value type's formulas.
+	Variables map[string]*ValueModelContentOverridesItemValueTypeOverridesValueVariablesValue `json:"variables,omitempty" url:"variables,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (v *ValueModelContentOverridesItemSignalOverridesValue) GetDefaults() map[string]*ValueModelContentOverridesItemSignalOverridesValueDefaultsValue {
+func (v *ValueModelContentOverridesItemValueTypeOverridesValue) GetVariables() map[string]*ValueModelContentOverridesItemValueTypeOverridesValueVariablesValue {
 	if v == nil {
 		return nil
 	}
-	return v.Defaults
+	return v.Variables
 }
 
-func (v *ValueModelContentOverridesItemSignalOverridesValue) GetExtraProperties() map[string]interface{} {
+func (v *ValueModelContentOverridesItemValueTypeOverridesValue) GetExtraProperties() map[string]interface{} {
 	return v.extraProperties
 }
 
-func (v *ValueModelContentOverridesItemSignalOverridesValue) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValueModelContentOverridesItemSignalOverridesValue
+func (v *ValueModelContentOverridesItemValueTypeOverridesValue) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelContentOverridesItemValueTypeOverridesValue
 	var value unmarshaler
 	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	*v = ValueModelContentOverridesItemSignalOverridesValue(value)
+	*v = ValueModelContentOverridesItemValueTypeOverridesValue(value)
 	extraProperties, err := internal.ExtractExtraProperties(data, *v)
 	if err != nil {
 		return err
@@ -1216,7 +1327,7 @@ func (v *ValueModelContentOverridesItemSignalOverridesValue) UnmarshalJSON(data 
 	return nil
 }
 
-func (v *ValueModelContentOverridesItemSignalOverridesValue) String() string {
+func (v *ValueModelContentOverridesItemValueTypeOverridesValue) String() string {
 	if len(v.rawJSON) > 0 {
 		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
 			return value
@@ -1228,28 +1339,28 @@ func (v *ValueModelContentOverridesItemSignalOverridesValue) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-type ValueModelContentOverridesItemSignalOverridesValueDefaultsValue struct {
+type ValueModelContentOverridesItemValueTypeOverridesValueVariablesValue struct {
 	Double float64
 	String string
 
 	typ string
 }
 
-func (v *ValueModelContentOverridesItemSignalOverridesValueDefaultsValue) GetDouble() float64 {
+func (v *ValueModelContentOverridesItemValueTypeOverridesValueVariablesValue) GetDouble() float64 {
 	if v == nil {
 		return 0
 	}
 	return v.Double
 }
 
-func (v *ValueModelContentOverridesItemSignalOverridesValueDefaultsValue) GetString() string {
+func (v *ValueModelContentOverridesItemValueTypeOverridesValueVariablesValue) GetString() string {
 	if v == nil {
 		return ""
 	}
 	return v.String
 }
 
-func (v *ValueModelContentOverridesItemSignalOverridesValueDefaultsValue) UnmarshalJSON(data []byte) error {
+func (v *ValueModelContentOverridesItemValueTypeOverridesValueVariablesValue) UnmarshalJSON(data []byte) error {
 	var valueDouble float64
 	if err := json.Unmarshal(data, &valueDouble); err == nil {
 		v.typ = "Double"
@@ -1265,7 +1376,7 @@ func (v *ValueModelContentOverridesItemSignalOverridesValueDefaultsValue) Unmars
 	return fmt.Errorf("%s cannot be deserialized as a %T", data, v)
 }
 
-func (v ValueModelContentOverridesItemSignalOverridesValueDefaultsValue) MarshalJSON() ([]byte, error) {
+func (v ValueModelContentOverridesItemValueTypeOverridesValueVariablesValue) MarshalJSON() ([]byte, error) {
 	if v.typ == "Double" || v.Double != 0 {
 		return json.Marshal(v.Double)
 	}
@@ -1275,12 +1386,12 @@ func (v ValueModelContentOverridesItemSignalOverridesValueDefaultsValue) Marshal
 	return nil, fmt.Errorf("type %T does not include a non-empty union type", v)
 }
 
-type ValueModelContentOverridesItemSignalOverridesValueDefaultsValueVisitor interface {
+type ValueModelContentOverridesItemValueTypeOverridesValueVariablesValueVisitor interface {
 	VisitDouble(float64) error
 	VisitString(string) error
 }
 
-func (v *ValueModelContentOverridesItemSignalOverridesValueDefaultsValue) Accept(visitor ValueModelContentOverridesItemSignalOverridesValueDefaultsValueVisitor) error {
+func (v *ValueModelContentOverridesItemValueTypeOverridesValueVariablesValue) Accept(visitor ValueModelContentOverridesItemValueTypeOverridesValueVariablesValueVisitor) error {
 	if v.typ == "Double" || v.Double != 0 {
 		return visitor.VisitDouble(v.Double)
 	}
@@ -1684,17 +1795,19 @@ func (v *ValueModelContentSignalsItemDefaultsValue) Accept(visitor ValueModelCon
 }
 
 type ValueModelContentValueTypesItem struct {
-	Slug               string                                             `json:"slug" url:"slug"`
-	Name               string                                             `json:"name" url:"name"`
-	Unit               *ValueModelContentValueTypesItemUnit               `json:"unit" url:"unit"`
-	MonetaryConversion *ValueModelContentValueTypesItemMonetaryConversion `json:"monetaryConversion,omitempty" url:"monetaryConversion,omitempty"`
-	Description        *string                                            `json:"description,omitempty" url:"description,omitempty"`
-	LongDescription    *string                                            `json:"longDescription,omitempty" url:"longDescription,omitempty"`
-	Sources            []*ValueModelContentValueTypesItemSourcesItem      `json:"sources,omitempty" url:"sources,omitempty"`
-	DisplayOrder       *int                                               `json:"displayOrder,omitempty" url:"displayOrder,omitempty"`
-	Color              *string                                            `json:"color,omitempty" url:"color,omitempty"`
-	Icon               *string                                            `json:"icon,omitempty" url:"icon,omitempty"`
-	Category           *ValueModelContentValueTypesItemCategory           `json:"category,omitempty" url:"category,omitempty"`
+	Slug                string                                                    `json:"slug" url:"slug"`
+	Name                string                                                    `json:"name" url:"name"`
+	CalculationTimeline []*ValueModelContentValueTypesItemCalculationTimelineItem `json:"calculationTimeline" url:"calculationTimeline"`
+	Description         *string                                                   `json:"description,omitempty" url:"description,omitempty"`
+	LongDescription     *string                                                   `json:"longDescription,omitempty" url:"longDescription,omitempty"`
+	Sources             []*ValueModelContentValueTypesItemSourcesItem             `json:"sources,omitempty" url:"sources,omitempty"`
+	// Gates when this value type's number is published to a customer on a value receipt. Evaluated per customer, cumulative since their first signal for this value type, as of the receipt's end date. Until the threshold is met the receipt withholds the figure and shows a 'gathering data' state instead. At least one of minDataPoints or minMonths is required.
+	Maturation   interface{}                              `json:"maturation,omitempty" url:"maturation,omitempty"`
+	DisplayOrder *int                                     `json:"displayOrder,omitempty" url:"displayOrder,omitempty"`
+	Color        *string                                  `json:"color,omitempty" url:"color,omitempty"`
+	Icon         *string                                  `json:"icon,omitempty" url:"icon,omitempty"`
+	Category     *ValueModelContentValueTypesItemCategory `json:"category,omitempty" url:"category,omitempty"`
+	ArchivedAt   *time.Time                               `json:"archivedAt,omitempty" url:"archivedAt,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -1714,18 +1827,11 @@ func (v *ValueModelContentValueTypesItem) GetName() string {
 	return v.Name
 }
 
-func (v *ValueModelContentValueTypesItem) GetUnit() *ValueModelContentValueTypesItemUnit {
+func (v *ValueModelContentValueTypesItem) GetCalculationTimeline() []*ValueModelContentValueTypesItemCalculationTimelineItem {
 	if v == nil {
 		return nil
 	}
-	return v.Unit
-}
-
-func (v *ValueModelContentValueTypesItem) GetMonetaryConversion() *ValueModelContentValueTypesItemMonetaryConversion {
-	if v == nil {
-		return nil
-	}
-	return v.MonetaryConversion
+	return v.CalculationTimeline
 }
 
 func (v *ValueModelContentValueTypesItem) GetDescription() *string {
@@ -1747,6 +1853,13 @@ func (v *ValueModelContentValueTypesItem) GetSources() []*ValueModelContentValue
 		return nil
 	}
 	return v.Sources
+}
+
+func (v *ValueModelContentValueTypesItem) GetMaturation() interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.Maturation
 }
 
 func (v *ValueModelContentValueTypesItem) GetDisplayOrder() *int {
@@ -1777,17 +1890,30 @@ func (v *ValueModelContentValueTypesItem) GetCategory() *ValueModelContentValueT
 	return v.Category
 }
 
+func (v *ValueModelContentValueTypesItem) GetArchivedAt() *time.Time {
+	if v == nil {
+		return nil
+	}
+	return v.ArchivedAt
+}
+
 func (v *ValueModelContentValueTypesItem) GetExtraProperties() map[string]interface{} {
 	return v.extraProperties
 }
 
 func (v *ValueModelContentValueTypesItem) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValueModelContentValueTypesItem
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
+	type embed ValueModelContentValueTypesItem
+	var unmarshaler = struct {
+		embed
+		ArchivedAt *internal.DateTime `json:"archivedAt,omitempty"`
+	}{
+		embed: embed(*v),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
 		return err
 	}
-	*v = ValueModelContentValueTypesItem(value)
+	*v = ValueModelContentValueTypesItem(unmarshaler.embed)
+	v.ArchivedAt = unmarshaler.ArchivedAt.TimePtr()
 	extraProperties, err := internal.ExtractExtraProperties(data, *v)
 	if err != nil {
 		return err
@@ -1795,6 +1921,18 @@ func (v *ValueModelContentValueTypesItem) UnmarshalJSON(data []byte) error {
 	v.extraProperties = extraProperties
 	v.rawJSON = json.RawMessage(data)
 	return nil
+}
+
+func (v *ValueModelContentValueTypesItem) MarshalJSON() ([]byte, error) {
+	type embed ValueModelContentValueTypesItem
+	var marshaler = struct {
+		embed
+		ArchivedAt *internal.DateTime `json:"archivedAt,omitempty"`
+	}{
+		embed:      embed(*v),
+		ArchivedAt: internal.NewOptionalDateTime(v.ArchivedAt),
+	}
+	return json.Marshal(marshaler)
 }
 
 func (v *ValueModelContentValueTypesItem) String() string {
@@ -1807,6 +1945,898 @@ func (v *ValueModelContentValueTypesItem) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItem struct {
+	EffectiveFrom time.Time                                                          `json:"effectiveFrom" url:"effectiveFrom"`
+	Calculation   *ValueModelContentValueTypesItemCalculationTimelineItemCalculation `json:"calculation" url:"calculation"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItem) GetEffectiveFrom() time.Time {
+	if v == nil {
+		return time.Time{}
+	}
+	return v.EffectiveFrom
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItem) GetCalculation() *ValueModelContentValueTypesItemCalculationTimelineItemCalculation {
+	if v == nil {
+		return nil
+	}
+	return v.Calculation
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItem) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItem) UnmarshalJSON(data []byte) error {
+	type embed ValueModelContentValueTypesItemCalculationTimelineItem
+	var unmarshaler = struct {
+		embed
+		EffectiveFrom *internal.DateTime `json:"effectiveFrom"`
+	}{
+		embed: embed(*v),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*v = ValueModelContentValueTypesItemCalculationTimelineItem(unmarshaler.embed)
+	v.EffectiveFrom = unmarshaler.EffectiveFrom.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItem) MarshalJSON() ([]byte, error) {
+	type embed ValueModelContentValueTypesItemCalculationTimelineItem
+	var marshaler = struct {
+		embed
+		EffectiveFrom *internal.DateTime `json:"effectiveFrom"`
+	}{
+		embed:         embed(*v),
+		EffectiveFrom: internal.NewDateTime(v.EffectiveFrom),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItem) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculation struct {
+	Unit               *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnit               `json:"unit" url:"unit"`
+	MonetaryConversion *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion `json:"monetaryConversion,omitempty" url:"monetaryConversion,omitempty"`
+	FormulaIDs         []string                                                                             `json:"formulaIds" url:"formulaIds"`
+	SignalEventNames   []string                                                                             `json:"signalEventNames" url:"signalEventNames"`
+	SegmentTableIDs    []string                                                                             `json:"segmentTableIds" url:"segmentTableIds"`
+	OverrideIDs        []string                                                                             `json:"overrideIds" url:"overrideIds"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculation) GetUnit() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnit {
+	if v == nil {
+		return nil
+	}
+	return v.Unit
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculation) GetMonetaryConversion() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion {
+	if v == nil {
+		return nil
+	}
+	return v.MonetaryConversion
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculation) GetFormulaIDs() []string {
+	if v == nil {
+		return nil
+	}
+	return v.FormulaIDs
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculation) GetSignalEventNames() []string {
+	if v == nil {
+		return nil
+	}
+	return v.SignalEventNames
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculation) GetSegmentTableIDs() []string {
+	if v == nil {
+		return nil
+	}
+	return v.SegmentTableIDs
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculation) GetOverrideIDs() []string {
+	if v == nil {
+		return nil
+	}
+	return v.OverrideIDs
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculation) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculation) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelContentValueTypesItemCalculationTimelineItemCalculation
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueModelContentValueTypesItemCalculationTimelineItemCalculation(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculation) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion struct {
+	Expression string                                                                                               `json:"expression" url:"expression"`
+	Variables  []*ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem  `json:"variables,omitempty" url:"variables,omitempty"`
+	Conditions []*ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem `json:"conditions,omitempty" url:"conditions,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion) GetExpression() string {
+	if v == nil {
+		return ""
+	}
+	return v.Expression
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion) GetVariables() []*ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem {
+	if v == nil {
+		return nil
+	}
+	return v.Variables
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion) GetConditions() []*ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem {
+	if v == nil {
+		return nil
+	}
+	return v.Conditions
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversion) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem struct {
+	Field    string                                                                                                    `json:"field" url:"field"`
+	Operator ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator `json:"operator" url:"operator"`
+	Value    *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValue   `json:"value" url:"value"`
+	Result   *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult  `json:"result" url:"result"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem) GetField() string {
+	if v == nil {
+		return ""
+	}
+	return v.Field
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem) GetOperator() ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator {
+	if v == nil {
+		return ""
+	}
+	return v.Operator
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem) GetValue() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValue {
+	if v == nil {
+		return nil
+	}
+	return v.Value
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem) GetResult() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult {
+	if v == nil {
+		return nil
+	}
+	return v.Result
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItem) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator string
+
+const (
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorGte      ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator = "gte"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorGt       ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator = "gt"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorLt       ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator = "lt"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorLte      ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator = "lte"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorEq       ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator = "eq"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorNeq      ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator = "neq"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorContains ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator = "contains"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorEqString ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator = "eq_string"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorEqBool   ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator = "eq_bool"
+)
+
+func NewValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorFromString(s string) (ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator, error) {
+	switch s {
+	case "gte":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorGte, nil
+	case "gt":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorGt, nil
+	case "lt":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorLt, nil
+	case "lte":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorLte, nil
+	case "eq":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorEq, nil
+	case "neq":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorNeq, nil
+	case "contains":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorContains, nil
+	case "eq_string":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorEqString, nil
+	case "eq_bool":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperatorEqBool, nil
+	}
+	var t ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator) Ptr() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemOperator {
+	return &v
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult struct {
+	Type       ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultType `json:"type" url:"type"`
+	Value      *float64                                                                                                    `json:"value,omitempty" url:"value,omitempty"`
+	Expression *string                                                                                                     `json:"expression,omitempty" url:"expression,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult) GetType() ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultType {
+	if v == nil {
+		return ""
+	}
+	return v.Type
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult) GetValue() *float64 {
+	if v == nil {
+		return nil
+	}
+	return v.Value
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult) GetExpression() *string {
+	if v == nil {
+		return nil
+	}
+	return v.Expression
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResult) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultType string
+
+const (
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultTypeConstant   ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultType = "constant"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultTypeExpression ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultType = "expression"
+)
+
+func NewValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultTypeFromString(s string) (ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultType, error) {
+	switch s {
+	case "constant":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultTypeConstant, nil
+	case "expression":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultTypeExpression, nil
+	}
+	var t ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultType) Ptr() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemResultType {
+	return &v
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValue struct {
+	Double  float64
+	String  string
+	Boolean bool
+
+	typ string
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValue) GetDouble() float64 {
+	if v == nil {
+		return 0
+	}
+	return v.Double
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValue) GetString() string {
+	if v == nil {
+		return ""
+	}
+	return v.String
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValue) GetBoolean() bool {
+	if v == nil {
+		return false
+	}
+	return v.Boolean
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValue) UnmarshalJSON(data []byte) error {
+	var valueDouble float64
+	if err := json.Unmarshal(data, &valueDouble); err == nil {
+		v.typ = "Double"
+		v.Double = valueDouble
+		return nil
+	}
+	var valueString string
+	if err := json.Unmarshal(data, &valueString); err == nil {
+		v.typ = "String"
+		v.String = valueString
+		return nil
+	}
+	var valueBoolean bool
+	if err := json.Unmarshal(data, &valueBoolean); err == nil {
+		v.typ = "Boolean"
+		v.Boolean = valueBoolean
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, v)
+}
+
+func (v ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValue) MarshalJSON() ([]byte, error) {
+	if v.typ == "Double" || v.Double != 0 {
+		return json.Marshal(v.Double)
+	}
+	if v.typ == "String" || v.String != "" {
+		return json.Marshal(v.String)
+	}
+	if v.typ == "Boolean" || v.Boolean != false {
+		return json.Marshal(v.Boolean)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValueVisitor interface {
+	VisitDouble(float64) error
+	VisitString(string) error
+	VisitBoolean(bool) error
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValue) Accept(visitor ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionConditionsItemValueVisitor) error {
+	if v.typ == "Double" || v.Double != 0 {
+		return visitor.VisitDouble(v.Double)
+	}
+	if v.typ == "String" || v.String != "" {
+		return visitor.VisitString(v.String)
+	}
+	if v.typ == "Boolean" || v.Boolean != false {
+		return visitor.VisitBoolean(v.Boolean)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem struct {
+	ID      string  `json:"id" url:"id"`
+	Label   string  `json:"label" url:"label"`
+	Default float64 `json:"default" url:"default"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem) GetID() string {
+	if v == nil {
+		return ""
+	}
+	return v.ID
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem) GetLabel() string {
+	if v == nil {
+		return ""
+	}
+	return v.Label
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem) GetDefault() float64 {
+	if v == nil {
+		return 0
+	}
+	return v.Default
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationMonetaryConversionVariablesItem) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnit struct {
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero         *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType         *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType
+
+	typ string
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnit) GetValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero {
+	if v == nil {
+		return nil
+	}
+	return v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnit) GetValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit {
+	if v == nil {
+		return nil
+	}
+	return v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnit) GetValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType {
+	if v == nil {
+		return nil
+	}
+	return v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnit) UnmarshalJSON(data []byte) error {
+	valueValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero := new(ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero)
+	if err := json.Unmarshal(data, &valueValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero); err == nil {
+		v.typ = "ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero"
+		v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero = valueValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero
+		return nil
+	}
+	valueValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit := new(ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit)
+	if err := json.Unmarshal(data, &valueValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit); err == nil {
+		v.typ = "ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit"
+		v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit = valueValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit
+		return nil
+	}
+	valueValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType := new(ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType)
+	if err := json.Unmarshal(data, &valueValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType); err == nil {
+		v.typ = "ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType"
+		v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType = valueValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, v)
+}
+
+func (v ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnit) MarshalJSON() ([]byte, error) {
+	if v.typ == "ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero" || v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero != nil {
+		return json.Marshal(v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero)
+	}
+	if v.typ == "ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit" || v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit != nil {
+		return json.Marshal(v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit)
+	}
+	if v.typ == "ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType" || v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType != nil {
+		return json.Marshal(v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitVisitor interface {
+	VisitValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero(*ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero) error
+	VisitValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit(*ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit) error
+	VisitValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType(*ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType) error
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnit) Accept(visitor ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitVisitor) error {
+	if v.typ == "ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero" || v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero != nil {
+		return visitor.VisitValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero(v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero)
+	}
+	if v.typ == "ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit" || v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit != nil {
+		return visitor.VisitValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit(v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit)
+	}
+	if v.typ == "ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType" || v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType != nil {
+		return visitor.VisitValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType(v.ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit struct {
+	Type         ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitType         `json:"type" url:"type"`
+	DurationUnit ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit `json:"durationUnit" url:"durationUnit"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit) GetType() ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitType {
+	if v == nil {
+		return ""
+	}
+	return v.Type
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit) GetDurationUnit() ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit {
+	if v == nil {
+		return ""
+	}
+	return v.DurationUnit
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnit) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit string
+
+const (
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnitSeconds ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit = "seconds"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnitMinutes ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit = "minutes"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnitHours   ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit = "hours"
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnitDays    ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit = "days"
+)
+
+func NewValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnitFromString(s string) (ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit, error) {
+	switch s {
+	case "seconds":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnitSeconds, nil
+	case "minutes":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnitMinutes, nil
+	case "hours":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnitHours, nil
+	case "days":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnitDays, nil
+	}
+	var t ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit) Ptr() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitDurationUnit {
+	return &v
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitType string
+
+const (
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitTypeDuration ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitType = "duration"
+)
+
+func NewValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitTypeFromString(s string) (ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitType, error) {
+	switch s {
+	case "duration":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitTypeDuration, nil
+	}
+	var t ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitType) Ptr() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitDurationUnitType {
+	return &v
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType struct {
+	Type        ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeType `json:"type" url:"type"`
+	Unit        string                                                                        `json:"unit" url:"unit"`
+	UnitDisplay string                                                                        `json:"unit_display" url:"unit_display"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType) GetType() ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeType {
+	if v == nil {
+		return ""
+	}
+	return v.Type
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType) GetUnit() string {
+	if v == nil {
+		return ""
+	}
+	return v.Unit
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType) GetUnitDisplay() string {
+	if v == nil {
+		return ""
+	}
+	return v.UnitDisplay
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitType) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeType string
+
+const (
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeTypeCustom ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeType = "custom"
+)
+
+func NewValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeTypeFromString(s string) (ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeType, error) {
+	switch s {
+	case "custom":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeTypeCustom, nil
+	}
+	var t ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeType) Ptr() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitTypeType {
+	return &v
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero struct {
+	Type ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroType `json:"type" url:"type"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero) GetType() ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroType {
+	if v == nil {
+		return ""
+	}
+	return v.Type
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero) GetExtraProperties() map[string]interface{} {
+	return v.extraProperties
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZero) String() string {
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+type ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroType string
+
+const (
+	ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroTypeMonetary ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroType = "monetary"
+)
+
+func NewValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroTypeFromString(s string) (ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroType, error) {
+	switch s {
+	case "monetary":
+		return ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroTypeMonetary, nil
+	}
+	var t ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroType) Ptr() *ValueModelContentValueTypesItemCalculationTimelineItemCalculationUnitZeroType {
+	return &v
 }
 
 type ValueModelContentValueTypesItemCategory string
@@ -1838,410 +2868,6 @@ func NewValueModelContentValueTypesItemCategoryFromString(s string) (ValueModelC
 
 func (v ValueModelContentValueTypesItemCategory) Ptr() *ValueModelContentValueTypesItemCategory {
 	return &v
-}
-
-type ValueModelContentValueTypesItemMonetaryConversion struct {
-	Expression string                                                             `json:"expression" url:"expression"`
-	Variables  []*ValueModelContentValueTypesItemMonetaryConversionVariablesItem  `json:"variables,omitempty" url:"variables,omitempty"`
-	Conditions []*ValueModelContentValueTypesItemMonetaryConversionConditionsItem `json:"conditions,omitempty" url:"conditions,omitempty"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversion) GetExpression() string {
-	if v == nil {
-		return ""
-	}
-	return v.Expression
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversion) GetVariables() []*ValueModelContentValueTypesItemMonetaryConversionVariablesItem {
-	if v == nil {
-		return nil
-	}
-	return v.Variables
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversion) GetConditions() []*ValueModelContentValueTypesItemMonetaryConversionConditionsItem {
-	if v == nil {
-		return nil
-	}
-	return v.Conditions
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversion) GetExtraProperties() map[string]interface{} {
-	return v.extraProperties
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversion) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValueModelContentValueTypesItemMonetaryConversion
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*v = ValueModelContentValueTypesItemMonetaryConversion(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *v)
-	if err != nil {
-		return err
-	}
-	v.extraProperties = extraProperties
-	v.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversion) String() string {
-	if len(v.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(v); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", v)
-}
-
-type ValueModelContentValueTypesItemMonetaryConversionConditionsItem struct {
-	Field    string                                                                  `json:"field" url:"field"`
-	Operator ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator `json:"operator" url:"operator"`
-	Value    *ValueModelContentValueTypesItemMonetaryConversionConditionsItemValue   `json:"value" url:"value"`
-	Result   *ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult  `json:"result" url:"result"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItem) GetField() string {
-	if v == nil {
-		return ""
-	}
-	return v.Field
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItem) GetOperator() ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator {
-	if v == nil {
-		return ""
-	}
-	return v.Operator
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItem) GetValue() *ValueModelContentValueTypesItemMonetaryConversionConditionsItemValue {
-	if v == nil {
-		return nil
-	}
-	return v.Value
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItem) GetResult() *ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult {
-	if v == nil {
-		return nil
-	}
-	return v.Result
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItem) GetExtraProperties() map[string]interface{} {
-	return v.extraProperties
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItem) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValueModelContentValueTypesItemMonetaryConversionConditionsItem
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*v = ValueModelContentValueTypesItemMonetaryConversionConditionsItem(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *v)
-	if err != nil {
-		return err
-	}
-	v.extraProperties = extraProperties
-	v.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItem) String() string {
-	if len(v.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(v); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", v)
-}
-
-type ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator string
-
-const (
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorGte      ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator = "gte"
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorGt       ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator = "gt"
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorLt       ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator = "lt"
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorLte      ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator = "lte"
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorEq       ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator = "eq"
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorNeq      ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator = "neq"
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorContains ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator = "contains"
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorEqString ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator = "eq_string"
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorEqBool   ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator = "eq_bool"
-)
-
-func NewValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorFromString(s string) (ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator, error) {
-	switch s {
-	case "gte":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorGte, nil
-	case "gt":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorGt, nil
-	case "lt":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorLt, nil
-	case "lte":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorLte, nil
-	case "eq":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorEq, nil
-	case "neq":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorNeq, nil
-	case "contains":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorContains, nil
-	case "eq_string":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorEqString, nil
-	case "eq_bool":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperatorEqBool, nil
-	}
-	var t ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (v ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator) Ptr() *ValueModelContentValueTypesItemMonetaryConversionConditionsItemOperator {
-	return &v
-}
-
-type ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult struct {
-	Type       ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultType `json:"type" url:"type"`
-	Value      *float64                                                                  `json:"value,omitempty" url:"value,omitempty"`
-	Expression *string                                                                   `json:"expression,omitempty" url:"expression,omitempty"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult) GetType() ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultType {
-	if v == nil {
-		return ""
-	}
-	return v.Type
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult) GetValue() *float64 {
-	if v == nil {
-		return nil
-	}
-	return v.Value
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult) GetExpression() *string {
-	if v == nil {
-		return nil
-	}
-	return v.Expression
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult) GetExtraProperties() map[string]interface{} {
-	return v.extraProperties
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*v = ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *v)
-	if err != nil {
-		return err
-	}
-	v.extraProperties = extraProperties
-	v.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemResult) String() string {
-	if len(v.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(v); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", v)
-}
-
-type ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultType string
-
-const (
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultTypeConstant   ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultType = "constant"
-	ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultTypeExpression ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultType = "expression"
-)
-
-func NewValueModelContentValueTypesItemMonetaryConversionConditionsItemResultTypeFromString(s string) (ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultType, error) {
-	switch s {
-	case "constant":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultTypeConstant, nil
-	case "expression":
-		return ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultTypeExpression, nil
-	}
-	var t ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultType
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (v ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultType) Ptr() *ValueModelContentValueTypesItemMonetaryConversionConditionsItemResultType {
-	return &v
-}
-
-type ValueModelContentValueTypesItemMonetaryConversionConditionsItemValue struct {
-	Double  float64
-	String  string
-	Boolean bool
-
-	typ string
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemValue) GetDouble() float64 {
-	if v == nil {
-		return 0
-	}
-	return v.Double
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemValue) GetString() string {
-	if v == nil {
-		return ""
-	}
-	return v.String
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemValue) GetBoolean() bool {
-	if v == nil {
-		return false
-	}
-	return v.Boolean
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemValue) UnmarshalJSON(data []byte) error {
-	var valueDouble float64
-	if err := json.Unmarshal(data, &valueDouble); err == nil {
-		v.typ = "Double"
-		v.Double = valueDouble
-		return nil
-	}
-	var valueString string
-	if err := json.Unmarshal(data, &valueString); err == nil {
-		v.typ = "String"
-		v.String = valueString
-		return nil
-	}
-	var valueBoolean bool
-	if err := json.Unmarshal(data, &valueBoolean); err == nil {
-		v.typ = "Boolean"
-		v.Boolean = valueBoolean
-		return nil
-	}
-	return fmt.Errorf("%s cannot be deserialized as a %T", data, v)
-}
-
-func (v ValueModelContentValueTypesItemMonetaryConversionConditionsItemValue) MarshalJSON() ([]byte, error) {
-	if v.typ == "Double" || v.Double != 0 {
-		return json.Marshal(v.Double)
-	}
-	if v.typ == "String" || v.String != "" {
-		return json.Marshal(v.String)
-	}
-	if v.typ == "Boolean" || v.Boolean != false {
-		return json.Marshal(v.Boolean)
-	}
-	return nil, fmt.Errorf("type %T does not include a non-empty union type", v)
-}
-
-type ValueModelContentValueTypesItemMonetaryConversionConditionsItemValueVisitor interface {
-	VisitDouble(float64) error
-	VisitString(string) error
-	VisitBoolean(bool) error
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionConditionsItemValue) Accept(visitor ValueModelContentValueTypesItemMonetaryConversionConditionsItemValueVisitor) error {
-	if v.typ == "Double" || v.Double != 0 {
-		return visitor.VisitDouble(v.Double)
-	}
-	if v.typ == "String" || v.String != "" {
-		return visitor.VisitString(v.String)
-	}
-	if v.typ == "Boolean" || v.Boolean != false {
-		return visitor.VisitBoolean(v.Boolean)
-	}
-	return fmt.Errorf("type %T does not include a non-empty union type", v)
-}
-
-type ValueModelContentValueTypesItemMonetaryConversionVariablesItem struct {
-	ID      string  `json:"id" url:"id"`
-	Label   string  `json:"label" url:"label"`
-	Default float64 `json:"default" url:"default"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionVariablesItem) GetID() string {
-	if v == nil {
-		return ""
-	}
-	return v.ID
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionVariablesItem) GetLabel() string {
-	if v == nil {
-		return ""
-	}
-	return v.Label
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionVariablesItem) GetDefault() float64 {
-	if v == nil {
-		return 0
-	}
-	return v.Default
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionVariablesItem) GetExtraProperties() map[string]interface{} {
-	return v.extraProperties
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionVariablesItem) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValueModelContentValueTypesItemMonetaryConversionVariablesItem
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*v = ValueModelContentValueTypesItemMonetaryConversionVariablesItem(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *v)
-	if err != nil {
-		return err
-	}
-	v.extraProperties = extraProperties
-	v.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (v *ValueModelContentValueTypesItemMonetaryConversionVariablesItem) String() string {
-	if len(v.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(v); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", v)
 }
 
 type ValueModelContentValueTypesItemSourcesItem struct {
@@ -2296,336 +2922,6 @@ func (v *ValueModelContentValueTypesItemSourcesItem) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", v)
-}
-
-type ValueModelContentValueTypesItemUnit struct {
-	ValueModelContentValueTypesItemUnitZero         *ValueModelContentValueTypesItemUnitZero
-	ValueModelContentValueTypesItemUnitDurationUnit *ValueModelContentValueTypesItemUnitDurationUnit
-	ValueModelContentValueTypesItemUnitType         *ValueModelContentValueTypesItemUnitType
-
-	typ string
-}
-
-func (v *ValueModelContentValueTypesItemUnit) GetValueModelContentValueTypesItemUnitZero() *ValueModelContentValueTypesItemUnitZero {
-	if v == nil {
-		return nil
-	}
-	return v.ValueModelContentValueTypesItemUnitZero
-}
-
-func (v *ValueModelContentValueTypesItemUnit) GetValueModelContentValueTypesItemUnitDurationUnit() *ValueModelContentValueTypesItemUnitDurationUnit {
-	if v == nil {
-		return nil
-	}
-	return v.ValueModelContentValueTypesItemUnitDurationUnit
-}
-
-func (v *ValueModelContentValueTypesItemUnit) GetValueModelContentValueTypesItemUnitType() *ValueModelContentValueTypesItemUnitType {
-	if v == nil {
-		return nil
-	}
-	return v.ValueModelContentValueTypesItemUnitType
-}
-
-func (v *ValueModelContentValueTypesItemUnit) UnmarshalJSON(data []byte) error {
-	valueValueModelContentValueTypesItemUnitZero := new(ValueModelContentValueTypesItemUnitZero)
-	if err := json.Unmarshal(data, &valueValueModelContentValueTypesItemUnitZero); err == nil {
-		v.typ = "ValueModelContentValueTypesItemUnitZero"
-		v.ValueModelContentValueTypesItemUnitZero = valueValueModelContentValueTypesItemUnitZero
-		return nil
-	}
-	valueValueModelContentValueTypesItemUnitDurationUnit := new(ValueModelContentValueTypesItemUnitDurationUnit)
-	if err := json.Unmarshal(data, &valueValueModelContentValueTypesItemUnitDurationUnit); err == nil {
-		v.typ = "ValueModelContentValueTypesItemUnitDurationUnit"
-		v.ValueModelContentValueTypesItemUnitDurationUnit = valueValueModelContentValueTypesItemUnitDurationUnit
-		return nil
-	}
-	valueValueModelContentValueTypesItemUnitType := new(ValueModelContentValueTypesItemUnitType)
-	if err := json.Unmarshal(data, &valueValueModelContentValueTypesItemUnitType); err == nil {
-		v.typ = "ValueModelContentValueTypesItemUnitType"
-		v.ValueModelContentValueTypesItemUnitType = valueValueModelContentValueTypesItemUnitType
-		return nil
-	}
-	return fmt.Errorf("%s cannot be deserialized as a %T", data, v)
-}
-
-func (v ValueModelContentValueTypesItemUnit) MarshalJSON() ([]byte, error) {
-	if v.typ == "ValueModelContentValueTypesItemUnitZero" || v.ValueModelContentValueTypesItemUnitZero != nil {
-		return json.Marshal(v.ValueModelContentValueTypesItemUnitZero)
-	}
-	if v.typ == "ValueModelContentValueTypesItemUnitDurationUnit" || v.ValueModelContentValueTypesItemUnitDurationUnit != nil {
-		return json.Marshal(v.ValueModelContentValueTypesItemUnitDurationUnit)
-	}
-	if v.typ == "ValueModelContentValueTypesItemUnitType" || v.ValueModelContentValueTypesItemUnitType != nil {
-		return json.Marshal(v.ValueModelContentValueTypesItemUnitType)
-	}
-	return nil, fmt.Errorf("type %T does not include a non-empty union type", v)
-}
-
-type ValueModelContentValueTypesItemUnitVisitor interface {
-	VisitValueModelContentValueTypesItemUnitZero(*ValueModelContentValueTypesItemUnitZero) error
-	VisitValueModelContentValueTypesItemUnitDurationUnit(*ValueModelContentValueTypesItemUnitDurationUnit) error
-	VisitValueModelContentValueTypesItemUnitType(*ValueModelContentValueTypesItemUnitType) error
-}
-
-func (v *ValueModelContentValueTypesItemUnit) Accept(visitor ValueModelContentValueTypesItemUnitVisitor) error {
-	if v.typ == "ValueModelContentValueTypesItemUnitZero" || v.ValueModelContentValueTypesItemUnitZero != nil {
-		return visitor.VisitValueModelContentValueTypesItemUnitZero(v.ValueModelContentValueTypesItemUnitZero)
-	}
-	if v.typ == "ValueModelContentValueTypesItemUnitDurationUnit" || v.ValueModelContentValueTypesItemUnitDurationUnit != nil {
-		return visitor.VisitValueModelContentValueTypesItemUnitDurationUnit(v.ValueModelContentValueTypesItemUnitDurationUnit)
-	}
-	if v.typ == "ValueModelContentValueTypesItemUnitType" || v.ValueModelContentValueTypesItemUnitType != nil {
-		return visitor.VisitValueModelContentValueTypesItemUnitType(v.ValueModelContentValueTypesItemUnitType)
-	}
-	return fmt.Errorf("type %T does not include a non-empty union type", v)
-}
-
-type ValueModelContentValueTypesItemUnitDurationUnit struct {
-	Type         ValueModelContentValueTypesItemUnitDurationUnitType         `json:"type" url:"type"`
-	DurationUnit ValueModelContentValueTypesItemUnitDurationUnitDurationUnit `json:"durationUnit" url:"durationUnit"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (v *ValueModelContentValueTypesItemUnitDurationUnit) GetType() ValueModelContentValueTypesItemUnitDurationUnitType {
-	if v == nil {
-		return ""
-	}
-	return v.Type
-}
-
-func (v *ValueModelContentValueTypesItemUnitDurationUnit) GetDurationUnit() ValueModelContentValueTypesItemUnitDurationUnitDurationUnit {
-	if v == nil {
-		return ""
-	}
-	return v.DurationUnit
-}
-
-func (v *ValueModelContentValueTypesItemUnitDurationUnit) GetExtraProperties() map[string]interface{} {
-	return v.extraProperties
-}
-
-func (v *ValueModelContentValueTypesItemUnitDurationUnit) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValueModelContentValueTypesItemUnitDurationUnit
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*v = ValueModelContentValueTypesItemUnitDurationUnit(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *v)
-	if err != nil {
-		return err
-	}
-	v.extraProperties = extraProperties
-	v.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (v *ValueModelContentValueTypesItemUnitDurationUnit) String() string {
-	if len(v.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(v); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", v)
-}
-
-type ValueModelContentValueTypesItemUnitDurationUnitDurationUnit string
-
-const (
-	ValueModelContentValueTypesItemUnitDurationUnitDurationUnitSeconds ValueModelContentValueTypesItemUnitDurationUnitDurationUnit = "seconds"
-	ValueModelContentValueTypesItemUnitDurationUnitDurationUnitMinutes ValueModelContentValueTypesItemUnitDurationUnitDurationUnit = "minutes"
-	ValueModelContentValueTypesItemUnitDurationUnitDurationUnitHours   ValueModelContentValueTypesItemUnitDurationUnitDurationUnit = "hours"
-	ValueModelContentValueTypesItemUnitDurationUnitDurationUnitDays    ValueModelContentValueTypesItemUnitDurationUnitDurationUnit = "days"
-)
-
-func NewValueModelContentValueTypesItemUnitDurationUnitDurationUnitFromString(s string) (ValueModelContentValueTypesItemUnitDurationUnitDurationUnit, error) {
-	switch s {
-	case "seconds":
-		return ValueModelContentValueTypesItemUnitDurationUnitDurationUnitSeconds, nil
-	case "minutes":
-		return ValueModelContentValueTypesItemUnitDurationUnitDurationUnitMinutes, nil
-	case "hours":
-		return ValueModelContentValueTypesItemUnitDurationUnitDurationUnitHours, nil
-	case "days":
-		return ValueModelContentValueTypesItemUnitDurationUnitDurationUnitDays, nil
-	}
-	var t ValueModelContentValueTypesItemUnitDurationUnitDurationUnit
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (v ValueModelContentValueTypesItemUnitDurationUnitDurationUnit) Ptr() *ValueModelContentValueTypesItemUnitDurationUnitDurationUnit {
-	return &v
-}
-
-type ValueModelContentValueTypesItemUnitDurationUnitType string
-
-const (
-	ValueModelContentValueTypesItemUnitDurationUnitTypeDuration ValueModelContentValueTypesItemUnitDurationUnitType = "duration"
-)
-
-func NewValueModelContentValueTypesItemUnitDurationUnitTypeFromString(s string) (ValueModelContentValueTypesItemUnitDurationUnitType, error) {
-	switch s {
-	case "duration":
-		return ValueModelContentValueTypesItemUnitDurationUnitTypeDuration, nil
-	}
-	var t ValueModelContentValueTypesItemUnitDurationUnitType
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (v ValueModelContentValueTypesItemUnitDurationUnitType) Ptr() *ValueModelContentValueTypesItemUnitDurationUnitType {
-	return &v
-}
-
-type ValueModelContentValueTypesItemUnitType struct {
-	Type        ValueModelContentValueTypesItemUnitTypeType `json:"type" url:"type"`
-	Unit        string                                      `json:"unit" url:"unit"`
-	UnitDisplay string                                      `json:"unit_display" url:"unit_display"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (v *ValueModelContentValueTypesItemUnitType) GetType() ValueModelContentValueTypesItemUnitTypeType {
-	if v == nil {
-		return ""
-	}
-	return v.Type
-}
-
-func (v *ValueModelContentValueTypesItemUnitType) GetUnit() string {
-	if v == nil {
-		return ""
-	}
-	return v.Unit
-}
-
-func (v *ValueModelContentValueTypesItemUnitType) GetUnitDisplay() string {
-	if v == nil {
-		return ""
-	}
-	return v.UnitDisplay
-}
-
-func (v *ValueModelContentValueTypesItemUnitType) GetExtraProperties() map[string]interface{} {
-	return v.extraProperties
-}
-
-func (v *ValueModelContentValueTypesItemUnitType) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValueModelContentValueTypesItemUnitType
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*v = ValueModelContentValueTypesItemUnitType(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *v)
-	if err != nil {
-		return err
-	}
-	v.extraProperties = extraProperties
-	v.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (v *ValueModelContentValueTypesItemUnitType) String() string {
-	if len(v.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(v); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", v)
-}
-
-type ValueModelContentValueTypesItemUnitTypeType string
-
-const (
-	ValueModelContentValueTypesItemUnitTypeTypeCustom ValueModelContentValueTypesItemUnitTypeType = "custom"
-)
-
-func NewValueModelContentValueTypesItemUnitTypeTypeFromString(s string) (ValueModelContentValueTypesItemUnitTypeType, error) {
-	switch s {
-	case "custom":
-		return ValueModelContentValueTypesItemUnitTypeTypeCustom, nil
-	}
-	var t ValueModelContentValueTypesItemUnitTypeType
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (v ValueModelContentValueTypesItemUnitTypeType) Ptr() *ValueModelContentValueTypesItemUnitTypeType {
-	return &v
-}
-
-type ValueModelContentValueTypesItemUnitZero struct {
-	Type ValueModelContentValueTypesItemUnitZeroType `json:"type" url:"type"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (v *ValueModelContentValueTypesItemUnitZero) GetType() ValueModelContentValueTypesItemUnitZeroType {
-	if v == nil {
-		return ""
-	}
-	return v.Type
-}
-
-func (v *ValueModelContentValueTypesItemUnitZero) GetExtraProperties() map[string]interface{} {
-	return v.extraProperties
-}
-
-func (v *ValueModelContentValueTypesItemUnitZero) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValueModelContentValueTypesItemUnitZero
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*v = ValueModelContentValueTypesItemUnitZero(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *v)
-	if err != nil {
-		return err
-	}
-	v.extraProperties = extraProperties
-	v.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (v *ValueModelContentValueTypesItemUnitZero) String() string {
-	if len(v.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(v); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", v)
-}
-
-type ValueModelContentValueTypesItemUnitZeroType string
-
-const (
-	ValueModelContentValueTypesItemUnitZeroTypeMonetary ValueModelContentValueTypesItemUnitZeroType = "monetary"
-)
-
-func NewValueModelContentValueTypesItemUnitZeroTypeFromString(s string) (ValueModelContentValueTypesItemUnitZeroType, error) {
-	switch s {
-	case "monetary":
-		return ValueModelContentValueTypesItemUnitZeroTypeMonetary, nil
-	}
-	var t ValueModelContentValueTypesItemUnitZeroType
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (v ValueModelContentValueTypesItemUnitZeroType) Ptr() *ValueModelContentValueTypesItemUnitZeroType {
-	return &v
 }
 
 type ValueModelDetail struct {
@@ -2973,6 +3269,8 @@ type ValueModelUploadRequest struct {
 	Content       *ValueModelContent `json:"content,omitempty" url:"-"`
 	EffectiveFrom *time.Time         `json:"effectiveFrom,omitempty" url:"-"`
 	EffectiveTo   *time.Time         `json:"effectiveTo,omitempty" url:"-"`
+	// Optimistic concurrency guard: the active version this upload is based on. When supplied and it does not match the live active version, the upload fails with 409 instead of overwriting a concurrent change.
+	ExpectedActiveVersion *int `json:"expectedActiveVersion,omitempty" url:"-"`
 }
 
 func (v *ValueModelUploadRequest) UnmarshalJSON(data []byte) error {

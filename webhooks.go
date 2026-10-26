@@ -265,6 +265,7 @@ const (
 	WebhookNameBillingPaymentFailed     WebhookName = "billing-payment-failed"
 	WebhookNameBillingCreditsDepleted   WebhookName = "billing-credits-depleted"
 	WebhookNameBillingOverageIncurred   WebhookName = "billing-overage-incurred"
+	WebhookNameBillingCreditCapReached  WebhookName = "billing-credit-cap-reached"
 )
 
 func NewWebhookNameFromString(s string) (WebhookName, error) {
@@ -289,6 +290,8 @@ func NewWebhookNameFromString(s string) (WebhookName, error) {
 		return WebhookNameBillingCreditsDepleted, nil
 	case "billing-overage-incurred":
 		return WebhookNameBillingOverageIncurred, nil
+	case "billing-credit-cap-reached":
+		return WebhookNameBillingCreditCapReached, nil
 	}
 	var t WebhookName
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -478,6 +481,7 @@ const (
 	WebhookUpdateResponseNameBillingPaymentFailed     WebhookUpdateResponseName = "billing-payment-failed"
 	WebhookUpdateResponseNameBillingCreditsDepleted   WebhookUpdateResponseName = "billing-credits-depleted"
 	WebhookUpdateResponseNameBillingOverageIncurred   WebhookUpdateResponseName = "billing-overage-incurred"
+	WebhookUpdateResponseNameBillingCreditCapReached  WebhookUpdateResponseName = "billing-credit-cap-reached"
 )
 
 func NewWebhookUpdateResponseNameFromString(s string) (WebhookUpdateResponseName, error) {
@@ -502,6 +506,8 @@ func NewWebhookUpdateResponseNameFromString(s string) (WebhookUpdateResponseName
 		return WebhookUpdateResponseNameBillingCreditsDepleted, nil
 	case "billing-overage-incurred":
 		return WebhookUpdateResponseNameBillingOverageIncurred, nil
+	case "billing-credit-cap-reached":
+		return WebhookUpdateResponseNameBillingCreditCapReached, nil
 	}
 	var t WebhookUpdateResponseName
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -524,6 +530,7 @@ const (
 	TestWebhookRequestWebhookNameBillingPaymentFailed     TestWebhookRequestWebhookName = "billing-payment-failed"
 	TestWebhookRequestWebhookNameBillingCreditsDepleted   TestWebhookRequestWebhookName = "billing-credits-depleted"
 	TestWebhookRequestWebhookNameBillingOverageIncurred   TestWebhookRequestWebhookName = "billing-overage-incurred"
+	TestWebhookRequestWebhookNameBillingCreditCapReached  TestWebhookRequestWebhookName = "billing-credit-cap-reached"
 )
 
 func NewTestWebhookRequestWebhookNameFromString(s string) (TestWebhookRequestWebhookName, error) {
@@ -548,6 +555,8 @@ func NewTestWebhookRequestWebhookNameFromString(s string) (TestWebhookRequestWeb
 		return TestWebhookRequestWebhookNameBillingCreditsDepleted, nil
 	case "billing-overage-incurred":
 		return TestWebhookRequestWebhookNameBillingOverageIncurred, nil
+	case "billing-credit-cap-reached":
+		return TestWebhookRequestWebhookNameBillingCreditCapReached, nil
 	}
 	var t TestWebhookRequestWebhookName
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -570,6 +579,7 @@ const (
 	UpdateWebhookRequestWebhookNameBillingPaymentFailed     UpdateWebhookRequestWebhookName = "billing-payment-failed"
 	UpdateWebhookRequestWebhookNameBillingCreditsDepleted   UpdateWebhookRequestWebhookName = "billing-credits-depleted"
 	UpdateWebhookRequestWebhookNameBillingOverageIncurred   UpdateWebhookRequestWebhookName = "billing-overage-incurred"
+	UpdateWebhookRequestWebhookNameBillingCreditCapReached  UpdateWebhookRequestWebhookName = "billing-credit-cap-reached"
 )
 
 func NewUpdateWebhookRequestWebhookNameFromString(s string) (UpdateWebhookRequestWebhookName, error) {
@@ -594,6 +604,8 @@ func NewUpdateWebhookRequestWebhookNameFromString(s string) (UpdateWebhookReques
 		return UpdateWebhookRequestWebhookNameBillingCreditsDepleted, nil
 	case "billing-overage-incurred":
 		return UpdateWebhookRequestWebhookNameBillingOverageIncurred, nil
+	case "billing-credit-cap-reached":
+		return UpdateWebhookRequestWebhookNameBillingCreditCapReached, nil
 	}
 	var t UpdateWebhookRequestWebhookName
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -607,6 +619,6 @@ type UpdateWebhookRequest struct {
 	WebhookName UpdateWebhookRequestWebhookName `json:"-" url:"-"`
 	// Whether the webhook is enabled for delivery.
 	Enabled *bool `json:"enabled,omitempty" url:"-"`
-	// The HTTPS endpoint Paid should deliver this webhook to. Set to null to clear it while disabled.
+	// The HTTPS endpoint Paid should deliver this webhook to. It must use HTTPS and a public host: localhost, private networks (10.x, 172.16-31.x, 192.168.x), link-local addresses and .local names are rejected. Set to null to clear it while disabled.
 	URL *string `json:"url,omitempty" url:"-"`
 }

@@ -31,7 +31,8 @@ type ListValueReceiptsRequest struct {
 }
 
 type PublishValueReceiptBody struct {
-	ID               string     `json:"-" url:"-"`
+	ID string `json:"-" url:"-"`
+	// When the public link stops working. Must be in the future, or the request fails with 409. Omit or set null for a link that does not expire.
 	PublishExpiresAt *time.Time `json:"publishExpiresAt,omitempty" url:"-"`
 }
 
@@ -63,43 +64,6 @@ type RefreshValueReceiptRequest struct {
 
 type SealValueReceiptRequest struct {
 	ID string `json:"-" url:"-"`
-}
-
-type SyncValueReceiptRequest struct {
-	// Mutually exclusive with externalCustomerId. Exactly one is required.
-	CustomerID *string `json:"customerId,omitempty" url:"-"`
-	// Mutually exclusive with customerId. Exactly one is required.
-	ExternalCustomerID *string   `json:"externalCustomerId,omitempty" url:"-"`
-	StartDate          time.Time `json:"startDate" url:"-"`
-	EndDate            time.Time `json:"endDate" url:"-"`
-	// Mutually exclusive with orderId. Provide at most one.
-	Product *SyncValueReceiptRequestProduct `json:"product,omitempty" url:"-"`
-	// Mutually exclusive with product. Provide at most one.
-	OrderID *string `json:"orderId,omitempty" url:"-"`
-}
-
-func (s *SyncValueReceiptRequest) UnmarshalJSON(data []byte) error {
-	type unmarshaler SyncValueReceiptRequest
-	var body unmarshaler
-	if err := json.Unmarshal(data, &body); err != nil {
-		return err
-	}
-	*s = SyncValueReceiptRequest(body)
-	return nil
-}
-
-func (s *SyncValueReceiptRequest) MarshalJSON() ([]byte, error) {
-	type embed SyncValueReceiptRequest
-	var marshaler = struct {
-		embed
-		StartDate *internal.DateTime `json:"startDate"`
-		EndDate   *internal.DateTime `json:"endDate"`
-	}{
-		embed:     embed(*s),
-		StartDate: internal.NewDateTime(s.StartDate),
-		EndDate:   internal.NewDateTime(s.EndDate),
-	}
-	return json.Marshal(marshaler)
 }
 
 type SuccessResponse struct {
@@ -148,8 +112,176 @@ func (s *SuccessResponse) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
+type SyncValueReceiptRequest struct {
+	// Mutually exclusive with externalCustomerId. Exactly one is required.
+	CustomerID *string `json:"customerId,omitempty" url:"customerId,omitempty"`
+	// Mutually exclusive with customerId. Exactly one is required.
+	ExternalCustomerID *string   `json:"externalCustomerId,omitempty" url:"externalCustomerId,omitempty"`
+	StartDate          time.Time `json:"startDate" url:"startDate"`
+	EndDate            time.Time `json:"endDate" url:"endDate"`
+	// Mutually exclusive with orderId. Provide at most one.
+	Product *SyncValueReceiptRequestProduct `json:"product,omitempty" url:"product,omitempty"`
+	// Mutually exclusive with product. Provide at most one.
+	OrderID *string `json:"orderId,omitempty" url:"orderId,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SyncValueReceiptRequest) GetCustomerID() *string {
+	if s == nil {
+		return nil
+	}
+	return s.CustomerID
+}
+
+func (s *SyncValueReceiptRequest) GetExternalCustomerID() *string {
+	if s == nil {
+		return nil
+	}
+	return s.ExternalCustomerID
+}
+
+func (s *SyncValueReceiptRequest) GetStartDate() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.StartDate
+}
+
+func (s *SyncValueReceiptRequest) GetEndDate() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.EndDate
+}
+
+func (s *SyncValueReceiptRequest) GetProduct() *SyncValueReceiptRequestProduct {
+	if s == nil {
+		return nil
+	}
+	return s.Product
+}
+
+func (s *SyncValueReceiptRequest) GetOrderID() *string {
+	if s == nil {
+		return nil
+	}
+	return s.OrderID
+}
+
+func (s *SyncValueReceiptRequest) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SyncValueReceiptRequest) UnmarshalJSON(data []byte) error {
+	type embed SyncValueReceiptRequest
+	var unmarshaler = struct {
+		embed
+		StartDate *internal.DateTime `json:"startDate"`
+		EndDate   *internal.DateTime `json:"endDate"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*s = SyncValueReceiptRequest(unmarshaler.embed)
+	s.StartDate = unmarshaler.StartDate.Time()
+	s.EndDate = unmarshaler.EndDate.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SyncValueReceiptRequest) MarshalJSON() ([]byte, error) {
+	type embed SyncValueReceiptRequest
+	var marshaler = struct {
+		embed
+		StartDate *internal.DateTime `json:"startDate"`
+		EndDate   *internal.DateTime `json:"endDate"`
+	}{
+		embed:     embed(*s),
+		StartDate: internal.NewDateTime(s.StartDate),
+		EndDate:   internal.NewDateTime(s.EndDate),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (s *SyncValueReceiptRequest) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// Mutually exclusive with orderId. Provide at most one.
+type SyncValueReceiptRequestProduct struct {
+	ProductID string  `json:"productId" url:"productId"`
+	Currency  *string `json:"currency,omitempty" url:"currency,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SyncValueReceiptRequestProduct) GetProductID() string {
+	if s == nil {
+		return ""
+	}
+	return s.ProductID
+}
+
+func (s *SyncValueReceiptRequestProduct) GetCurrency() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Currency
+}
+
+func (s *SyncValueReceiptRequestProduct) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SyncValueReceiptRequestProduct) UnmarshalJSON(data []byte) error {
+	type unmarshaler SyncValueReceiptRequestProduct
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SyncValueReceiptRequestProduct(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SyncValueReceiptRequestProduct) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
 type ValueReceiptDetail struct {
-	ID                  string     `json:"id" url:"id"`
+	ID string `json:"id" url:"id"`
+	// Always "posted": a value receipt is immutable from creation.
 	Status              string     `json:"status" url:"status"`
 	PublicURLToken      string     `json:"publicUrlToken" url:"publicUrlToken"`
 	PublicURL           string     `json:"publicUrl" url:"publicUrl"`
@@ -431,7 +563,8 @@ func (v *ValueReceiptListResponse) String() string {
 }
 
 type ValueReceiptSummary struct {
-	ID                  string     `json:"id" url:"id"`
+	ID string `json:"id" url:"id"`
+	// Always "posted": a value receipt is immutable from creation.
 	Status              string     `json:"status" url:"status"`
 	PublicURLToken      string     `json:"publicUrlToken" url:"publicUrlToken"`
 	PublicURL           string     `json:"publicUrl" url:"publicUrl"`
@@ -627,10 +760,12 @@ func (v *ValueReceiptSummary) String() string {
 }
 
 type ValueReceiptSyncResponse struct {
-	ID             string `json:"id" url:"id"`
-	Status         string `json:"status" url:"status"`
-	PublicURLToken string `json:"publicUrlToken" url:"publicUrlToken"`
-	PublicURL      string `json:"publicUrl" url:"publicUrl"`
+	ID string `json:"id" url:"id"`
+	// Always "posted".
+	Status         string     `json:"status" url:"status"`
+	PublicURLToken string     `json:"publicUrlToken" url:"publicUrlToken"`
+	PublicURL      string     `json:"publicUrl" url:"publicUrl"`
+	GeneratedAt    *time.Time `json:"generatedAt,omitempty" url:"generatedAt,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -664,17 +799,30 @@ func (v *ValueReceiptSyncResponse) GetPublicURL() string {
 	return v.PublicURL
 }
 
+func (v *ValueReceiptSyncResponse) GetGeneratedAt() *time.Time {
+	if v == nil {
+		return nil
+	}
+	return v.GeneratedAt
+}
+
 func (v *ValueReceiptSyncResponse) GetExtraProperties() map[string]interface{} {
 	return v.extraProperties
 }
 
 func (v *ValueReceiptSyncResponse) UnmarshalJSON(data []byte) error {
-	type unmarshaler ValueReceiptSyncResponse
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
+	type embed ValueReceiptSyncResponse
+	var unmarshaler = struct {
+		embed
+		GeneratedAt *internal.DateTime `json:"generatedAt,omitempty"`
+	}{
+		embed: embed(*v),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
 		return err
 	}
-	*v = ValueReceiptSyncResponse(value)
+	*v = ValueReceiptSyncResponse(unmarshaler.embed)
+	v.GeneratedAt = unmarshaler.GeneratedAt.TimePtr()
 	extraProperties, err := internal.ExtractExtraProperties(data, *v)
 	if err != nil {
 		return err
@@ -682,6 +830,18 @@ func (v *ValueReceiptSyncResponse) UnmarshalJSON(data []byte) error {
 	v.extraProperties = extraProperties
 	v.rawJSON = json.RawMessage(data)
 	return nil
+}
+
+func (v *ValueReceiptSyncResponse) MarshalJSON() ([]byte, error) {
+	type embed ValueReceiptSyncResponse
+	var marshaler = struct {
+		embed
+		GeneratedAt *internal.DateTime `json:"generatedAt,omitempty"`
+	}{
+		embed:       embed(*v),
+		GeneratedAt: internal.NewOptionalDateTime(v.GeneratedAt),
+	}
+	return json.Marshal(marshaler)
 }
 
 func (v *ValueReceiptSyncResponse) String() string {
@@ -716,61 +876,6 @@ func NewListValueReceiptsRequestArchivedFromString(s string) (ListValueReceiptsR
 
 func (l ListValueReceiptsRequestArchived) Ptr() *ListValueReceiptsRequestArchived {
 	return &l
-}
-
-// Mutually exclusive with orderId. Provide at most one.
-type SyncValueReceiptRequestProduct struct {
-	ProductID string  `json:"productId" url:"productId"`
-	Currency  *string `json:"currency,omitempty" url:"currency,omitempty"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (s *SyncValueReceiptRequestProduct) GetProductID() string {
-	if s == nil {
-		return ""
-	}
-	return s.ProductID
-}
-
-func (s *SyncValueReceiptRequestProduct) GetCurrency() *string {
-	if s == nil {
-		return nil
-	}
-	return s.Currency
-}
-
-func (s *SyncValueReceiptRequestProduct) GetExtraProperties() map[string]interface{} {
-	return s.extraProperties
-}
-
-func (s *SyncValueReceiptRequestProduct) UnmarshalJSON(data []byte) error {
-	type unmarshaler SyncValueReceiptRequestProduct
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*s = SyncValueReceiptRequestProduct(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *s)
-	if err != nil {
-		return err
-	}
-	s.extraProperties = extraProperties
-	s.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (s *SyncValueReceiptRequestProduct) String() string {
-	if len(s.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(s); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", s)
 }
 
 type UnarchiveValueReceiptRequest struct {

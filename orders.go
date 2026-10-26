@@ -28,16 +28,16 @@ type CreateOrderRequest struct {
 	SubscriptionTerms *int                `json:"subscriptionTerms,omitempty" url:"-"`
 	CreationState     *OrderCreationState `json:"creationState,omitempty" url:"-"`
 	// Day of month for billing anchor (1-31). Defaults to start date day if not provided.
-	BillingAnchor            *int                           `json:"billingAnchor,omitempty" url:"-"`
-	PaymentTerms             *string                        `json:"paymentTerms,omitempty" url:"-"`
-	ExternalID               *string                        `json:"externalId,omitempty" url:"-"`
-	Metadata                 map[string]interface{}         `json:"metadata,omitempty" url:"-"`
-	Currency                 *string                        `json:"currency,omitempty" url:"-"`
-	AutoPostInvoices         *bool                          `json:"autoPostInvoices,omitempty" url:"-"`
-	AutoSendBillingEmails    *bool                          `json:"autoSendBillingEmails,omitempty" url:"-"`
-	AutoSendPaymentEmails    *bool                          `json:"autoSendPaymentEmails,omitempty" url:"-"`
-	Lines                    []*CreateOrderLineRequest      `json:"lines,omitempty" url:"-"`
-	BillingFrequencyOverride *OrderBillingFrequencyOverride `json:"billingFrequencyOverride,omitempty" url:"-"`
+	BillingAnchor            *int                            `json:"billingAnchor,omitempty" url:"-"`
+	PaymentTerms             *CreateOrderRequestPaymentTerms `json:"paymentTerms,omitempty" url:"-"`
+	ExternalID               *string                         `json:"externalId,omitempty" url:"-"`
+	Metadata                 map[string]interface{}          `json:"metadata,omitempty" url:"-"`
+	Currency                 *string                         `json:"currency,omitempty" url:"-"`
+	AutoPostInvoices         *bool                           `json:"autoPostInvoices,omitempty" url:"-"`
+	AutoSendBillingEmails    *bool                           `json:"autoSendBillingEmails,omitempty" url:"-"`
+	AutoSendPaymentEmails    *bool                           `json:"autoSendPaymentEmails,omitempty" url:"-"`
+	Lines                    []*CreateOrderLineRequest       `json:"lines,omitempty" url:"-"`
+	BillingFrequencyOverride *OrderBillingFrequencyOverride  `json:"billingFrequencyOverride,omitempty" url:"-"`
 	// Purchase order number printed on invoices generated from this order.
 	PurchaseOrderReference *string `json:"purchaseOrderReference,omitempty" url:"-"`
 }
@@ -223,19 +223,24 @@ type CreateOrderLineAttributeRequestPricing struct {
 	EventName  *string                                          `json:"eventName,omitempty" url:"eventName,omitempty"`
 	ChargeType CreateOrderLineAttributeRequestPricingChargeType `json:"chargeType" url:"chargeType"`
 	// Single flat price point for this order attribute override. Do not send a currency-keyed map here.
-	PricePoints                  *CreateOrderLineAttributeRequestPricingPricePoints              `json:"pricePoints" url:"pricePoints"`
-	PricingModel                 CreateOrderLineAttributeRequestPricingPricingModel              `json:"pricingModel" url:"pricingModel"`
-	BillingFrequency             *CreateOrderLineAttributeRequestPricingBillingFrequency         `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
-	BillingFrequencyCustomMonths *int                                                            `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *CreateOrderLineAttributeRequestPricingBillingType              `json:"billingType,omitempty" url:"billingType,omitempty"`
-	SignalType                   *CreateOrderLineAttributeRequestPricingSignalType               `json:"signalType,omitempty" url:"signalType,omitempty"`
-	CreditsCurrencyID            *string                                                         `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
-	CreditCost                   *float64                                                        `json:"creditCost,omitempty" url:"creditCost,omitempty"`
-	OverageUnitPrice             *float64                                                        `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
-	CreditRolloverAmount         *float64                                                        `json:"creditRolloverAmount,omitempty" url:"creditRolloverAmount,omitempty"`
-	CreditBenefits               []*CreateOrderLineAttributeRequestPricingCreditBenefitsItem     `json:"creditBenefits,omitempty" url:"creditBenefits,omitempty"`
-	PricingInput                 *CreateOrderLineAttributeRequestPricingPricingInput             `json:"pricingInput,omitempty" url:"pricingInput,omitempty"`
-	CreditUnitBrackets           []*CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem `json:"creditUnitBrackets,omitempty" url:"creditUnitBrackets,omitempty"`
+	PricePoints                  *CreateOrderLineAttributeRequestPricingPricePoints      `json:"pricePoints" url:"pricePoints"`
+	PricingModel                 CreateOrderLineAttributeRequestPricingPricingModel      `json:"pricingModel" url:"pricingModel"`
+	BillingFrequency             *CreateOrderLineAttributeRequestPricingBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingFrequencyCustomMonths *int                                                    `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	// When the charge is billed. A usage charge must use arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time charge.
+	BillingType       *CreateOrderLineAttributeRequestPricingBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	SignalType        *CreateOrderLineAttributeRequestPricingSignalType  `json:"signalType,omitempty" url:"signalType,omitempty"`
+	CreditsCurrencyID *string                                            `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
+	CreditCost       *float64 `json:"creditCost,omitempty" url:"creditCost,omitempty"`
+	OverageUnitPrice *int     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
+	CreditRolloverAmount *float64                                                        `json:"creditRolloverAmount,omitempty" url:"creditRolloverAmount,omitempty"`
+	CreditBenefits       []*CreateOrderLineAttributeRequestPricingCreditBenefitsItem     `json:"creditBenefits,omitempty" url:"creditBenefits,omitempty"`
+	PricingInput         *CreateOrderLineAttributeRequestPricingPricingInput             `json:"pricingInput,omitempty" url:"pricingInput,omitempty"`
+	CreditUnitBrackets   []*CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem `json:"creditUnitBrackets,omitempty" url:"creditUnitBrackets,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -311,11 +316,18 @@ func (c *CreateOrderLineAttributeRequestPricing) GetCreditCost() *float64 {
 	return c.CreditCost
 }
 
-func (c *CreateOrderLineAttributeRequestPricing) GetOverageUnitPrice() *float64 {
+func (c *CreateOrderLineAttributeRequestPricing) GetOverageUnitPrice() *int {
 	if c == nil {
 		return nil
 	}
 	return c.OverageUnitPrice
+}
+
+func (c *CreateOrderLineAttributeRequestPricing) GetOverageUnitPrices() map[string]*int {
+	if c == nil {
+		return nil
+	}
+	return c.OverageUnitPrices
 }
 
 func (c *CreateOrderLineAttributeRequestPricing) GetCreditRolloverAmount() *float64 {
@@ -409,6 +421,7 @@ func (c CreateOrderLineAttributeRequestPricingBillingFrequency) Ptr() *CreateOrd
 	return &c
 }
 
+// When the charge is billed. A usage charge must use arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time charge.
 type CreateOrderLineAttributeRequestPricingBillingType string
 
 const (
@@ -460,12 +473,17 @@ func (c CreateOrderLineAttributeRequestPricingChargeType) Ptr() *CreateOrderLine
 }
 
 type CreateOrderLineAttributeRequestPricingCreditBenefitsItem struct {
-	ID                   string                                                                        `json:"id" url:"id"`
-	CreditsCurrencyID    *string                                                                       `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
-	Recipient            *CreateOrderLineAttributeRequestPricingCreditBenefitsItemRecipient            `json:"recipient,omitempty" url:"recipient,omitempty"`
-	Amount               float64                                                                       `json:"amount" url:"amount"`
+	ID                string                                                             `json:"id" url:"id"`
+	CreditsCurrencyID *string                                                            `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	Recipient         *CreateOrderLineAttributeRequestPricingCreditBenefitsItemRecipient `json:"recipient,omitempty" url:"recipient,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
+	Amount           float64 `json:"amount" url:"amount"`
+	OverageUnitPrice *int    `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
 	RolloverAmount       *float64                                                                      `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
-	RolloverDuration     *float64                                                                      `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDuration     *int                                                                          `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
 	RolloverDurationUnit *CreateOrderLineAttributeRequestPricingCreditBenefitsItemRolloverDurationUnit `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
 	AllocationCadence    *CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence    `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
 	CreditGrantTiming    *CreateOrderLineAttributeRequestPricingCreditBenefitsItemCreditGrantTiming    `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
@@ -502,6 +520,20 @@ func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetAmount() f
 	return c.Amount
 }
 
+func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetOverageUnitPrice() *int {
+	if c == nil {
+		return nil
+	}
+	return c.OverageUnitPrice
+}
+
+func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetOverageUnitPrices() map[string]*int {
+	if c == nil {
+		return nil
+	}
+	return c.OverageUnitPrices
+}
+
 func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetRolloverAmount() *float64 {
 	if c == nil {
 		return nil
@@ -509,7 +541,7 @@ func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetRolloverAm
 	return c.RolloverAmount
 }
 
-func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetRolloverDuration() *float64 {
+func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetRolloverDuration() *int {
 	if c == nil {
 		return nil
 	}
@@ -572,8 +604,10 @@ func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) String() stri
 type CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence string
 
 const (
-	CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceUpfront CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence = "upfront"
-	CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceMonthly CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence = "monthly"
+	CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceUpfront      CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence = "upfront"
+	CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceMonthly      CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence = "monthly"
+	CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceQuarterly    CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence = "quarterly"
+	CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceSemiAnnually CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence = "semi_annually"
 )
 
 func NewCreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceFromString(s string) (CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence, error) {
@@ -582,6 +616,10 @@ func NewCreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenc
 		return CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceUpfront, nil
 	case "monthly":
 		return CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceMonthly, nil
+	case "quarterly":
+		return CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceQuarterly, nil
+	case "semi_annually":
+		return CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadenceSemiAnnually, nil
 	}
 	var t CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -661,8 +699,11 @@ func (c CreateOrderLineAttributeRequestPricingCreditBenefitsItemRolloverDuration
 }
 
 type CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem struct {
-	UpTo        *int `json:"upTo,omitempty" url:"upTo,omitempty"`
-	CreditUnits int  `json:"creditUnits" url:"creditUnits"`
+	UpTo *int `json:"upTo,omitempty" url:"upTo,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
+	CreditUnits float64 `json:"creditUnits" url:"creditUnits"`
+	// Credits burned per unit in this band (graduated), instead of the flat creditUnits per signal. Brackets must be all flat or all graduated. Requires the graduated-credit-brackets flag.
+	CreditUnitsPerUnit *float64 `json:"creditUnitsPerUnit,omitempty" url:"creditUnitsPerUnit,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -675,11 +716,18 @@ func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetUpTo()
 	return c.UpTo
 }
 
-func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetCreditUnits() int {
+func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetCreditUnits() float64 {
 	if c == nil {
 		return 0
 	}
 	return c.CreditUnits
+}
+
+func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetCreditUnitsPerUnit() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.CreditUnitsPerUnit
 }
 
 func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetExtraProperties() map[string]interface{} {
@@ -717,9 +765,9 @@ func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) String() 
 // Single flat price point for this order attribute override. Do not send a currency-keyed map here.
 type CreateOrderLineAttributeRequestPricingPricePoints struct {
 	Currency         *string                                                       `json:"currency,omitempty" url:"currency,omitempty"`
-	UnitPrice        float64                                                       `json:"unitPrice" url:"unitPrice"`
-	MinQuantity      *float64                                                      `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
-	IncludedQuantity *float64                                                      `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+	UnitPrice        int                                                           `json:"unitPrice" url:"unitPrice"`
+	MinQuantity      *int                                                          `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	IncludedQuantity *int                                                          `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
 	Tiers            []*CreateOrderLineAttributeRequestPricingPricePointsTiersItem `json:"tiers,omitempty" url:"tiers,omitempty"`
 
 	extraProperties map[string]interface{}
@@ -733,21 +781,21 @@ func (c *CreateOrderLineAttributeRequestPricingPricePoints) GetCurrency() *strin
 	return c.Currency
 }
 
-func (c *CreateOrderLineAttributeRequestPricingPricePoints) GetUnitPrice() float64 {
+func (c *CreateOrderLineAttributeRequestPricingPricePoints) GetUnitPrice() int {
 	if c == nil {
 		return 0
 	}
 	return c.UnitPrice
 }
 
-func (c *CreateOrderLineAttributeRequestPricingPricePoints) GetMinQuantity() *float64 {
+func (c *CreateOrderLineAttributeRequestPricingPricePoints) GetMinQuantity() *int {
 	if c == nil {
 		return nil
 	}
 	return c.MinQuantity
 }
 
-func (c *CreateOrderLineAttributeRequestPricingPricePoints) GetIncludedQuantity() *float64 {
+func (c *CreateOrderLineAttributeRequestPricingPricePoints) GetIncludedQuantity() *int {
 	if c == nil {
 		return nil
 	}
@@ -794,19 +842,19 @@ func (c *CreateOrderLineAttributeRequestPricingPricePoints) String() string {
 }
 
 type CreateOrderLineAttributeRequestPricingPricePointsTiersItem struct {
-	FlatAmount      *float64                                                                   `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	FlatAmount      *int                                                                       `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
 	Index           *float64                                                                   `json:"index,omitempty" url:"index,omitempty"`
-	LowerBound      *float64                                                                   `json:"lowerBound,omitempty" url:"lowerBound,omitempty"`
-	Number          *float64                                                                   `json:"number,omitempty" url:"number,omitempty"`
+	LowerBound      *int                                                                       `json:"lowerBound,omitempty" url:"lowerBound,omitempty"`
+	Number          *int                                                                       `json:"number,omitempty" url:"number,omitempty"`
 	TierBillingType *CreateOrderLineAttributeRequestPricingPricePointsTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
-	UnitAmount      *float64                                                                   `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
-	UpperBound      *float64                                                                   `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+	UnitAmount      *int                                                                       `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound      *int                                                                       `json:"upperBound,omitempty" url:"upperBound,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetFlatAmount() *float64 {
+func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetFlatAmount() *int {
 	if c == nil {
 		return nil
 	}
@@ -820,14 +868,14 @@ func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetIndex() 
 	return c.Index
 }
 
-func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetLowerBound() *float64 {
+func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetLowerBound() *int {
 	if c == nil {
 		return nil
 	}
 	return c.LowerBound
 }
 
-func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetNumber() *float64 {
+func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetNumber() *int {
 	if c == nil {
 		return nil
 	}
@@ -841,14 +889,14 @@ func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetTierBill
 	return c.TierBillingType
 }
 
-func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetUnitAmount() *float64 {
+func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetUnitAmount() *int {
 	if c == nil {
 		return nil
 	}
 	return c.UnitAmount
 }
 
-func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetUpperBound() *float64 {
+func (c *CreateOrderLineAttributeRequestPricingPricePointsTiersItem) GetUpperBound() *int {
 	if c == nil {
 		return nil
 	}
@@ -1993,6 +2041,2691 @@ func (o *OrderSeatListResponse) String() string {
 	return fmt.Sprintf("%#v", o)
 }
 
+type ProvisionBillingFrequencyOverride struct {
+	Frequency    ProvisionBillingFrequencyOverrideFrequency `json:"frequency" url:"frequency"`
+	CustomMonths *int                                       `json:"customMonths,omitempty" url:"customMonths,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionBillingFrequencyOverride) GetFrequency() ProvisionBillingFrequencyOverrideFrequency {
+	if p == nil {
+		return ""
+	}
+	return p.Frequency
+}
+
+func (p *ProvisionBillingFrequencyOverride) GetCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.CustomMonths
+}
+
+func (p *ProvisionBillingFrequencyOverride) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionBillingFrequencyOverride) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionBillingFrequencyOverride
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionBillingFrequencyOverride(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionBillingFrequencyOverride) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionBillingFrequencyOverrideFrequency string
+
+const (
+	ProvisionBillingFrequencyOverrideFrequencyMonthly      ProvisionBillingFrequencyOverrideFrequency = "monthly"
+	ProvisionBillingFrequencyOverrideFrequencyQuarterly    ProvisionBillingFrequencyOverrideFrequency = "quarterly"
+	ProvisionBillingFrequencyOverrideFrequencySemiAnnually ProvisionBillingFrequencyOverrideFrequency = "semiAnnually"
+	ProvisionBillingFrequencyOverrideFrequencyAnnual       ProvisionBillingFrequencyOverrideFrequency = "annual"
+	ProvisionBillingFrequencyOverrideFrequencyCustom       ProvisionBillingFrequencyOverrideFrequency = "custom"
+)
+
+func NewProvisionBillingFrequencyOverrideFrequencyFromString(s string) (ProvisionBillingFrequencyOverrideFrequency, error) {
+	switch s {
+	case "monthly":
+		return ProvisionBillingFrequencyOverrideFrequencyMonthly, nil
+	case "quarterly":
+		return ProvisionBillingFrequencyOverrideFrequencyQuarterly, nil
+	case "semiAnnually":
+		return ProvisionBillingFrequencyOverrideFrequencySemiAnnually, nil
+	case "annual":
+		return ProvisionBillingFrequencyOverrideFrequencyAnnual, nil
+	case "custom":
+		return ProvisionBillingFrequencyOverrideFrequencyCustom, nil
+	}
+	var t ProvisionBillingFrequencyOverrideFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionBillingFrequencyOverrideFrequency) Ptr() *ProvisionBillingFrequencyOverrideFrequency {
+	return &p
+}
+
+type ProvisionContact struct {
+	FirstName      *string                     `json:"firstName,omitempty" url:"firstName,omitempty"`
+	LastName       *string                     `json:"lastName,omitempty" url:"lastName,omitempty"`
+	Email          *string                     `json:"email,omitempty" url:"email,omitempty"`
+	Phone          *string                     `json:"phone,omitempty" url:"phone,omitempty"`
+	BillingAddress *ContactBillingAddress      `json:"billingAddress,omitempty" url:"billingAddress,omitempty"`
+	Roles          []ProvisionContactRolesItem `json:"roles,omitempty" url:"roles,omitempty"`
+	ExternalID     string                      `json:"externalId" url:"externalId"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionContact) GetFirstName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.FirstName
+}
+
+func (p *ProvisionContact) GetLastName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.LastName
+}
+
+func (p *ProvisionContact) GetEmail() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Email
+}
+
+func (p *ProvisionContact) GetPhone() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Phone
+}
+
+func (p *ProvisionContact) GetBillingAddress() *ContactBillingAddress {
+	if p == nil {
+		return nil
+	}
+	return p.BillingAddress
+}
+
+func (p *ProvisionContact) GetRoles() []ProvisionContactRolesItem {
+	if p == nil {
+		return nil
+	}
+	return p.Roles
+}
+
+func (p *ProvisionContact) GetExternalID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ExternalID
+}
+
+func (p *ProvisionContact) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionContact) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionContact
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionContact(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionContact) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionContactRolesItem string
+
+const (
+	ProvisionContactRolesItemBilling         ProvisionContactRolesItem = "BILLING"
+	ProvisionContactRolesItemAccountsPayable ProvisionContactRolesItem = "ACCOUNTS_PAYABLE"
+)
+
+func NewProvisionContactRolesItemFromString(s string) (ProvisionContactRolesItem, error) {
+	switch s {
+	case "BILLING":
+		return ProvisionContactRolesItemBilling, nil
+	case "ACCOUNTS_PAYABLE":
+		return ProvisionContactRolesItemAccountsPayable, nil
+	}
+	var t ProvisionContactRolesItem
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionContactRolesItem) Ptr() *ProvisionContactRolesItem {
+	return &p
+}
+
+type ProvisionCreatedContact struct {
+	ID string `json:"id" url:"id"`
+	// created: the entity was created; updated: the entity was updated
+	ProvisionStatus ProvisionCreatedContactProvisionStatus `json:"provisionStatus" url:"provisionStatus"`
+	CreatedAt       time.Time                              `json:"createdAt" url:"createdAt"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionCreatedContact) GetID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ID
+}
+
+func (p *ProvisionCreatedContact) GetProvisionStatus() ProvisionCreatedContactProvisionStatus {
+	if p == nil {
+		return ""
+	}
+	return p.ProvisionStatus
+}
+
+func (p *ProvisionCreatedContact) GetCreatedAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.CreatedAt
+}
+
+func (p *ProvisionCreatedContact) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionCreatedContact) UnmarshalJSON(data []byte) error {
+	type embed ProvisionCreatedContact
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = ProvisionCreatedContact(unmarshaler.embed)
+	p.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionCreatedContact) MarshalJSON() ([]byte, error) {
+	type embed ProvisionCreatedContact
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed:     embed(*p),
+		CreatedAt: internal.NewDateTime(p.CreatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (p *ProvisionCreatedContact) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// created: the entity was created; updated: the entity was updated
+type ProvisionCreatedContactProvisionStatus string
+
+const (
+	ProvisionCreatedContactProvisionStatusCreated ProvisionCreatedContactProvisionStatus = "created"
+	ProvisionCreatedContactProvisionStatusUpdated ProvisionCreatedContactProvisionStatus = "updated"
+)
+
+func NewProvisionCreatedContactProvisionStatusFromString(s string) (ProvisionCreatedContactProvisionStatus, error) {
+	switch s {
+	case "created":
+		return ProvisionCreatedContactProvisionStatusCreated, nil
+	case "updated":
+		return ProvisionCreatedContactProvisionStatusUpdated, nil
+	}
+	var t ProvisionCreatedContactProvisionStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionCreatedContactProvisionStatus) Ptr() *ProvisionCreatedContactProvisionStatus {
+	return &p
+}
+
+type ProvisionCreatedCustomer struct {
+	ID string `json:"id" url:"id"`
+	// created: the entity was created; updated: the entity was updated
+	ProvisionStatus ProvisionCreatedCustomerProvisionStatus `json:"provisionStatus" url:"provisionStatus"`
+	CreatedAt       time.Time                               `json:"createdAt" url:"createdAt"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionCreatedCustomer) GetID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ID
+}
+
+func (p *ProvisionCreatedCustomer) GetProvisionStatus() ProvisionCreatedCustomerProvisionStatus {
+	if p == nil {
+		return ""
+	}
+	return p.ProvisionStatus
+}
+
+func (p *ProvisionCreatedCustomer) GetCreatedAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.CreatedAt
+}
+
+func (p *ProvisionCreatedCustomer) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionCreatedCustomer) UnmarshalJSON(data []byte) error {
+	type embed ProvisionCreatedCustomer
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = ProvisionCreatedCustomer(unmarshaler.embed)
+	p.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionCreatedCustomer) MarshalJSON() ([]byte, error) {
+	type embed ProvisionCreatedCustomer
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed:     embed(*p),
+		CreatedAt: internal.NewDateTime(p.CreatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (p *ProvisionCreatedCustomer) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// created: the entity was created; updated: the entity was updated
+type ProvisionCreatedCustomerProvisionStatus string
+
+const (
+	ProvisionCreatedCustomerProvisionStatusCreated ProvisionCreatedCustomerProvisionStatus = "created"
+	ProvisionCreatedCustomerProvisionStatusUpdated ProvisionCreatedCustomerProvisionStatus = "updated"
+)
+
+func NewProvisionCreatedCustomerProvisionStatusFromString(s string) (ProvisionCreatedCustomerProvisionStatus, error) {
+	switch s {
+	case "created":
+		return ProvisionCreatedCustomerProvisionStatusCreated, nil
+	case "updated":
+		return ProvisionCreatedCustomerProvisionStatusUpdated, nil
+	}
+	var t ProvisionCreatedCustomerProvisionStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionCreatedCustomerProvisionStatus) Ptr() *ProvisionCreatedCustomerProvisionStatus {
+	return &p
+}
+
+type ProvisionCreatedOrder struct {
+	ID    string                       `json:"id" url:"id"`
+	Lines []*ProvisionCreatedOrderLine `json:"lines" url:"lines"`
+	// created: the entity was created; updated: the entity was updated
+	ProvisionStatus          ProvisionCreatedOrderProvisionStatus `json:"provisionStatus" url:"provisionStatus"`
+	CreatedAt                time.Time                            `json:"createdAt" url:"createdAt"`
+	BillingFrequencyOverride *ProvisionBillingFrequencyOverride   `json:"billingFrequencyOverride,omitempty" url:"billingFrequencyOverride,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionCreatedOrder) GetID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ID
+}
+
+func (p *ProvisionCreatedOrder) GetLines() []*ProvisionCreatedOrderLine {
+	if p == nil {
+		return nil
+	}
+	return p.Lines
+}
+
+func (p *ProvisionCreatedOrder) GetProvisionStatus() ProvisionCreatedOrderProvisionStatus {
+	if p == nil {
+		return ""
+	}
+	return p.ProvisionStatus
+}
+
+func (p *ProvisionCreatedOrder) GetCreatedAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.CreatedAt
+}
+
+func (p *ProvisionCreatedOrder) GetBillingFrequencyOverride() *ProvisionBillingFrequencyOverride {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyOverride
+}
+
+func (p *ProvisionCreatedOrder) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionCreatedOrder) UnmarshalJSON(data []byte) error {
+	type embed ProvisionCreatedOrder
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = ProvisionCreatedOrder(unmarshaler.embed)
+	p.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionCreatedOrder) MarshalJSON() ([]byte, error) {
+	type embed ProvisionCreatedOrder
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed:     embed(*p),
+		CreatedAt: internal.NewDateTime(p.CreatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (p *ProvisionCreatedOrder) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionCreatedOrderLine struct {
+	ID         string `json:"id" url:"id"`
+	ExternalID string `json:"externalId" url:"externalId"`
+	// created: the entity was created; updated: the entity was updated
+	ProvisionStatus ProvisionCreatedOrderLineProvisionStatus `json:"provisionStatus" url:"provisionStatus"`
+	CreatedAt       time.Time                                `json:"createdAt" url:"createdAt"`
+	LineType        ProvisionOrderLineType                   `json:"lineType" url:"lineType"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionCreatedOrderLine) GetID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ID
+}
+
+func (p *ProvisionCreatedOrderLine) GetExternalID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ExternalID
+}
+
+func (p *ProvisionCreatedOrderLine) GetProvisionStatus() ProvisionCreatedOrderLineProvisionStatus {
+	if p == nil {
+		return ""
+	}
+	return p.ProvisionStatus
+}
+
+func (p *ProvisionCreatedOrderLine) GetCreatedAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.CreatedAt
+}
+
+func (p *ProvisionCreatedOrderLine) GetLineType() ProvisionOrderLineType {
+	if p == nil {
+		return ""
+	}
+	return p.LineType
+}
+
+func (p *ProvisionCreatedOrderLine) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionCreatedOrderLine) UnmarshalJSON(data []byte) error {
+	type embed ProvisionCreatedOrderLine
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = ProvisionCreatedOrderLine(unmarshaler.embed)
+	p.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionCreatedOrderLine) MarshalJSON() ([]byte, error) {
+	type embed ProvisionCreatedOrderLine
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed:     embed(*p),
+		CreatedAt: internal.NewDateTime(p.CreatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (p *ProvisionCreatedOrderLine) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// created: the entity was created; updated: the entity was updated
+type ProvisionCreatedOrderLineProvisionStatus string
+
+const (
+	ProvisionCreatedOrderLineProvisionStatusCreated ProvisionCreatedOrderLineProvisionStatus = "created"
+	ProvisionCreatedOrderLineProvisionStatusUpdated ProvisionCreatedOrderLineProvisionStatus = "updated"
+)
+
+func NewProvisionCreatedOrderLineProvisionStatusFromString(s string) (ProvisionCreatedOrderLineProvisionStatus, error) {
+	switch s {
+	case "created":
+		return ProvisionCreatedOrderLineProvisionStatusCreated, nil
+	case "updated":
+		return ProvisionCreatedOrderLineProvisionStatusUpdated, nil
+	}
+	var t ProvisionCreatedOrderLineProvisionStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionCreatedOrderLineProvisionStatus) Ptr() *ProvisionCreatedOrderLineProvisionStatus {
+	return &p
+}
+
+// created: the entity was created; updated: the entity was updated
+type ProvisionCreatedOrderProvisionStatus string
+
+const (
+	ProvisionCreatedOrderProvisionStatusCreated ProvisionCreatedOrderProvisionStatus = "created"
+	ProvisionCreatedOrderProvisionStatusUpdated ProvisionCreatedOrderProvisionStatus = "updated"
+)
+
+func NewProvisionCreatedOrderProvisionStatusFromString(s string) (ProvisionCreatedOrderProvisionStatus, error) {
+	switch s {
+	case "created":
+		return ProvisionCreatedOrderProvisionStatusCreated, nil
+	case "updated":
+		return ProvisionCreatedOrderProvisionStatusUpdated, nil
+	}
+	var t ProvisionCreatedOrderProvisionStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionCreatedOrderProvisionStatus) Ptr() *ProvisionCreatedOrderProvisionStatus {
+	return &p
+}
+
+type ProvisionCreditBenefit struct {
+	// The `key` of the credits currency.
+	CreditsCurrencyKey string `json:"creditsCurrencyKey" url:"creditsCurrencyKey"`
+	// Credits granted per allocation period. Must be greater than 0, with at most 6 decimal places. For an unlimited grant, set `isInfiniteTotal: true` and send any positive amount.
+	Amount            float64                                  `json:"amount" url:"amount"`
+	Recipient         *ProvisionCreditBenefitRecipient         `json:"recipient,omitempty" url:"recipient,omitempty"`
+	IsInfiniteTotal   *bool                                    `json:"isInfiniteTotal,omitempty" url:"isInfiniteTotal,omitempty"`
+	AllocationCadence *ProvisionCreditBenefitAllocationCadence `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
+	CreditGrantTiming *ProvisionCreditBenefitCreditGrantTiming `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
+	OverageUnitPrice  *int                                     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
+	RolloverAmount       *float64                                    `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	RolloverDuration     *int                                        `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDurationUnit *ProvisionCreditBenefitRolloverDurationUnit `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
+	// When true, Paid adds a usage line to the order that draws down this credit currency: one credit for each signal whose event name is the `creditsCurrencyKey`. The line uses a product named `Paid Usage - <creditsCurrencyKey>`, with external ID `paid:usage:<creditsCurrencyKey>`, which Paid creates if it does not exist. An order gets one such line per credit currency, even when several benefits set this flag.
+	CreateUsageLine *bool `json:"createUsageLine,omitempty" url:"createUsageLine,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionCreditBenefit) GetCreditsCurrencyKey() string {
+	if p == nil {
+		return ""
+	}
+	return p.CreditsCurrencyKey
+}
+
+func (p *ProvisionCreditBenefit) GetAmount() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.Amount
+}
+
+func (p *ProvisionCreditBenefit) GetRecipient() *ProvisionCreditBenefitRecipient {
+	if p == nil {
+		return nil
+	}
+	return p.Recipient
+}
+
+func (p *ProvisionCreditBenefit) GetIsInfiniteTotal() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.IsInfiniteTotal
+}
+
+func (p *ProvisionCreditBenefit) GetAllocationCadence() *ProvisionCreditBenefitAllocationCadence {
+	if p == nil {
+		return nil
+	}
+	return p.AllocationCadence
+}
+
+func (p *ProvisionCreditBenefit) GetCreditGrantTiming() *ProvisionCreditBenefitCreditGrantTiming {
+	if p == nil {
+		return nil
+	}
+	return p.CreditGrantTiming
+}
+
+func (p *ProvisionCreditBenefit) GetOverageUnitPrice() *int {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrice
+}
+
+func (p *ProvisionCreditBenefit) GetOverageUnitPrices() map[string]*int {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrices
+}
+
+func (p *ProvisionCreditBenefit) GetRolloverAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverAmount
+}
+
+func (p *ProvisionCreditBenefit) GetRolloverDuration() *int {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverDuration
+}
+
+func (p *ProvisionCreditBenefit) GetRolloverDurationUnit() *ProvisionCreditBenefitRolloverDurationUnit {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverDurationUnit
+}
+
+func (p *ProvisionCreditBenefit) GetCreateUsageLine() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.CreateUsageLine
+}
+
+func (p *ProvisionCreditBenefit) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionCreditBenefit) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionCreditBenefit
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionCreditBenefit(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionCreditBenefit) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionCreditBenefitAllocationCadence string
+
+const (
+	ProvisionCreditBenefitAllocationCadenceUpfront      ProvisionCreditBenefitAllocationCadence = "upfront"
+	ProvisionCreditBenefitAllocationCadenceMonthly      ProvisionCreditBenefitAllocationCadence = "monthly"
+	ProvisionCreditBenefitAllocationCadenceQuarterly    ProvisionCreditBenefitAllocationCadence = "quarterly"
+	ProvisionCreditBenefitAllocationCadenceSemiAnnually ProvisionCreditBenefitAllocationCadence = "semi_annually"
+)
+
+func NewProvisionCreditBenefitAllocationCadenceFromString(s string) (ProvisionCreditBenefitAllocationCadence, error) {
+	switch s {
+	case "upfront":
+		return ProvisionCreditBenefitAllocationCadenceUpfront, nil
+	case "monthly":
+		return ProvisionCreditBenefitAllocationCadenceMonthly, nil
+	case "quarterly":
+		return ProvisionCreditBenefitAllocationCadenceQuarterly, nil
+	case "semi_annually":
+		return ProvisionCreditBenefitAllocationCadenceSemiAnnually, nil
+	}
+	var t ProvisionCreditBenefitAllocationCadence
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionCreditBenefitAllocationCadence) Ptr() *ProvisionCreditBenefitAllocationCadence {
+	return &p
+}
+
+type ProvisionCreditBenefitCreditGrantTiming string
+
+const (
+	ProvisionCreditBenefitCreditGrantTimingOnOrderActivation ProvisionCreditBenefitCreditGrantTiming = "on_order_activation"
+	ProvisionCreditBenefitCreditGrantTimingOnPayment         ProvisionCreditBenefitCreditGrantTiming = "on_payment"
+	ProvisionCreditBenefitCreditGrantTimingOnInvoicePosted   ProvisionCreditBenefitCreditGrantTiming = "on_invoice_posted"
+)
+
+func NewProvisionCreditBenefitCreditGrantTimingFromString(s string) (ProvisionCreditBenefitCreditGrantTiming, error) {
+	switch s {
+	case "on_order_activation":
+		return ProvisionCreditBenefitCreditGrantTimingOnOrderActivation, nil
+	case "on_payment":
+		return ProvisionCreditBenefitCreditGrantTimingOnPayment, nil
+	case "on_invoice_posted":
+		return ProvisionCreditBenefitCreditGrantTimingOnInvoicePosted, nil
+	}
+	var t ProvisionCreditBenefitCreditGrantTiming
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionCreditBenefitCreditGrantTiming) Ptr() *ProvisionCreditBenefitCreditGrantTiming {
+	return &p
+}
+
+type ProvisionCreditBenefitRecipient string
+
+const (
+	ProvisionCreditBenefitRecipientOrganization ProvisionCreditBenefitRecipient = "organization"
+	ProvisionCreditBenefitRecipientSeat         ProvisionCreditBenefitRecipient = "seat"
+)
+
+func NewProvisionCreditBenefitRecipientFromString(s string) (ProvisionCreditBenefitRecipient, error) {
+	switch s {
+	case "organization":
+		return ProvisionCreditBenefitRecipientOrganization, nil
+	case "seat":
+		return ProvisionCreditBenefitRecipientSeat, nil
+	}
+	var t ProvisionCreditBenefitRecipient
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionCreditBenefitRecipient) Ptr() *ProvisionCreditBenefitRecipient {
+	return &p
+}
+
+type ProvisionCreditBenefitRolloverDurationUnit string
+
+const (
+	ProvisionCreditBenefitRolloverDurationUnitDays   ProvisionCreditBenefitRolloverDurationUnit = "days"
+	ProvisionCreditBenefitRolloverDurationUnitMonths ProvisionCreditBenefitRolloverDurationUnit = "months"
+)
+
+func NewProvisionCreditBenefitRolloverDurationUnitFromString(s string) (ProvisionCreditBenefitRolloverDurationUnit, error) {
+	switch s {
+	case "days":
+		return ProvisionCreditBenefitRolloverDurationUnitDays, nil
+	case "months":
+		return ProvisionCreditBenefitRolloverDurationUnitMonths, nil
+	}
+	var t ProvisionCreditBenefitRolloverDurationUnit
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionCreditBenefitRolloverDurationUnit) Ptr() *ProvisionCreditBenefitRolloverDurationUnit {
+	return &p
+}
+
+type ProvisionCustomer struct {
+	Name           string                       `json:"name" url:"name"`
+	LegalName      *string                      `json:"legalName,omitempty" url:"legalName,omitempty"`
+	Email          *string                      `json:"email,omitempty" url:"email,omitempty"`
+	Phone          *string                      `json:"phone,omitempty" url:"phone,omitempty"`
+	Website        *string                      `json:"website,omitempty" url:"website,omitempty"`
+	BillingAddress *CustomerBillingAddressInput `json:"billingAddress,omitempty" url:"billingAddress,omitempty"`
+	// The customer state, `draft` or `active`. Defaults to `active`.
+	CreationState   *ProvisionCustomerCreationState `json:"creationState,omitempty" url:"creationState,omitempty"`
+	VatNumber       *string                         `json:"vatNumber,omitempty" url:"vatNumber,omitempty"`
+	Metadata        map[string]interface{}          `json:"metadata,omitempty" url:"metadata,omitempty"`
+	DefaultCurrency *string                         `json:"defaultCurrency,omitempty" url:"defaultCurrency,omitempty"`
+	ExternalID      string                          `json:"externalId" url:"externalId"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionCustomer) GetName() string {
+	if p == nil {
+		return ""
+	}
+	return p.Name
+}
+
+func (p *ProvisionCustomer) GetLegalName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.LegalName
+}
+
+func (p *ProvisionCustomer) GetEmail() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Email
+}
+
+func (p *ProvisionCustomer) GetPhone() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Phone
+}
+
+func (p *ProvisionCustomer) GetWebsite() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Website
+}
+
+func (p *ProvisionCustomer) GetBillingAddress() *CustomerBillingAddressInput {
+	if p == nil {
+		return nil
+	}
+	return p.BillingAddress
+}
+
+func (p *ProvisionCustomer) GetCreationState() *ProvisionCustomerCreationState {
+	if p == nil {
+		return nil
+	}
+	return p.CreationState
+}
+
+func (p *ProvisionCustomer) GetVatNumber() *string {
+	if p == nil {
+		return nil
+	}
+	return p.VatNumber
+}
+
+func (p *ProvisionCustomer) GetMetadata() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.Metadata
+}
+
+func (p *ProvisionCustomer) GetDefaultCurrency() *string {
+	if p == nil {
+		return nil
+	}
+	return p.DefaultCurrency
+}
+
+func (p *ProvisionCustomer) GetExternalID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ExternalID
+}
+
+func (p *ProvisionCustomer) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionCustomer) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionCustomer
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionCustomer(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionCustomer) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// The customer state, `draft` or `active`. Defaults to `active`.
+type ProvisionCustomerCreationState string
+
+const (
+	ProvisionCustomerCreationStateDraft  ProvisionCustomerCreationState = "draft"
+	ProvisionCustomerCreationStateActive ProvisionCustomerCreationState = "active"
+)
+
+func NewProvisionCustomerCreationStateFromString(s string) (ProvisionCustomerCreationState, error) {
+	switch s {
+	case "draft":
+		return ProvisionCustomerCreationStateDraft, nil
+	case "active":
+		return ProvisionCustomerCreationStateActive, nil
+	}
+	var t ProvisionCustomerCreationState
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionCustomerCreationState) Ptr() *ProvisionCustomerCreationState {
+	return &p
+}
+
+type ProvisionExternalReference struct {
+	// The system that sends the provision. Use `standard` for an integration you build yourself: it has no source-specific behaviour, and neither do `hubspot` and `salesbricks`. With `salesforce`, a recurring or seat-based line price is the value for the whole line term, and Paid bills it once, as one billing period that spans the line. For that reason `salesforce` cannot be combined with `order.billingFrequencyOverride`.
+	Source ProvisionExternalReferenceSource `json:"source" url:"source"`
+	// Free-form details from the source system, such as its record IDs. Paid stores the whole `externalReference` object, `source` included, on the order's `metadata` under the `externalReference` key. Each provision of the order replaces it, and other `metadata` keys are kept.
+	Metadata map[string]interface{} `json:"metadata,omitempty" url:"metadata,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionExternalReference) GetSource() ProvisionExternalReferenceSource {
+	if p == nil {
+		return ""
+	}
+	return p.Source
+}
+
+func (p *ProvisionExternalReference) GetMetadata() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.Metadata
+}
+
+func (p *ProvisionExternalReference) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionExternalReference) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionExternalReference
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionExternalReference(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionExternalReference) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// The system that sends the provision. Use `standard` for an integration you build yourself: it has no source-specific behaviour, and neither do `hubspot` and `salesbricks`. With `salesforce`, a recurring or seat-based line price is the value for the whole line term, and Paid bills it once, as one billing period that spans the line. For that reason `salesforce` cannot be combined with `order.billingFrequencyOverride`.
+type ProvisionExternalReferenceSource string
+
+const (
+	ProvisionExternalReferenceSourceSalesforce  ProvisionExternalReferenceSource = "salesforce"
+	ProvisionExternalReferenceSourceHubspot     ProvisionExternalReferenceSource = "hubspot"
+	ProvisionExternalReferenceSourceSalesbricks ProvisionExternalReferenceSource = "salesbricks"
+	ProvisionExternalReferenceSourceStandard    ProvisionExternalReferenceSource = "standard"
+)
+
+func NewProvisionExternalReferenceSourceFromString(s string) (ProvisionExternalReferenceSource, error) {
+	switch s {
+	case "salesforce":
+		return ProvisionExternalReferenceSourceSalesforce, nil
+	case "hubspot":
+		return ProvisionExternalReferenceSourceHubspot, nil
+	case "salesbricks":
+		return ProvisionExternalReferenceSourceSalesbricks, nil
+	case "standard":
+		return ProvisionExternalReferenceSourceStandard, nil
+	}
+	var t ProvisionExternalReferenceSource
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionExternalReferenceSource) Ptr() *ProvisionExternalReferenceSource {
+	return &p
+}
+
+// The order, matched by `externalId`. Its lines are set from this payload each time you provision it. A draft order can have no lines; an active order needs at least one.
+type ProvisionOrder struct {
+	// Currency code for the order, such as `USD`. A price point can set its own currency.
+	Currency  string     `json:"currency" url:"currency"`
+	StartDate time.Time  `json:"startDate" url:"startDate"`
+	EndDate   *time.Time `json:"endDate,omitempty" url:"endDate,omitempty"`
+	// Defaults to `active`, which activates the order and starts billing. Send `draft` to create or update the order without billing it; you can provision it again later with `active`. An active order cannot go back to `draft`.
+	Status                    *ProvisionOrderStatus              `json:"status,omitempty" url:"status,omitempty"`
+	BillingAnchor             *int                               `json:"billingAnchor,omitempty" url:"billingAnchor,omitempty"`
+	BillingCustomerExternalID *string                            `json:"billingCustomerExternalId,omitempty" url:"billingCustomerExternalId,omitempty"`
+	BillingContactExternalIDs []string                           `json:"billingContactExternalIds,omitempty" url:"billingContactExternalIds,omitempty"`
+	PaymentTerms              *ProvisionOrderPaymentTerms        `json:"paymentTerms,omitempty" url:"paymentTerms,omitempty"`
+	Name                      *string                            `json:"name,omitempty" url:"name,omitempty"`
+	ExternalID                string                             `json:"externalId" url:"externalId"`
+	Lines                     []*ProvisionOrderLine              `json:"lines" url:"lines"`
+	BillingFrequencyOverride  *ProvisionBillingFrequencyOverride `json:"billingFrequencyOverride,omitempty" url:"billingFrequencyOverride,omitempty"`
+	// For migrating an order that another system has already billed. ISO 8601 timestamp in UTC. Paid creates no invoices or payments for billing cycles that fall due on or before this time, and bills normally after it. Use it with a past `startDate` so the order does not bill again for periods the other system already billed.
+	HistoricalReplayUntil *time.Time `json:"historicalReplayUntil,omitempty" url:"historicalReplayUntil,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionOrder) GetCurrency() string {
+	if p == nil {
+		return ""
+	}
+	return p.Currency
+}
+
+func (p *ProvisionOrder) GetStartDate() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.StartDate
+}
+
+func (p *ProvisionOrder) GetEndDate() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.EndDate
+}
+
+func (p *ProvisionOrder) GetStatus() *ProvisionOrderStatus {
+	if p == nil {
+		return nil
+	}
+	return p.Status
+}
+
+func (p *ProvisionOrder) GetBillingAnchor() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingAnchor
+}
+
+func (p *ProvisionOrder) GetBillingCustomerExternalID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.BillingCustomerExternalID
+}
+
+func (p *ProvisionOrder) GetBillingContactExternalIDs() []string {
+	if p == nil {
+		return nil
+	}
+	return p.BillingContactExternalIDs
+}
+
+func (p *ProvisionOrder) GetPaymentTerms() *ProvisionOrderPaymentTerms {
+	if p == nil {
+		return nil
+	}
+	return p.PaymentTerms
+}
+
+func (p *ProvisionOrder) GetName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Name
+}
+
+func (p *ProvisionOrder) GetExternalID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ExternalID
+}
+
+func (p *ProvisionOrder) GetLines() []*ProvisionOrderLine {
+	if p == nil {
+		return nil
+	}
+	return p.Lines
+}
+
+func (p *ProvisionOrder) GetBillingFrequencyOverride() *ProvisionBillingFrequencyOverride {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyOverride
+}
+
+func (p *ProvisionOrder) GetHistoricalReplayUntil() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.HistoricalReplayUntil
+}
+
+func (p *ProvisionOrder) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionOrder) UnmarshalJSON(data []byte) error {
+	type embed ProvisionOrder
+	var unmarshaler = struct {
+		embed
+		StartDate             *internal.DateTime `json:"startDate"`
+		EndDate               *internal.DateTime `json:"endDate,omitempty"`
+		HistoricalReplayUntil *internal.DateTime `json:"historicalReplayUntil,omitempty"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = ProvisionOrder(unmarshaler.embed)
+	p.StartDate = unmarshaler.StartDate.Time()
+	p.EndDate = unmarshaler.EndDate.TimePtr()
+	p.HistoricalReplayUntil = unmarshaler.HistoricalReplayUntil.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionOrder) MarshalJSON() ([]byte, error) {
+	type embed ProvisionOrder
+	var marshaler = struct {
+		embed
+		StartDate             *internal.DateTime `json:"startDate"`
+		EndDate               *internal.DateTime `json:"endDate,omitempty"`
+		HistoricalReplayUntil *internal.DateTime `json:"historicalReplayUntil,omitempty"`
+	}{
+		embed:                 embed(*p),
+		StartDate:             internal.NewDateTime(p.StartDate),
+		EndDate:               internal.NewOptionalDateTime(p.EndDate),
+		HistoricalReplayUntil: internal.NewOptionalDateTime(p.HistoricalReplayUntil),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (p *ProvisionOrder) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionOrderLine struct {
+	Product     *ProvisionProduct `json:"product" url:"product"`
+	Name        *string           `json:"name,omitempty" url:"name,omitempty"`
+	Description *string           `json:"description,omitempty" url:"description,omitempty"`
+	StartDate   time.Time         `json:"startDate" url:"startDate"`
+	EndDate     *time.Time        `json:"endDate,omitempty" url:"endDate,omitempty"`
+	// If not provided, pricing is pulled from the provisioned product attributes.
+	Attributes []*ProvisionOrderLineAttribute  `json:"attributes,omitempty" url:"attributes,omitempty"`
+	ExternalID string                          `json:"externalId" url:"externalId"`
+	LineType   *WritableProvisionOrderLineType `json:"lineType,omitempty" url:"lineType,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionOrderLine) GetProduct() *ProvisionProduct {
+	if p == nil {
+		return nil
+	}
+	return p.Product
+}
+
+func (p *ProvisionOrderLine) GetName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Name
+}
+
+func (p *ProvisionOrderLine) GetDescription() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Description
+}
+
+func (p *ProvisionOrderLine) GetStartDate() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.StartDate
+}
+
+func (p *ProvisionOrderLine) GetEndDate() *time.Time {
+	if p == nil {
+		return nil
+	}
+	return p.EndDate
+}
+
+func (p *ProvisionOrderLine) GetAttributes() []*ProvisionOrderLineAttribute {
+	if p == nil {
+		return nil
+	}
+	return p.Attributes
+}
+
+func (p *ProvisionOrderLine) GetExternalID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ExternalID
+}
+
+func (p *ProvisionOrderLine) GetLineType() *WritableProvisionOrderLineType {
+	if p == nil {
+		return nil
+	}
+	return p.LineType
+}
+
+func (p *ProvisionOrderLine) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionOrderLine) UnmarshalJSON(data []byte) error {
+	type embed ProvisionOrderLine
+	var unmarshaler = struct {
+		embed
+		StartDate *internal.DateTime `json:"startDate"`
+		EndDate   *internal.DateTime `json:"endDate,omitempty"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = ProvisionOrderLine(unmarshaler.embed)
+	p.StartDate = unmarshaler.StartDate.Time()
+	p.EndDate = unmarshaler.EndDate.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionOrderLine) MarshalJSON() ([]byte, error) {
+	type embed ProvisionOrderLine
+	var marshaler = struct {
+		embed
+		StartDate *internal.DateTime `json:"startDate"`
+		EndDate   *internal.DateTime `json:"endDate,omitempty"`
+	}{
+		embed:     embed(*p),
+		StartDate: internal.NewDateTime(p.StartDate),
+		EndDate:   internal.NewOptionalDateTime(p.EndDate),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (p *ProvisionOrderLine) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionOrderLineAttribute struct {
+	Name     string `json:"name" url:"name"`
+	Quantity *int   `json:"quantity,omitempty" url:"quantity,omitempty"`
+	// When omitted, the line uses the pricing of the product attribute with the same name, unchanged. This includes pricing models that this request cannot express. Send pricing only to override the catalog price for this order.
+	Pricing *ProvisionOrderLineAttributePricing `json:"pricing,omitempty" url:"pricing,omitempty"`
+	// Overrides the credit amount on every credit benefit this attribute carries onto the order line. Paid grants creditAmount × quantity per allocation. When omitted, the product attribute's configured benefit amount applies.
+	CreditAmount *float64 `json:"creditAmount,omitempty" url:"creditAmount,omitempty"`
+	// Overrides the overage unit price, in the currency's minor units, for credits consumed beyond the granted balance, on this attribute only: applied to every credit benefit this attribute carries onto the order line, or to the attribute's pricing when it carries no benefits, and it replaces this attribute's per-currency price for the order currency, so it is what this attribute bills in every currency. Other attributes on the order that price the same credits currency keep their own overage prices, and the invoice bills the highest entry for its currency across all of them. When omitted, the product attribute's configured overage applies; null clears it, so the attribute takes its order-currency per-currency price, or none if it has no map.
+	OverageUnitPrice *int `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overrides this attribute's per-currency overage prices, in each currency's minor units keyed by uppercase ISO 4217 currency code, wherever overageUnitPrice would land. An entry for the order currency also becomes the attribute's overageUnitPrice. Keys must be currencies the product is priced in. When omitted, the product attribute's configured per-currency prices apply; null removes them, leaving only the scalar overage.
+	OverageUnitPrices map[string]*int                          `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	DiscountType      *ProvisionOrderLineAttributeDiscountType `json:"discountType,omitempty" url:"discountType,omitempty"`
+	// Percentage discount, greater than 0 and at most 100, with at most 2 decimal places. Required when `discountType` is `percentage`.
+	DiscountPercent *float64 `json:"discountPercent,omitempty" url:"discountPercent,omitempty"`
+	// Fixed discount in minor currency units (cents). Required when `discountType` is `fixed`.
+	DiscountAmount *int `json:"discountAmount,omitempty" url:"discountAmount,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionOrderLineAttribute) GetName() string {
+	if p == nil {
+		return ""
+	}
+	return p.Name
+}
+
+func (p *ProvisionOrderLineAttribute) GetQuantity() *int {
+	if p == nil {
+		return nil
+	}
+	return p.Quantity
+}
+
+func (p *ProvisionOrderLineAttribute) GetPricing() *ProvisionOrderLineAttributePricing {
+	if p == nil {
+		return nil
+	}
+	return p.Pricing
+}
+
+func (p *ProvisionOrderLineAttribute) GetCreditAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.CreditAmount
+}
+
+func (p *ProvisionOrderLineAttribute) GetOverageUnitPrice() *int {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrice
+}
+
+func (p *ProvisionOrderLineAttribute) GetOverageUnitPrices() map[string]*int {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrices
+}
+
+func (p *ProvisionOrderLineAttribute) GetDiscountType() *ProvisionOrderLineAttributeDiscountType {
+	if p == nil {
+		return nil
+	}
+	return p.DiscountType
+}
+
+func (p *ProvisionOrderLineAttribute) GetDiscountPercent() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.DiscountPercent
+}
+
+func (p *ProvisionOrderLineAttribute) GetDiscountAmount() *int {
+	if p == nil {
+		return nil
+	}
+	return p.DiscountAmount
+}
+
+func (p *ProvisionOrderLineAttribute) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionOrderLineAttribute) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionOrderLineAttribute
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionOrderLineAttribute(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionOrderLineAttribute) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionOrderLineAttributeDiscountType string
+
+const (
+	ProvisionOrderLineAttributeDiscountTypePercentage ProvisionOrderLineAttributeDiscountType = "percentage"
+	ProvisionOrderLineAttributeDiscountTypeFixed      ProvisionOrderLineAttributeDiscountType = "fixed"
+)
+
+func NewProvisionOrderLineAttributeDiscountTypeFromString(s string) (ProvisionOrderLineAttributeDiscountType, error) {
+	switch s {
+	case "percentage":
+		return ProvisionOrderLineAttributeDiscountTypePercentage, nil
+	case "fixed":
+		return ProvisionOrderLineAttributeDiscountTypeFixed, nil
+	}
+	var t ProvisionOrderLineAttributeDiscountType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionOrderLineAttributeDiscountType) Ptr() *ProvisionOrderLineAttributeDiscountType {
+	return &p
+}
+
+// When omitted, the line uses the pricing of the product attribute with the same name, unchanged. This includes pricing models that this request cannot express. Send pricing only to override the catalog price for this order.
+type ProvisionOrderLineAttributePricing struct {
+	EventName                    *string                                             `json:"eventName,omitempty" url:"eventName,omitempty"`
+	ChargeType                   ProvisionOrderLineAttributePricingChargeType        `json:"chargeType" url:"chargeType"`
+	PricePoints                  *ProvisionOrderLineAttributePricingPricePoints      `json:"pricePoints" url:"pricePoints"`
+	PricingModel                 ProvisionOrderLineAttributePricingPricingModel      `json:"pricingModel" url:"pricingModel"`
+	BillingFrequency             *ProvisionOrderLineAttributePricingBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingFrequencyCustomMonths *int                                                `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	// When the charge is billed. Usage charges must use arrears.
+	BillingType *ProvisionOrderLineAttributePricingBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionOrderLineAttributePricing) GetEventName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.EventName
+}
+
+func (p *ProvisionOrderLineAttributePricing) GetChargeType() ProvisionOrderLineAttributePricingChargeType {
+	if p == nil {
+		return ""
+	}
+	return p.ChargeType
+}
+
+func (p *ProvisionOrderLineAttributePricing) GetPricePoints() *ProvisionOrderLineAttributePricingPricePoints {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProvisionOrderLineAttributePricing) GetPricingModel() ProvisionOrderLineAttributePricingPricingModel {
+	if p == nil {
+		return ""
+	}
+	return p.PricingModel
+}
+
+func (p *ProvisionOrderLineAttributePricing) GetBillingFrequency() *ProvisionOrderLineAttributePricingBillingFrequency {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProvisionOrderLineAttributePricing) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProvisionOrderLineAttributePricing) GetBillingType() *ProvisionOrderLineAttributePricingBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProvisionOrderLineAttributePricing) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionOrderLineAttributePricing) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionOrderLineAttributePricing
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionOrderLineAttributePricing(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionOrderLineAttributePricing) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionOrderLineAttributePricingBillingFrequency string
+
+const (
+	ProvisionOrderLineAttributePricingBillingFrequencyMonthly      ProvisionOrderLineAttributePricingBillingFrequency = "monthly"
+	ProvisionOrderLineAttributePricingBillingFrequencyQuarterly    ProvisionOrderLineAttributePricingBillingFrequency = "quarterly"
+	ProvisionOrderLineAttributePricingBillingFrequencySemiAnnually ProvisionOrderLineAttributePricingBillingFrequency = "semiAnnually"
+	ProvisionOrderLineAttributePricingBillingFrequencyAnnual       ProvisionOrderLineAttributePricingBillingFrequency = "annual"
+	ProvisionOrderLineAttributePricingBillingFrequencyCustom       ProvisionOrderLineAttributePricingBillingFrequency = "custom"
+)
+
+func NewProvisionOrderLineAttributePricingBillingFrequencyFromString(s string) (ProvisionOrderLineAttributePricingBillingFrequency, error) {
+	switch s {
+	case "monthly":
+		return ProvisionOrderLineAttributePricingBillingFrequencyMonthly, nil
+	case "quarterly":
+		return ProvisionOrderLineAttributePricingBillingFrequencyQuarterly, nil
+	case "semiAnnually":
+		return ProvisionOrderLineAttributePricingBillingFrequencySemiAnnually, nil
+	case "annual":
+		return ProvisionOrderLineAttributePricingBillingFrequencyAnnual, nil
+	case "custom":
+		return ProvisionOrderLineAttributePricingBillingFrequencyCustom, nil
+	}
+	var t ProvisionOrderLineAttributePricingBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionOrderLineAttributePricingBillingFrequency) Ptr() *ProvisionOrderLineAttributePricingBillingFrequency {
+	return &p
+}
+
+// When the charge is billed. Usage charges must use arrears.
+type ProvisionOrderLineAttributePricingBillingType string
+
+const (
+	ProvisionOrderLineAttributePricingBillingTypeAdvance ProvisionOrderLineAttributePricingBillingType = "advance"
+	ProvisionOrderLineAttributePricingBillingTypeArrears ProvisionOrderLineAttributePricingBillingType = "arrears"
+)
+
+func NewProvisionOrderLineAttributePricingBillingTypeFromString(s string) (ProvisionOrderLineAttributePricingBillingType, error) {
+	switch s {
+	case "advance":
+		return ProvisionOrderLineAttributePricingBillingTypeAdvance, nil
+	case "arrears":
+		return ProvisionOrderLineAttributePricingBillingTypeArrears, nil
+	}
+	var t ProvisionOrderLineAttributePricingBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionOrderLineAttributePricingBillingType) Ptr() *ProvisionOrderLineAttributePricingBillingType {
+	return &p
+}
+
+type ProvisionOrderLineAttributePricingChargeType string
+
+const (
+	ProvisionOrderLineAttributePricingChargeTypeUsage     ProvisionOrderLineAttributePricingChargeType = "usage"
+	ProvisionOrderLineAttributePricingChargeTypeRecurring ProvisionOrderLineAttributePricingChargeType = "recurring"
+	ProvisionOrderLineAttributePricingChargeTypeOneTime   ProvisionOrderLineAttributePricingChargeType = "oneTime"
+	ProvisionOrderLineAttributePricingChargeTypeSeatBased ProvisionOrderLineAttributePricingChargeType = "seatBased"
+)
+
+func NewProvisionOrderLineAttributePricingChargeTypeFromString(s string) (ProvisionOrderLineAttributePricingChargeType, error) {
+	switch s {
+	case "usage":
+		return ProvisionOrderLineAttributePricingChargeTypeUsage, nil
+	case "recurring":
+		return ProvisionOrderLineAttributePricingChargeTypeRecurring, nil
+	case "oneTime":
+		return ProvisionOrderLineAttributePricingChargeTypeOneTime, nil
+	case "seatBased":
+		return ProvisionOrderLineAttributePricingChargeTypeSeatBased, nil
+	}
+	var t ProvisionOrderLineAttributePricingChargeType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionOrderLineAttributePricingChargeType) Ptr() *ProvisionOrderLineAttributePricingChargeType {
+	return &p
+}
+
+type ProvisionOrderLineAttributePricingPricePoints struct {
+	Currency *string `json:"currency,omitempty" url:"currency,omitempty"`
+	// Price per unit, as a whole number in minor currency units (cents): 4900 is $49.00. Must be 0 or more. For a discount or credit, send a positive price on a line with `lineType: CREDIT`.
+	UnitPrice int `json:"unitPrice" url:"unitPrice"`
+	// Optional pricing tiers for volume/graduated pricing models. When provided, overrides the default flat unitPrice structure.
+	Tiers []*ProvisionOrderLineAttributePricingPricePointsTiersItem `json:"tiers,omitempty" url:"tiers,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePoints) GetCurrency() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Currency
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePoints) GetUnitPrice() int {
+	if p == nil {
+		return 0
+	}
+	return p.UnitPrice
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePoints) GetTiers() []*ProvisionOrderLineAttributePricingPricePointsTiersItem {
+	if p == nil {
+		return nil
+	}
+	return p.Tiers
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePoints) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePoints) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionOrderLineAttributePricingPricePoints
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionOrderLineAttributePricingPricePoints(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePoints) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionOrderLineAttributePricingPricePointsTiersItem struct {
+	// Flat fee for this tier, in minor currency units (cents). Must be 0 or more.
+	FlatAmount      *int                                                                   `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	Index           *float64                                                               `json:"index,omitempty" url:"index,omitempty"`
+	LowerBound      int                                                                    `json:"lowerBound" url:"lowerBound"`
+	Number          *int                                                                   `json:"number,omitempty" url:"number,omitempty"`
+	TierBillingType *ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
+	// Price per unit in this tier, in minor currency units (cents). Must be 0 or more.
+	UnitAmount *int `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound *int `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePointsTiersItem) GetFlatAmount() *int {
+	if p == nil {
+		return nil
+	}
+	return p.FlatAmount
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePointsTiersItem) GetIndex() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Index
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePointsTiersItem) GetLowerBound() int {
+	if p == nil {
+		return 0
+	}
+	return p.LowerBound
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePointsTiersItem) GetNumber() *int {
+	if p == nil {
+		return nil
+	}
+	return p.Number
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePointsTiersItem) GetTierBillingType() *ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.TierBillingType
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePointsTiersItem) GetUnitAmount() *int {
+	if p == nil {
+		return nil
+	}
+	return p.UnitAmount
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePointsTiersItem) GetUpperBound() *int {
+	if p == nil {
+		return nil
+	}
+	return p.UpperBound
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePointsTiersItem) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePointsTiersItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionOrderLineAttributePricingPricePointsTiersItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionOrderLineAttributePricingPricePointsTiersItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionOrderLineAttributePricingPricePointsTiersItem) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingType string
+
+const (
+	ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingTypeFlat    ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingType = "flat"
+	ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingTypePerUnit ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingType = "perUnit"
+)
+
+func NewProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingTypeFromString(s string) (ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingType, error) {
+	switch s {
+	case "flat":
+		return ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingTypeFlat, nil
+	case "perUnit":
+		return ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingTypePerUnit, nil
+	}
+	var t ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingType) Ptr() *ProvisionOrderLineAttributePricingPricePointsTiersItemTierBillingType {
+	return &p
+}
+
+type ProvisionOrderLineAttributePricingPricingModel string
+
+const (
+	ProvisionOrderLineAttributePricingPricingModelPerUnit          ProvisionOrderLineAttributePricingPricingModel = "perUnit"
+	ProvisionOrderLineAttributePricingPricingModelVolumePricing    ProvisionOrderLineAttributePricingPricingModel = "volumePricing"
+	ProvisionOrderLineAttributePricingPricingModelGraduatedPricing ProvisionOrderLineAttributePricingPricingModel = "graduatedPricing"
+)
+
+func NewProvisionOrderLineAttributePricingPricingModelFromString(s string) (ProvisionOrderLineAttributePricingPricingModel, error) {
+	switch s {
+	case "perUnit":
+		return ProvisionOrderLineAttributePricingPricingModelPerUnit, nil
+	case "volumePricing":
+		return ProvisionOrderLineAttributePricingPricingModelVolumePricing, nil
+	case "graduatedPricing":
+		return ProvisionOrderLineAttributePricingPricingModelGraduatedPricing, nil
+	}
+	var t ProvisionOrderLineAttributePricingPricingModel
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionOrderLineAttributePricingPricingModel) Ptr() *ProvisionOrderLineAttributePricingPricingModel {
+	return &p
+}
+
+type ProvisionOrderLineType string
+
+const (
+	ProvisionOrderLineTypeStandard        ProvisionOrderLineType = "STANDARD"
+	ProvisionOrderLineTypeProrationCredit ProvisionOrderLineType = "PRORATION_CREDIT"
+	ProvisionOrderLineTypeProrationCharge ProvisionOrderLineType = "PRORATION_CHARGE"
+	ProvisionOrderLineTypeCredit          ProvisionOrderLineType = "CREDIT"
+)
+
+func NewProvisionOrderLineTypeFromString(s string) (ProvisionOrderLineType, error) {
+	switch s {
+	case "STANDARD":
+		return ProvisionOrderLineTypeStandard, nil
+	case "PRORATION_CREDIT":
+		return ProvisionOrderLineTypeProrationCredit, nil
+	case "PRORATION_CHARGE":
+		return ProvisionOrderLineTypeProrationCharge, nil
+	case "CREDIT":
+		return ProvisionOrderLineTypeCredit, nil
+	}
+	var t ProvisionOrderLineType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionOrderLineType) Ptr() *ProvisionOrderLineType {
+	return &p
+}
+
+type ProvisionOrderPaymentTerms string
+
+const (
+	ProvisionOrderPaymentTermsDueOnReceipt ProvisionOrderPaymentTerms = "DueOnReceipt"
+	ProvisionOrderPaymentTermsNet15        ProvisionOrderPaymentTerms = "Net15"
+	ProvisionOrderPaymentTermsNet30        ProvisionOrderPaymentTerms = "Net30"
+	ProvisionOrderPaymentTermsNet45        ProvisionOrderPaymentTerms = "Net45"
+	ProvisionOrderPaymentTermsNet60        ProvisionOrderPaymentTerms = "Net60"
+	ProvisionOrderPaymentTermsNet90        ProvisionOrderPaymentTerms = "Net90"
+)
+
+func NewProvisionOrderPaymentTermsFromString(s string) (ProvisionOrderPaymentTerms, error) {
+	switch s {
+	case "DueOnReceipt":
+		return ProvisionOrderPaymentTermsDueOnReceipt, nil
+	case "Net15":
+		return ProvisionOrderPaymentTermsNet15, nil
+	case "Net30":
+		return ProvisionOrderPaymentTermsNet30, nil
+	case "Net45":
+		return ProvisionOrderPaymentTermsNet45, nil
+	case "Net60":
+		return ProvisionOrderPaymentTermsNet60, nil
+	case "Net90":
+		return ProvisionOrderPaymentTermsNet90, nil
+	}
+	var t ProvisionOrderPaymentTerms
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionOrderPaymentTerms) Ptr() *ProvisionOrderPaymentTerms {
+	return &p
+}
+
+// Defaults to `active`, which activates the order and starts billing. Send `draft` to create or update the order without billing it; you can provision it again later with `active`. An active order cannot go back to `draft`.
+type ProvisionOrderStatus string
+
+const (
+	ProvisionOrderStatusDraft  ProvisionOrderStatus = "draft"
+	ProvisionOrderStatusActive ProvisionOrderStatus = "active"
+)
+
+func NewProvisionOrderStatusFromString(s string) (ProvisionOrderStatus, error) {
+	switch s {
+	case "draft":
+		return ProvisionOrderStatusDraft, nil
+	case "active":
+		return ProvisionOrderStatusActive, nil
+	}
+	var t ProvisionOrderStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionOrderStatus) Ptr() *ProvisionOrderStatus {
+	return &p
+}
+
+type ProvisionProduct struct {
+	Name        string  `json:"name" url:"name"`
+	ExternalID  string  `json:"externalId" url:"externalId"`
+	ProductCode *string `json:"productCode,omitempty" url:"productCode,omitempty"`
+	Description *string `json:"description,omitempty" url:"description,omitempty"`
+	// Product attributes to create or update on the provisioned product. These are upserted by name. If pricing.pricePoints.currency is omitted, the request order currency is used.
+	Attributes []*ProvisionProductAttributesItem `json:"attributes,omitempty" url:"attributes,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionProduct) GetName() string {
+	if p == nil {
+		return ""
+	}
+	return p.Name
+}
+
+func (p *ProvisionProduct) GetExternalID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ExternalID
+}
+
+func (p *ProvisionProduct) GetProductCode() *string {
+	if p == nil {
+		return nil
+	}
+	return p.ProductCode
+}
+
+func (p *ProvisionProduct) GetDescription() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Description
+}
+
+func (p *ProvisionProduct) GetAttributes() []*ProvisionProductAttributesItem {
+	if p == nil {
+		return nil
+	}
+	return p.Attributes
+}
+
+func (p *ProvisionProduct) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionProduct) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionProduct
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionProduct(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionProduct) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionProductAttributesItem struct {
+	Name                string                                 `json:"name" url:"name"`
+	Description         *string                                `json:"description,omitempty" url:"description,omitempty"`
+	Active              *bool                                  `json:"active,omitempty" url:"active,omitempty"`
+	Sequence            *int                                   `json:"sequence,omitempty" url:"sequence,omitempty"`
+	TimeEstimateMinutes *int                                   `json:"timeEstimateMinutes,omitempty" url:"timeEstimateMinutes,omitempty"`
+	Pricing             *ProvisionProductAttributesItemPricing `json:"pricing" url:"pricing"`
+	// Credit benefits granted by this product attribute. These flow to every order line that selects this attribute.
+	CreditBenefits []*ProvisionCreditBenefit `json:"creditBenefits,omitempty" url:"creditBenefits,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionProductAttributesItem) GetName() string {
+	if p == nil {
+		return ""
+	}
+	return p.Name
+}
+
+func (p *ProvisionProductAttributesItem) GetDescription() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Description
+}
+
+func (p *ProvisionProductAttributesItem) GetActive() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.Active
+}
+
+func (p *ProvisionProductAttributesItem) GetSequence() *int {
+	if p == nil {
+		return nil
+	}
+	return p.Sequence
+}
+
+func (p *ProvisionProductAttributesItem) GetTimeEstimateMinutes() *int {
+	if p == nil {
+		return nil
+	}
+	return p.TimeEstimateMinutes
+}
+
+func (p *ProvisionProductAttributesItem) GetPricing() *ProvisionProductAttributesItemPricing {
+	if p == nil {
+		return nil
+	}
+	return p.Pricing
+}
+
+func (p *ProvisionProductAttributesItem) GetCreditBenefits() []*ProvisionCreditBenefit {
+	if p == nil {
+		return nil
+	}
+	return p.CreditBenefits
+}
+
+func (p *ProvisionProductAttributesItem) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionProductAttributesItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionProductAttributesItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionProductAttributesItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionProductAttributesItem) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionProductAttributesItemPricing struct {
+	EventName                    *string                                                `json:"eventName,omitempty" url:"eventName,omitempty"`
+	ChargeType                   ProvisionProductAttributesItemPricingChargeType        `json:"chargeType" url:"chargeType"`
+	PricePoints                  *ProvisionProductAttributesItemPricingPricePoints      `json:"pricePoints" url:"pricePoints"`
+	PricingModel                 ProvisionProductAttributesItemPricingPricingModel      `json:"pricingModel" url:"pricingModel"`
+	BillingFrequency             *ProvisionProductAttributesItemPricingBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingFrequencyCustomMonths *int                                                   `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
+	// When the charge is billed. Usage charges must use arrears.
+	BillingType *ProvisionProductAttributesItemPricingBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionProductAttributesItemPricing) GetEventName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.EventName
+}
+
+func (p *ProvisionProductAttributesItemPricing) GetChargeType() ProvisionProductAttributesItemPricingChargeType {
+	if p == nil {
+		return ""
+	}
+	return p.ChargeType
+}
+
+func (p *ProvisionProductAttributesItemPricing) GetPricePoints() *ProvisionProductAttributesItemPricingPricePoints {
+	if p == nil {
+		return nil
+	}
+	return p.PricePoints
+}
+
+func (p *ProvisionProductAttributesItemPricing) GetPricingModel() ProvisionProductAttributesItemPricingPricingModel {
+	if p == nil {
+		return ""
+	}
+	return p.PricingModel
+}
+
+func (p *ProvisionProductAttributesItemPricing) GetBillingFrequency() *ProvisionProductAttributesItemPricingBillingFrequency {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequency
+}
+
+func (p *ProvisionProductAttributesItemPricing) GetBillingFrequencyCustomMonths() *int {
+	if p == nil {
+		return nil
+	}
+	return p.BillingFrequencyCustomMonths
+}
+
+func (p *ProvisionProductAttributesItemPricing) GetBillingType() *ProvisionProductAttributesItemPricingBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.BillingType
+}
+
+func (p *ProvisionProductAttributesItemPricing) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionProductAttributesItemPricing) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionProductAttributesItemPricing
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionProductAttributesItemPricing(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionProductAttributesItemPricing) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionProductAttributesItemPricingBillingFrequency string
+
+const (
+	ProvisionProductAttributesItemPricingBillingFrequencyMonthly      ProvisionProductAttributesItemPricingBillingFrequency = "monthly"
+	ProvisionProductAttributesItemPricingBillingFrequencyQuarterly    ProvisionProductAttributesItemPricingBillingFrequency = "quarterly"
+	ProvisionProductAttributesItemPricingBillingFrequencySemiAnnually ProvisionProductAttributesItemPricingBillingFrequency = "semiAnnually"
+	ProvisionProductAttributesItemPricingBillingFrequencyAnnual       ProvisionProductAttributesItemPricingBillingFrequency = "annual"
+	ProvisionProductAttributesItemPricingBillingFrequencyCustom       ProvisionProductAttributesItemPricingBillingFrequency = "custom"
+)
+
+func NewProvisionProductAttributesItemPricingBillingFrequencyFromString(s string) (ProvisionProductAttributesItemPricingBillingFrequency, error) {
+	switch s {
+	case "monthly":
+		return ProvisionProductAttributesItemPricingBillingFrequencyMonthly, nil
+	case "quarterly":
+		return ProvisionProductAttributesItemPricingBillingFrequencyQuarterly, nil
+	case "semiAnnually":
+		return ProvisionProductAttributesItemPricingBillingFrequencySemiAnnually, nil
+	case "annual":
+		return ProvisionProductAttributesItemPricingBillingFrequencyAnnual, nil
+	case "custom":
+		return ProvisionProductAttributesItemPricingBillingFrequencyCustom, nil
+	}
+	var t ProvisionProductAttributesItemPricingBillingFrequency
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionProductAttributesItemPricingBillingFrequency) Ptr() *ProvisionProductAttributesItemPricingBillingFrequency {
+	return &p
+}
+
+// When the charge is billed. Usage charges must use arrears.
+type ProvisionProductAttributesItemPricingBillingType string
+
+const (
+	ProvisionProductAttributesItemPricingBillingTypeAdvance ProvisionProductAttributesItemPricingBillingType = "advance"
+	ProvisionProductAttributesItemPricingBillingTypeArrears ProvisionProductAttributesItemPricingBillingType = "arrears"
+)
+
+func NewProvisionProductAttributesItemPricingBillingTypeFromString(s string) (ProvisionProductAttributesItemPricingBillingType, error) {
+	switch s {
+	case "advance":
+		return ProvisionProductAttributesItemPricingBillingTypeAdvance, nil
+	case "arrears":
+		return ProvisionProductAttributesItemPricingBillingTypeArrears, nil
+	}
+	var t ProvisionProductAttributesItemPricingBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionProductAttributesItemPricingBillingType) Ptr() *ProvisionProductAttributesItemPricingBillingType {
+	return &p
+}
+
+type ProvisionProductAttributesItemPricingChargeType string
+
+const (
+	ProvisionProductAttributesItemPricingChargeTypeUsage     ProvisionProductAttributesItemPricingChargeType = "usage"
+	ProvisionProductAttributesItemPricingChargeTypeRecurring ProvisionProductAttributesItemPricingChargeType = "recurring"
+	ProvisionProductAttributesItemPricingChargeTypeOneTime   ProvisionProductAttributesItemPricingChargeType = "oneTime"
+	ProvisionProductAttributesItemPricingChargeTypeSeatBased ProvisionProductAttributesItemPricingChargeType = "seatBased"
+)
+
+func NewProvisionProductAttributesItemPricingChargeTypeFromString(s string) (ProvisionProductAttributesItemPricingChargeType, error) {
+	switch s {
+	case "usage":
+		return ProvisionProductAttributesItemPricingChargeTypeUsage, nil
+	case "recurring":
+		return ProvisionProductAttributesItemPricingChargeTypeRecurring, nil
+	case "oneTime":
+		return ProvisionProductAttributesItemPricingChargeTypeOneTime, nil
+	case "seatBased":
+		return ProvisionProductAttributesItemPricingChargeTypeSeatBased, nil
+	}
+	var t ProvisionProductAttributesItemPricingChargeType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionProductAttributesItemPricingChargeType) Ptr() *ProvisionProductAttributesItemPricingChargeType {
+	return &p
+}
+
+type ProvisionProductAttributesItemPricingPricePoints struct {
+	Currency *string `json:"currency,omitempty" url:"currency,omitempty"`
+	// Price per unit, as a whole number in minor currency units (cents): 4900 is $49.00. Must be 0 or more. For a discount or credit, send a positive price on a line with `lineType: CREDIT`.
+	UnitPrice int `json:"unitPrice" url:"unitPrice"`
+	// Optional pricing tiers for volume/graduated pricing models. When provided, overrides the default flat unitPrice structure.
+	Tiers []*ProvisionProductAttributesItemPricingPricePointsTiersItem `json:"tiers,omitempty" url:"tiers,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePoints) GetCurrency() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Currency
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePoints) GetUnitPrice() int {
+	if p == nil {
+		return 0
+	}
+	return p.UnitPrice
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePoints) GetTiers() []*ProvisionProductAttributesItemPricingPricePointsTiersItem {
+	if p == nil {
+		return nil
+	}
+	return p.Tiers
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePoints) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePoints) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionProductAttributesItemPricingPricePoints
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionProductAttributesItemPricingPricePoints(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePoints) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionProductAttributesItemPricingPricePointsTiersItem struct {
+	// Flat fee for this tier, in minor currency units (cents). Must be 0 or more.
+	FlatAmount      *int                                                                      `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	Index           *float64                                                                  `json:"index,omitempty" url:"index,omitempty"`
+	LowerBound      int                                                                       `json:"lowerBound" url:"lowerBound"`
+	Number          *int                                                                      `json:"number,omitempty" url:"number,omitempty"`
+	TierBillingType *ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
+	// Price per unit in this tier, in minor currency units (cents). Must be 0 or more.
+	UnitAmount *int `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound *int `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePointsTiersItem) GetFlatAmount() *int {
+	if p == nil {
+		return nil
+	}
+	return p.FlatAmount
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePointsTiersItem) GetIndex() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Index
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePointsTiersItem) GetLowerBound() int {
+	if p == nil {
+		return 0
+	}
+	return p.LowerBound
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePointsTiersItem) GetNumber() *int {
+	if p == nil {
+		return nil
+	}
+	return p.Number
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePointsTiersItem) GetTierBillingType() *ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.TierBillingType
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePointsTiersItem) GetUnitAmount() *int {
+	if p == nil {
+		return nil
+	}
+	return p.UnitAmount
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePointsTiersItem) GetUpperBound() *int {
+	if p == nil {
+		return nil
+	}
+	return p.UpperBound
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePointsTiersItem) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePointsTiersItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionProductAttributesItemPricingPricePointsTiersItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionProductAttributesItemPricingPricePointsTiersItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionProductAttributesItemPricingPricePointsTiersItem) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingType string
+
+const (
+	ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingTypeFlat    ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingType = "flat"
+	ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingTypePerUnit ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingType = "perUnit"
+)
+
+func NewProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingTypeFromString(s string) (ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingType, error) {
+	switch s {
+	case "flat":
+		return ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingTypeFlat, nil
+	case "perUnit":
+		return ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingTypePerUnit, nil
+	}
+	var t ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingType) Ptr() *ProvisionProductAttributesItemPricingPricePointsTiersItemTierBillingType {
+	return &p
+}
+
+type ProvisionProductAttributesItemPricingPricingModel string
+
+const (
+	ProvisionProductAttributesItemPricingPricingModelPerUnit          ProvisionProductAttributesItemPricingPricingModel = "perUnit"
+	ProvisionProductAttributesItemPricingPricingModelVolumePricing    ProvisionProductAttributesItemPricingPricingModel = "volumePricing"
+	ProvisionProductAttributesItemPricingPricingModelGraduatedPricing ProvisionProductAttributesItemPricingPricingModel = "graduatedPricing"
+)
+
+func NewProvisionProductAttributesItemPricingPricingModelFromString(s string) (ProvisionProductAttributesItemPricingPricingModel, error) {
+	switch s {
+	case "perUnit":
+		return ProvisionProductAttributesItemPricingPricingModelPerUnit, nil
+	case "volumePricing":
+		return ProvisionProductAttributesItemPricingPricingModelVolumePricing, nil
+	case "graduatedPricing":
+		return ProvisionProductAttributesItemPricingPricingModelGraduatedPricing, nil
+	}
+	var t ProvisionProductAttributesItemPricingPricingModel
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionProductAttributesItemPricingPricingModel) Ptr() *ProvisionProductAttributesItemPricingPricingModel {
+	return &p
+}
+
+type ProvisionResponse struct {
+	// Mirrors order.provisionStatus. created (HTTP 201): the order was created; updated (HTTP 200): an existing draft order with the same externalId was updated
+	Status    ProvisionResponseStatus   `json:"status" url:"status"`
+	CreatedAt string                    `json:"createdAt" url:"createdAt"`
+	Customer  *ProvisionCreatedCustomer `json:"customer" url:"customer"`
+	Contact   *ProvisionCreatedContact  `json:"contact,omitempty" url:"contact,omitempty"`
+	Order     *ProvisionCreatedOrder    `json:"order" url:"order"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProvisionResponse) GetStatus() ProvisionResponseStatus {
+	if p == nil {
+		return ""
+	}
+	return p.Status
+}
+
+func (p *ProvisionResponse) GetCreatedAt() string {
+	if p == nil {
+		return ""
+	}
+	return p.CreatedAt
+}
+
+func (p *ProvisionResponse) GetCustomer() *ProvisionCreatedCustomer {
+	if p == nil {
+		return nil
+	}
+	return p.Customer
+}
+
+func (p *ProvisionResponse) GetContact() *ProvisionCreatedContact {
+	if p == nil {
+		return nil
+	}
+	return p.Contact
+}
+
+func (p *ProvisionResponse) GetOrder() *ProvisionCreatedOrder {
+	if p == nil {
+		return nil
+	}
+	return p.Order
+}
+
+func (p *ProvisionResponse) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProvisionResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProvisionResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProvisionResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProvisionResponse) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// Mirrors order.provisionStatus. created (HTTP 201): the order was created; updated (HTTP 200): an existing draft order with the same externalId was updated
+type ProvisionResponseStatus string
+
+const (
+	ProvisionResponseStatusCreated ProvisionResponseStatus = "created"
+	ProvisionResponseStatusUpdated ProvisionResponseStatus = "updated"
+)
+
+func NewProvisionResponseStatusFromString(s string) (ProvisionResponseStatus, error) {
+	switch s {
+	case "created":
+		return ProvisionResponseStatusCreated, nil
+	case "updated":
+		return ProvisionResponseStatusUpdated, nil
+	}
+	var t ProvisionResponseStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionResponseStatus) Ptr() *ProvisionResponseStatus {
+	return &p
+}
+
 type SeatAssignee struct {
 	ID         string  `json:"id" url:"id"`
 	ExternalID string  `json:"externalId" url:"externalId"`
@@ -2100,6 +4833,29 @@ func (w WritableOrderLineType) Ptr() *WritableOrderLineType {
 	return &w
 }
 
+// Defaults to `STANDARD`. Set to `CREDIT` for a discount or credit line: send its prices as positive amounts, and Paid subtracts them from the invoice.
+type WritableProvisionOrderLineType string
+
+const (
+	WritableProvisionOrderLineTypeStandard WritableProvisionOrderLineType = "STANDARD"
+	WritableProvisionOrderLineTypeCredit   WritableProvisionOrderLineType = "CREDIT"
+)
+
+func NewWritableProvisionOrderLineTypeFromString(s string) (WritableProvisionOrderLineType, error) {
+	switch s {
+	case "STANDARD":
+		return WritableProvisionOrderLineTypeStandard, nil
+	case "CREDIT":
+		return WritableProvisionOrderLineTypeCredit, nil
+	}
+	var t WritableProvisionOrderLineType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (w WritableProvisionOrderLineType) Ptr() *WritableProvisionOrderLineType {
+	return &w
+}
+
 type BatchSeatAssignmentsRequestAssignmentsItem struct {
 	SeatID         string  `json:"seatId" url:"seatId"`
 	UserExternalID *string `json:"userExternalId,omitempty" url:"userExternalId,omitempty"`
@@ -2152,6 +4908,40 @@ func (b *BatchSeatAssignmentsRequestAssignmentsItem) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", b)
+}
+
+type CreateOrderRequestPaymentTerms string
+
+const (
+	CreateOrderRequestPaymentTermsDueOnReceipt CreateOrderRequestPaymentTerms = "DueOnReceipt"
+	CreateOrderRequestPaymentTermsNet15        CreateOrderRequestPaymentTerms = "Net15"
+	CreateOrderRequestPaymentTermsNet30        CreateOrderRequestPaymentTerms = "Net30"
+	CreateOrderRequestPaymentTermsNet45        CreateOrderRequestPaymentTerms = "Net45"
+	CreateOrderRequestPaymentTermsNet60        CreateOrderRequestPaymentTerms = "Net60"
+	CreateOrderRequestPaymentTermsNet90        CreateOrderRequestPaymentTerms = "Net90"
+)
+
+func NewCreateOrderRequestPaymentTermsFromString(s string) (CreateOrderRequestPaymentTerms, error) {
+	switch s {
+	case "DueOnReceipt":
+		return CreateOrderRequestPaymentTermsDueOnReceipt, nil
+	case "Net15":
+		return CreateOrderRequestPaymentTermsNet15, nil
+	case "Net30":
+		return CreateOrderRequestPaymentTermsNet30, nil
+	case "Net45":
+		return CreateOrderRequestPaymentTermsNet45, nil
+	case "Net60":
+		return CreateOrderRequestPaymentTermsNet60, nil
+	case "Net90":
+		return CreateOrderRequestPaymentTermsNet90, nil
+	}
+	var t CreateOrderRequestPaymentTerms
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CreateOrderRequestPaymentTerms) Ptr() *CreateOrderRequestPaymentTerms {
+	return &c
 }
 
 type ListOrderSeatsRequestStatus string
@@ -2226,6 +5016,40 @@ func (o OrderStatusFilter) Ptr() *OrderStatusFilter {
 	return &o
 }
 
+type UpdateOrderRequestPaymentTerms string
+
+const (
+	UpdateOrderRequestPaymentTermsDueOnReceipt UpdateOrderRequestPaymentTerms = "DueOnReceipt"
+	UpdateOrderRequestPaymentTermsNet15        UpdateOrderRequestPaymentTerms = "Net15"
+	UpdateOrderRequestPaymentTermsNet30        UpdateOrderRequestPaymentTerms = "Net30"
+	UpdateOrderRequestPaymentTermsNet45        UpdateOrderRequestPaymentTerms = "Net45"
+	UpdateOrderRequestPaymentTermsNet60        UpdateOrderRequestPaymentTerms = "Net60"
+	UpdateOrderRequestPaymentTermsNet90        UpdateOrderRequestPaymentTerms = "Net90"
+)
+
+func NewUpdateOrderRequestPaymentTermsFromString(s string) (UpdateOrderRequestPaymentTerms, error) {
+	switch s {
+	case "DueOnReceipt":
+		return UpdateOrderRequestPaymentTermsDueOnReceipt, nil
+	case "Net15":
+		return UpdateOrderRequestPaymentTermsNet15, nil
+	case "Net30":
+		return UpdateOrderRequestPaymentTermsNet30, nil
+	case "Net45":
+		return UpdateOrderRequestPaymentTermsNet45, nil
+	case "Net60":
+		return UpdateOrderRequestPaymentTermsNet60, nil
+	case "Net90":
+		return UpdateOrderRequestPaymentTermsNet90, nil
+	}
+	var t UpdateOrderRequestPaymentTerms
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UpdateOrderRequestPaymentTerms) Ptr() *UpdateOrderRequestPaymentTerms {
+	return &u
+}
+
 type UpdateOrderRequest struct {
 	ID                string              `json:"-" url:"-"`
 	Name              *string             `json:"name,omitempty" url:"-"`
@@ -2234,15 +5058,15 @@ type UpdateOrderRequest struct {
 	SubscriptionTerms *int                `json:"subscriptionTerms,omitempty" url:"-"`
 	CreationState     *OrderCreationState `json:"creationState,omitempty" url:"-"`
 	// Day of month for billing anchor (1-31). Defaults to start date day if not provided.
-	BillingAnchor         *int                   `json:"billingAnchor,omitempty" url:"-"`
-	PaymentTerms          *string                `json:"paymentTerms,omitempty" url:"-"`
-	ExternalID            *string                `json:"externalId,omitempty" url:"-"`
-	Metadata              map[string]interface{} `json:"metadata,omitempty" url:"-"`
-	BillingCustomerID     *string                `json:"billingCustomerId,omitempty" url:"-"`
-	BillingContactIDs     []string               `json:"billingContactIds,omitempty" url:"-"`
-	AutoPostInvoices      *bool                  `json:"autoPostInvoices,omitempty" url:"-"`
-	AutoSendBillingEmails *bool                  `json:"autoSendBillingEmails,omitempty" url:"-"`
-	AutoSendPaymentEmails *bool                  `json:"autoSendPaymentEmails,omitempty" url:"-"`
+	BillingAnchor         *int                            `json:"billingAnchor,omitempty" url:"-"`
+	PaymentTerms          *UpdateOrderRequestPaymentTerms `json:"paymentTerms,omitempty" url:"-"`
+	ExternalID            *string                         `json:"externalId,omitempty" url:"-"`
+	Metadata              map[string]interface{}          `json:"metadata,omitempty" url:"-"`
+	BillingCustomerID     *string                         `json:"billingCustomerId,omitempty" url:"-"`
+	BillingContactIDs     []string                        `json:"billingContactIds,omitempty" url:"-"`
+	AutoPostInvoices      *bool                           `json:"autoPostInvoices,omitempty" url:"-"`
+	AutoSendBillingEmails *bool                           `json:"autoSendBillingEmails,omitempty" url:"-"`
+	AutoSendPaymentEmails *bool                           `json:"autoSendPaymentEmails,omitempty" url:"-"`
 	// Purchase order number printed on invoices generated from this order.
 	PurchaseOrderReference *string `json:"purchaseOrderReference,omitempty" url:"-"`
 }
@@ -2275,4 +5099,12 @@ type UpdateSeatAssignmentRequest struct {
 	ID             string  `json:"-" url:"-"`
 	SeatID         string  `json:"-" url:"-"`
 	UserExternalID *string `json:"userExternalId,omitempty" url:"-"`
+}
+
+type ProvisionRequest struct {
+	IdempotencyKey    string                      `json:"-" url:"-"`
+	ExternalReference *ProvisionExternalReference `json:"externalReference,omitempty" url:"-"`
+	Customer          *ProvisionCustomer          `json:"customer,omitempty" url:"-"`
+	Contact           *ProvisionContact           `json:"contact,omitempty" url:"-"`
+	Order             *ProvisionOrder             `json:"order,omitempty" url:"-"`
 }

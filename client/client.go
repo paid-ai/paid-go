@@ -3,16 +3,18 @@
 package client
 
 import (
+	amendments "github.com/paid-ai/paid-go/amendments"
+	analytics "github.com/paid-ai/paid-go/analytics"
 	analyticsexperimental "github.com/paid-ai/paid-go/analyticsexperimental"
 	checkouts "github.com/paid-ai/paid-go/checkouts"
 	contacts "github.com/paid-ai/paid-go/contacts"
 	core "github.com/paid-ai/paid-go/core"
 	costs "github.com/paid-ai/paid-go/costs"
 	credits "github.com/paid-ai/paid-go/credits"
-	customergroups "github.com/paid-ai/paid-go/customergroups"
 	customerportals "github.com/paid-ai/paid-go/customerportals"
 	customers "github.com/paid-ai/paid-go/customers"
 	customviewsexperimental "github.com/paid-ai/paid-go/customviewsexperimental"
+	deliveredvalue "github.com/paid-ai/paid-go/deliveredvalue"
 	internal "github.com/paid-ai/paid-go/internal"
 	invoices "github.com/paid-ai/paid-go/invoices"
 	option "github.com/paid-ai/paid-go/option"
@@ -24,6 +26,7 @@ import (
 	pricing "github.com/paid-ai/paid-go/pricing"
 	products "github.com/paid-ai/paid-go/products"
 	signals "github.com/paid-ai/paid-go/signals"
+	valuemetrics "github.com/paid-ai/paid-go/valuemetrics"
 	valuemodels "github.com/paid-ai/paid-go/valuemodels"
 	valuereceipts "github.com/paid-ai/paid-go/valuereceipts"
 	webhooks "github.com/paid-ai/paid-go/webhooks"
@@ -46,16 +49,19 @@ type Client struct {
 	Checkouts               *checkouts.Client
 	CustomerPortals         *customerportals.Client
 	ValueReceipts           *valuereceipts.Client
+	DeliveredValue          *deliveredvalue.Client
 	Webhooks                *webhooks.Client
 	Pricing                 *pricing.Client
 	Costs                   *costs.Client
-	AnalyticsExperimental   *analyticsexperimental.Client
+	Analytics               *analytics.Client
 	CustomViewsExperimental *customviewsexperimental.Client
 	ValueModels             *valuemodels.Client
-	CustomerGroups          *customergroups.Client
+	ValueMetrics            *valuemetrics.Client
 	PaymentMethods          *paymentmethods.Client
 	Payments                *payments.Client
 	PaymentAllocations      *paymentallocations.Client
+	Amendments              *amendments.Client
+	AnalyticsExperimental   *analyticsexperimental.Client
 }
 
 func NewClient(opts ...option.RequestOption) *Client {
@@ -80,15 +86,18 @@ func NewClient(opts ...option.RequestOption) *Client {
 		Checkouts:               checkouts.NewClient(opts...),
 		CustomerPortals:         customerportals.NewClient(opts...),
 		ValueReceipts:           valuereceipts.NewClient(opts...),
+		DeliveredValue:          deliveredvalue.NewClient(opts...),
 		Webhooks:                webhooks.NewClient(opts...),
 		Pricing:                 pricing.NewClient(opts...),
 		Costs:                   costs.NewClient(opts...),
-		AnalyticsExperimental:   analyticsexperimental.NewClient(opts...),
+		Analytics:               analytics.NewClient(opts...),
 		CustomViewsExperimental: customviewsexperimental.NewClient(opts...),
 		ValueModels:             valuemodels.NewClient(opts...),
-		CustomerGroups:          customergroups.NewClient(opts...),
+		ValueMetrics:            valuemetrics.NewClient(opts...),
 		PaymentMethods:          paymentmethods.NewClient(opts...),
 		Payments:                payments.NewClient(opts...),
 		PaymentAllocations:      paymentallocations.NewClient(opts...),
+		Amendments:              amendments.NewClient(opts...),
+		AnalyticsExperimental:   analyticsexperimental.NewClient(opts...),
 	}
 }

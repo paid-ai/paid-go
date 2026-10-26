@@ -346,17 +346,19 @@ func (p *ProductAttributeUpsert) String() string {
 }
 
 type ProductCreditBenefitOutput struct {
-	ID                   string   `json:"id" url:"id"`
-	CreditsCurrencyID    *string  `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
-	Amount               float64  `json:"amount" url:"amount"`
-	Recipient            string   `json:"recipient" url:"recipient"`
-	IsInfiniteTotal      bool     `json:"isInfiniteTotal" url:"isInfiniteTotal"`
-	AllocationCadence    string   `json:"allocationCadence" url:"allocationCadence"`
-	CreditGrantTiming    *string  `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
-	OverageUnitPrice     *float64 `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
-	RolloverAmount       *float64 `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
-	RolloverDuration     *float64 `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
-	RolloverDurationUnit *string  `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
+	ID                string   `json:"id" url:"id"`
+	CreditsCurrencyID *string  `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	Amount            float64  `json:"amount" url:"amount"`
+	Recipient         string   `json:"recipient" url:"recipient"`
+	IsInfiniteTotal   bool     `json:"isInfiniteTotal" url:"isInfiniteTotal"`
+	AllocationCadence string   `json:"allocationCadence" url:"allocationCadence"`
+	CreditGrantTiming *string  `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
+	OverageUnitPrice  *float64 `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices    map[string]*float64 `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	RolloverAmount       *float64            `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	RolloverDuration     *float64            `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDurationUnit *string             `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -416,6 +418,13 @@ func (p *ProductCreditBenefitOutput) GetOverageUnitPrice() *float64 {
 		return nil
 	}
 	return p.OverageUnitPrice
+}
+
+func (p *ProductCreditBenefitOutput) GetOverageUnitPrices() map[string]*float64 {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrices
 }
 
 func (p *ProductCreditBenefitOutput) GetRolloverAmount() *float64 {
@@ -678,12 +687,12 @@ func (p *ProductListResponse) String() string {
 }
 
 type ProductPricePointOutput struct {
-	Currency         string                              `json:"currency" url:"currency"`
-	UnitPrice        float64                             `json:"unitPrice" url:"unitPrice"`
-	Tiers            []*ProductPricePointOutputTiersItem `json:"tiers,omitempty" url:"tiers,omitempty"`
-	MinQuantity      *float64                            `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
-	MaxQuantity      *float64                            `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
-	IncludedQuantity *float64                            `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+	Currency         string                      `json:"currency" url:"currency"`
+	UnitPrice        float64                     `json:"unitPrice" url:"unitPrice"`
+	Tiers            []*ProductPricingTierOutput `json:"tiers,omitempty" url:"tiers,omitempty"`
+	MinQuantity      *float64                    `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	MaxQuantity      *float64                    `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
+	IncludedQuantity *float64                    `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -703,7 +712,7 @@ func (p *ProductPricePointOutput) GetUnitPrice() float64 {
 	return p.UnitPrice
 }
 
-func (p *ProductPricePointOutput) GetTiers() []*ProductPricePointOutputTiersItem {
+func (p *ProductPricePointOutput) GetTiers() []*ProductPricingTierOutput {
 	if p == nil {
 		return nil
 	}
@@ -763,136 +772,23 @@ func (p *ProductPricePointOutput) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-type ProductPricePointOutputTiersItem struct {
-	FlatAmount      *float64                                         `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
-	Index           *float64                                         `json:"index,omitempty" url:"index,omitempty"`
-	LowerBound      float64                                          `json:"lowerBound" url:"lowerBound"`
-	Number          *float64                                         `json:"number,omitempty" url:"number,omitempty"`
-	TierBillingType *ProductPricePointOutputTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
-	UnitAmount      *float64                                         `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
-	UpperBound      *float64                                         `json:"upperBound,omitempty" url:"upperBound,omitempty"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (p *ProductPricePointOutputTiersItem) GetFlatAmount() *float64 {
-	if p == nil {
-		return nil
-	}
-	return p.FlatAmount
-}
-
-func (p *ProductPricePointOutputTiersItem) GetIndex() *float64 {
-	if p == nil {
-		return nil
-	}
-	return p.Index
-}
-
-func (p *ProductPricePointOutputTiersItem) GetLowerBound() float64 {
-	if p == nil {
-		return 0
-	}
-	return p.LowerBound
-}
-
-func (p *ProductPricePointOutputTiersItem) GetNumber() *float64 {
-	if p == nil {
-		return nil
-	}
-	return p.Number
-}
-
-func (p *ProductPricePointOutputTiersItem) GetTierBillingType() *ProductPricePointOutputTiersItemTierBillingType {
-	if p == nil {
-		return nil
-	}
-	return p.TierBillingType
-}
-
-func (p *ProductPricePointOutputTiersItem) GetUnitAmount() *float64 {
-	if p == nil {
-		return nil
-	}
-	return p.UnitAmount
-}
-
-func (p *ProductPricePointOutputTiersItem) GetUpperBound() *float64 {
-	if p == nil {
-		return nil
-	}
-	return p.UpperBound
-}
-
-func (p *ProductPricePointOutputTiersItem) GetExtraProperties() map[string]interface{} {
-	return p.extraProperties
-}
-
-func (p *ProductPricePointOutputTiersItem) UnmarshalJSON(data []byte) error {
-	type unmarshaler ProductPricePointOutputTiersItem
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*p = ProductPricePointOutputTiersItem(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *p)
-	if err != nil {
-		return err
-	}
-	p.extraProperties = extraProperties
-	p.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (p *ProductPricePointOutputTiersItem) String() string {
-	if len(p.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(p); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", p)
-}
-
-type ProductPricePointOutputTiersItemTierBillingType string
-
-const (
-	ProductPricePointOutputTiersItemTierBillingTypeFlat    ProductPricePointOutputTiersItemTierBillingType = "flat"
-	ProductPricePointOutputTiersItemTierBillingTypePerUnit ProductPricePointOutputTiersItemTierBillingType = "perUnit"
-)
-
-func NewProductPricePointOutputTiersItemTierBillingTypeFromString(s string) (ProductPricePointOutputTiersItemTierBillingType, error) {
-	switch s {
-	case "flat":
-		return ProductPricePointOutputTiersItemTierBillingTypeFlat, nil
-	case "perUnit":
-		return ProductPricePointOutputTiersItemTierBillingTypePerUnit, nil
-	}
-	var t ProductPricePointOutputTiersItemTierBillingType
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (p ProductPricePointOutputTiersItemTierBillingType) Ptr() *ProductPricePointOutputTiersItemTierBillingType {
-	return &p
-}
-
 type ProductPricingOutput struct {
-	PricingType        ProductPricingOutputPricingType `json:"pricingType" url:"pricingType"`
-	ChargeType         string                          `json:"chargeType" url:"chargeType"`
-	PricingModel       *string                         `json:"pricingModel,omitempty" url:"pricingModel,omitempty"`
-	EventName          *string                         `json:"eventName,omitempty" url:"eventName,omitempty"`
-	SignalType         *ProductPricingOutputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
-	BillingFrequency   *string                         `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
-	BillingType        *string                         `json:"billingType,omitempty" url:"billingType,omitempty"`
-	CreditsCurrencyID  *string                         `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
-	CreditCost         *float64                        `json:"creditCost,omitempty" url:"creditCost,omitempty"`
-	UnitValue          *float64                        `json:"unitValue,omitempty" url:"unitValue,omitempty"`
-	PercentageValue    *float64                        `json:"percentageValue,omitempty" url:"percentageValue,omitempty"`
-	CostPlusMultiplier *float64                        `json:"costPlusMultiplier,omitempty" url:"costPlusMultiplier,omitempty"`
-	PricePoints        []*ProductPricePointOutput      `json:"pricePoints" url:"pricePoints"`
+	PricingType       ProductPricingOutputPricingType `json:"pricingType" url:"pricingType"`
+	ChargeType        string                          `json:"chargeType" url:"chargeType"`
+	PricingModel      *string                         `json:"pricingModel,omitempty" url:"pricingModel,omitempty"`
+	EventName         *string                         `json:"eventName,omitempty" url:"eventName,omitempty"`
+	SignalType        *ProductPricingOutputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
+	BillingFrequency  *string                         `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingType       *string                         `json:"billingType,omitempty" url:"billingType,omitempty"`
+	CreditsCurrencyID *string                         `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	CreditCost        *float64                        `json:"creditCost,omitempty" url:"creditCost,omitempty"`
+	UnitValue         *float64                        `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	OverageUnitPrice  *float64                        `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices  map[string]*float64        `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	PercentageValue    *float64                   `json:"percentageValue,omitempty" url:"percentageValue,omitempty"`
+	CostPlusMultiplier *float64                   `json:"costPlusMultiplier,omitempty" url:"costPlusMultiplier,omitempty"`
+	PricePoints        []*ProductPricePointOutput `json:"pricePoints" url:"pricePoints"`
 
 	ExtraProperties map[string]interface{} `json:"-" url:"-"`
 
@@ -967,6 +863,20 @@ func (p *ProductPricingOutput) GetUnitValue() *float64 {
 		return nil
 	}
 	return p.UnitValue
+}
+
+func (p *ProductPricingOutput) GetOverageUnitPrice() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrice
+}
+
+func (p *ProductPricingOutput) GetOverageUnitPrices() map[string]*float64 {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrices
 }
 
 func (p *ProductPricingOutput) GetPercentageValue() *float64 {
@@ -1116,6 +1026,122 @@ func NewProductPricingOutputSignalTypeFromString(s string) (ProductPricingOutput
 }
 
 func (p ProductPricingOutputSignalType) Ptr() *ProductPricingOutputSignalType {
+	return &p
+}
+
+type ProductPricingTierOutput struct {
+	FlatAmount      *float64                                 `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	Index           *float64                                 `json:"index,omitempty" url:"index,omitempty"`
+	LowerBound      float64                                  `json:"lowerBound" url:"lowerBound"`
+	Number          *float64                                 `json:"number,omitempty" url:"number,omitempty"`
+	TierBillingType *ProductPricingTierOutputTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
+	UnitAmount      *float64                                 `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound      *float64                                 `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ProductPricingTierOutput) GetFlatAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.FlatAmount
+}
+
+func (p *ProductPricingTierOutput) GetIndex() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Index
+}
+
+func (p *ProductPricingTierOutput) GetLowerBound() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.LowerBound
+}
+
+func (p *ProductPricingTierOutput) GetNumber() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Number
+}
+
+func (p *ProductPricingTierOutput) GetTierBillingType() *ProductPricingTierOutputTierBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.TierBillingType
+}
+
+func (p *ProductPricingTierOutput) GetUnitAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UnitAmount
+}
+
+func (p *ProductPricingTierOutput) GetUpperBound() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UpperBound
+}
+
+func (p *ProductPricingTierOutput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *ProductPricingTierOutput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ProductPricingTierOutput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ProductPricingTierOutput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ProductPricingTierOutput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type ProductPricingTierOutputTierBillingType string
+
+const (
+	ProductPricingTierOutputTierBillingTypeFlat    ProductPricingTierOutputTierBillingType = "flat"
+	ProductPricingTierOutputTierBillingTypePerUnit ProductPricingTierOutputTierBillingType = "perUnit"
+)
+
+func NewProductPricingTierOutputTierBillingTypeFromString(s string) (ProductPricingTierOutputTierBillingType, error) {
+	switch s {
+	case "flat":
+		return ProductPricingTierOutputTierBillingTypeFlat, nil
+	case "perUnit":
+		return ProductPricingTierOutputTierBillingTypePerUnit, nil
+	}
+	var t ProductPricingTierOutputTierBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductPricingTierOutputTierBillingType) Ptr() *ProductPricingTierOutputTierBillingType {
 	return &p
 }
 

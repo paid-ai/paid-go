@@ -16,7 +16,7 @@ type CreatePaymentRequest struct {
 	ExternalCustomerID *string `json:"externalCustomerId,omitempty" url:"-"`
 	// Payment amount in cents (minor currency units).
 	Amount int `json:"amount" url:"-"`
-	// Three-letter ISO currency code.
+	// Three-letter ISO 4217 currency code. Lowercase is accepted and stored upper-cased.
 	Currency string `json:"currency" url:"-"`
 	// When the payment was made (ISO 8601). Defaults to the current time.
 	PaymentDate *time.Time           `json:"paymentDate,omitempty" url:"-"`

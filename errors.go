@@ -10,11 +10,11 @@ import (
 // 400
 type BadRequestError struct {
 	*core.APIError
-	Body *ErrorResponse
+	Body interface{}
 }
 
 func (b *BadRequestError) UnmarshalJSON(data []byte) error {
-	var body *ErrorResponse
+	var body interface{}
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
@@ -34,11 +34,11 @@ func (b *BadRequestError) Unwrap() error {
 // 409
 type ConflictError struct {
 	*core.APIError
-	Body *ErrorResponse
+	Body interface{}
 }
 
 func (c *ConflictError) UnmarshalJSON(data []byte) error {
-	var body *ErrorResponse
+	var body interface{}
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
@@ -58,11 +58,11 @@ func (c *ConflictError) Unwrap() error {
 // 403
 type ForbiddenError struct {
 	*core.APIError
-	Body *ErrorResponse
+	Body interface{}
 }
 
 func (f *ForbiddenError) UnmarshalJSON(data []byte) error {
-	var body *ErrorResponse
+	var body interface{}
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
@@ -82,11 +82,11 @@ func (f *ForbiddenError) Unwrap() error {
 // 500
 type InternalServerError struct {
 	*core.APIError
-	Body *ErrorResponse
+	Body interface{}
 }
 
 func (i *InternalServerError) UnmarshalJSON(data []byte) error {
-	var body *ErrorResponse
+	var body interface{}
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
@@ -106,11 +106,11 @@ func (i *InternalServerError) Unwrap() error {
 // 404
 type NotFoundError struct {
 	*core.APIError
-	Body *ErrorResponse
+	Body interface{}
 }
 
 func (n *NotFoundError) UnmarshalJSON(data []byte) error {
-	var body *ErrorResponse
+	var body interface{}
 	if err := json.Unmarshal(data, &body); err != nil {
 		return err
 	}
@@ -173,4 +173,28 @@ func (t *TooManyRequestsError) MarshalJSON() ([]byte, error) {
 
 func (t *TooManyRequestsError) Unwrap() error {
 	return t.APIError
+}
+
+// 422
+type UnprocessableEntityError struct {
+	*core.APIError
+	Body *ErrorResponse
+}
+
+func (u *UnprocessableEntityError) UnmarshalJSON(data []byte) error {
+	var body *ErrorResponse
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	u.StatusCode = 422
+	u.Body = body
+	return nil
+}
+
+func (u *UnprocessableEntityError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.Body)
+}
+
+func (u *UnprocessableEntityError) Unwrap() error {
+	return u.APIError
 }

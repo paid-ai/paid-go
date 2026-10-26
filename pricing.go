@@ -18,19 +18,31 @@ type ListPricingRequest struct {
 }
 
 type CreditBenefitInput struct {
-	CreditsCurrencyID    string                               `json:"creditsCurrencyId" url:"creditsCurrencyId"`
-	Amount               float64                              `json:"amount" url:"amount"`
-	Recipient            *CreditBenefitInputRecipient         `json:"recipient,omitempty" url:"recipient,omitempty"`
-	IsInfiniteTotal      *bool                                `json:"isInfiniteTotal,omitempty" url:"isInfiniteTotal,omitempty"`
-	AllocationCadence    *CreditBenefitInputAllocationCadence `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
-	CreditGrantTiming    *CreditBenefitInputCreditGrantTiming `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
-	OverageUnitPrice     *float64                             `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
-	RolloverAmount       *float64                             `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
-	RolloverDuration     *float64                             `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
-	RolloverDurationUnit *string                              `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
+	ID                *string `json:"id,omitempty" url:"id,omitempty"`
+	CreditsCurrencyID string  `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	// Credit amount, exact to at most 6 decimal places.
+	Amount            float64                              `json:"amount" url:"amount"`
+	Recipient         *CreditBenefitInputRecipient         `json:"recipient,omitempty" url:"recipient,omitempty"`
+	IsInfiniteTotal   *bool                                `json:"isInfiniteTotal,omitempty" url:"isInfiniteTotal,omitempty"`
+	AllocationCadence *CreditBenefitInputAllocationCadence `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
+	CreditGrantTiming *CreditBenefitInputCreditGrantTiming `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
+	OverageUnitPrice  *int                                 `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
+	RolloverAmount       *float64 `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	RolloverDuration     *int     `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDurationUnit *string  `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (c *CreditBenefitInput) GetID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ID
 }
 
 func (c *CreditBenefitInput) GetCreditsCurrencyID() string {
@@ -75,11 +87,18 @@ func (c *CreditBenefitInput) GetCreditGrantTiming() *CreditBenefitInputCreditGra
 	return c.CreditGrantTiming
 }
 
-func (c *CreditBenefitInput) GetOverageUnitPrice() *float64 {
+func (c *CreditBenefitInput) GetOverageUnitPrice() *int {
 	if c == nil {
 		return nil
 	}
 	return c.OverageUnitPrice
+}
+
+func (c *CreditBenefitInput) GetOverageUnitPrices() map[string]*int {
+	if c == nil {
+		return nil
+	}
+	return c.OverageUnitPrices
 }
 
 func (c *CreditBenefitInput) GetRolloverAmount() *float64 {
@@ -89,7 +108,7 @@ func (c *CreditBenefitInput) GetRolloverAmount() *float64 {
 	return c.RolloverAmount
 }
 
-func (c *CreditBenefitInput) GetRolloverDuration() *float64 {
+func (c *CreditBenefitInput) GetRolloverDuration() *int {
 	if c == nil {
 		return nil
 	}
@@ -138,8 +157,10 @@ func (c *CreditBenefitInput) String() string {
 type CreditBenefitInputAllocationCadence string
 
 const (
-	CreditBenefitInputAllocationCadenceUpfront CreditBenefitInputAllocationCadence = "upfront"
-	CreditBenefitInputAllocationCadenceMonthly CreditBenefitInputAllocationCadence = "monthly"
+	CreditBenefitInputAllocationCadenceUpfront      CreditBenefitInputAllocationCadence = "upfront"
+	CreditBenefitInputAllocationCadenceMonthly      CreditBenefitInputAllocationCadence = "monthly"
+	CreditBenefitInputAllocationCadenceQuarterly    CreditBenefitInputAllocationCadence = "quarterly"
+	CreditBenefitInputAllocationCadenceSemiAnnually CreditBenefitInputAllocationCadence = "semi_annually"
 )
 
 func NewCreditBenefitInputAllocationCadenceFromString(s string) (CreditBenefitInputAllocationCadence, error) {
@@ -148,6 +169,10 @@ func NewCreditBenefitInputAllocationCadenceFromString(s string) (CreditBenefitIn
 		return CreditBenefitInputAllocationCadenceUpfront, nil
 	case "monthly":
 		return CreditBenefitInputAllocationCadenceMonthly, nil
+	case "quarterly":
+		return CreditBenefitInputAllocationCadenceQuarterly, nil
+	case "semi_annually":
+		return CreditBenefitInputAllocationCadenceSemiAnnually, nil
 	}
 	var t CreditBenefitInputAllocationCadence
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -205,17 +230,19 @@ func (c CreditBenefitInputRecipient) Ptr() *CreditBenefitInputRecipient {
 }
 
 type CreditBenefitOutput struct {
-	ID                   string   `json:"id" url:"id"`
-	CreditsCurrencyID    *string  `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
-	Amount               float64  `json:"amount" url:"amount"`
-	Recipient            string   `json:"recipient" url:"recipient"`
-	IsInfiniteTotal      bool     `json:"isInfiniteTotal" url:"isInfiniteTotal"`
-	AllocationCadence    string   `json:"allocationCadence" url:"allocationCadence"`
-	CreditGrantTiming    *string  `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
-	OverageUnitPrice     *float64 `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
-	RolloverAmount       *float64 `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
-	RolloverDuration     *float64 `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
-	RolloverDurationUnit *string  `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
+	ID                string   `json:"id" url:"id"`
+	CreditsCurrencyID *string  `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	Amount            float64  `json:"amount" url:"amount"`
+	Recipient         string   `json:"recipient" url:"recipient"`
+	IsInfiniteTotal   bool     `json:"isInfiniteTotal" url:"isInfiniteTotal"`
+	AllocationCadence string   `json:"allocationCadence" url:"allocationCadence"`
+	CreditGrantTiming *string  `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
+	OverageUnitPrice  *float64 `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices    map[string]*float64 `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	RolloverAmount       *float64            `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	RolloverDuration     *float64            `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDurationUnit *string             `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -275,6 +302,13 @@ func (c *CreditBenefitOutput) GetOverageUnitPrice() *float64 {
 		return nil
 	}
 	return c.OverageUnitPrice
+}
+
+func (c *CreditBenefitOutput) GetOverageUnitPrices() map[string]*float64 {
+	if c == nil {
+		return nil
+	}
+	return c.OverageUnitPrices
 }
 
 func (c *CreditBenefitOutput) GetRolloverAmount() *float64 {
@@ -921,16 +955,19 @@ func (p *PricingListResponse) String() string {
 }
 
 type PricingOutput struct {
-	PricingType        PricingOutputPricingType   `json:"pricingType" url:"pricingType"`
-	ChargeType         string                     `json:"chargeType" url:"chargeType"`
-	PricingModel       *string                    `json:"pricingModel,omitempty" url:"pricingModel,omitempty"`
-	EventName          *string                    `json:"eventName,omitempty" url:"eventName,omitempty"`
-	SignalType         *PricingOutputSignalType   `json:"signalType,omitempty" url:"signalType,omitempty"`
-	BillingFrequency   *string                    `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
-	BillingType        *string                    `json:"billingType,omitempty" url:"billingType,omitempty"`
-	CreditsCurrencyID  *string                    `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
-	CreditCost         *float64                   `json:"creditCost,omitempty" url:"creditCost,omitempty"`
-	UnitValue          *float64                   `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	PricingType       PricingOutputPricingType `json:"pricingType" url:"pricingType"`
+	ChargeType        string                   `json:"chargeType" url:"chargeType"`
+	PricingModel      *string                  `json:"pricingModel,omitempty" url:"pricingModel,omitempty"`
+	EventName         *string                  `json:"eventName,omitempty" url:"eventName,omitempty"`
+	SignalType        *PricingOutputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
+	BillingFrequency  *string                  `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
+	BillingType       *string                  `json:"billingType,omitempty" url:"billingType,omitempty"`
+	CreditsCurrencyID *string                  `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	CreditCost        *float64                 `json:"creditCost,omitempty" url:"creditCost,omitempty"`
+	UnitValue         *float64                 `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	OverageUnitPrice  *float64                 `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices  map[string]*float64        `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
 	PercentageValue    *float64                   `json:"percentageValue,omitempty" url:"percentageValue,omitempty"`
 	CostPlusMultiplier *float64                   `json:"costPlusMultiplier,omitempty" url:"costPlusMultiplier,omitempty"`
 	PricePoints        []*PricingPricePointOutput `json:"pricePoints" url:"pricePoints"`
@@ -1008,6 +1045,20 @@ func (p *PricingOutput) GetUnitValue() *float64 {
 		return nil
 	}
 	return p.UnitValue
+}
+
+func (p *PricingOutput) GetOverageUnitPrice() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrice
+}
+
+func (p *PricingOutput) GetOverageUnitPrices() map[string]*float64 {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPrices
 }
 
 func (p *PricingOutput) GetPercentageValue() *float64 {
@@ -1161,12 +1212,12 @@ func (p PricingOutputSignalType) Ptr() *PricingOutputSignalType {
 }
 
 type PricingPricePointOutput struct {
-	Currency         string                              `json:"currency" url:"currency"`
-	UnitPrice        float64                             `json:"unitPrice" url:"unitPrice"`
-	Tiers            []*PricingPricePointOutputTiersItem `json:"tiers,omitempty" url:"tiers,omitempty"`
-	MinQuantity      *float64                            `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
-	MaxQuantity      *float64                            `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
-	IncludedQuantity *float64                            `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+	Currency         string               `json:"currency" url:"currency"`
+	UnitPrice        float64              `json:"unitPrice" url:"unitPrice"`
+	Tiers            []*PricingTierOutput `json:"tiers,omitempty" url:"tiers,omitempty"`
+	MinQuantity      *float64             `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	MaxQuantity      *float64             `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
+	IncludedQuantity *float64             `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -1186,7 +1237,7 @@ func (p *PricingPricePointOutput) GetUnitPrice() float64 {
 	return p.UnitPrice
 }
 
-func (p *PricingPricePointOutput) GetTiers() []*PricingPricePointOutputTiersItem {
+func (p *PricingPricePointOutput) GetTiers() []*PricingTierOutput {
 	if p == nil {
 		return nil
 	}
@@ -1244,122 +1295,6 @@ func (p *PricingPricePointOutput) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", p)
-}
-
-type PricingPricePointOutputTiersItem struct {
-	FlatAmount      *float64                                         `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
-	Index           *float64                                         `json:"index,omitempty" url:"index,omitempty"`
-	LowerBound      float64                                          `json:"lowerBound" url:"lowerBound"`
-	Number          *float64                                         `json:"number,omitempty" url:"number,omitempty"`
-	TierBillingType *PricingPricePointOutputTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
-	UnitAmount      *float64                                         `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
-	UpperBound      *float64                                         `json:"upperBound,omitempty" url:"upperBound,omitempty"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (p *PricingPricePointOutputTiersItem) GetFlatAmount() *float64 {
-	if p == nil {
-		return nil
-	}
-	return p.FlatAmount
-}
-
-func (p *PricingPricePointOutputTiersItem) GetIndex() *float64 {
-	if p == nil {
-		return nil
-	}
-	return p.Index
-}
-
-func (p *PricingPricePointOutputTiersItem) GetLowerBound() float64 {
-	if p == nil {
-		return 0
-	}
-	return p.LowerBound
-}
-
-func (p *PricingPricePointOutputTiersItem) GetNumber() *float64 {
-	if p == nil {
-		return nil
-	}
-	return p.Number
-}
-
-func (p *PricingPricePointOutputTiersItem) GetTierBillingType() *PricingPricePointOutputTiersItemTierBillingType {
-	if p == nil {
-		return nil
-	}
-	return p.TierBillingType
-}
-
-func (p *PricingPricePointOutputTiersItem) GetUnitAmount() *float64 {
-	if p == nil {
-		return nil
-	}
-	return p.UnitAmount
-}
-
-func (p *PricingPricePointOutputTiersItem) GetUpperBound() *float64 {
-	if p == nil {
-		return nil
-	}
-	return p.UpperBound
-}
-
-func (p *PricingPricePointOutputTiersItem) GetExtraProperties() map[string]interface{} {
-	return p.extraProperties
-}
-
-func (p *PricingPricePointOutputTiersItem) UnmarshalJSON(data []byte) error {
-	type unmarshaler PricingPricePointOutputTiersItem
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*p = PricingPricePointOutputTiersItem(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *p)
-	if err != nil {
-		return err
-	}
-	p.extraProperties = extraProperties
-	p.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (p *PricingPricePointOutputTiersItem) String() string {
-	if len(p.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(p); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", p)
-}
-
-type PricingPricePointOutputTiersItemTierBillingType string
-
-const (
-	PricingPricePointOutputTiersItemTierBillingTypeFlat    PricingPricePointOutputTiersItemTierBillingType = "flat"
-	PricingPricePointOutputTiersItemTierBillingTypePerUnit PricingPricePointOutputTiersItemTierBillingType = "perUnit"
-)
-
-func NewPricingPricePointOutputTiersItemTierBillingTypeFromString(s string) (PricingPricePointOutputTiersItemTierBillingType, error) {
-	switch s {
-	case "flat":
-		return PricingPricePointOutputTiersItemTierBillingTypeFlat, nil
-	case "perUnit":
-		return PricingPricePointOutputTiersItemTierBillingTypePerUnit, nil
-	}
-	var t PricingPricePointOutputTiersItemTierBillingType
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (p PricingPricePointOutputTiersItemTierBillingType) Ptr() *PricingPricePointOutputTiersItemTierBillingType {
-	return &p
 }
 
 type PricingResponse struct {
@@ -1430,6 +1365,122 @@ func (p *PricingResponse) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", p)
+}
+
+type PricingTierOutput struct {
+	FlatAmount      *float64                          `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	Index           *float64                          `json:"index,omitempty" url:"index,omitempty"`
+	LowerBound      float64                           `json:"lowerBound" url:"lowerBound"`
+	Number          *float64                          `json:"number,omitempty" url:"number,omitempty"`
+	TierBillingType *PricingTierOutputTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
+	UnitAmount      *float64                          `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound      *float64                          `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PricingTierOutput) GetFlatAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.FlatAmount
+}
+
+func (p *PricingTierOutput) GetIndex() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Index
+}
+
+func (p *PricingTierOutput) GetLowerBound() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.LowerBound
+}
+
+func (p *PricingTierOutput) GetNumber() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Number
+}
+
+func (p *PricingTierOutput) GetTierBillingType() *PricingTierOutputTierBillingType {
+	if p == nil {
+		return nil
+	}
+	return p.TierBillingType
+}
+
+func (p *PricingTierOutput) GetUnitAmount() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UnitAmount
+}
+
+func (p *PricingTierOutput) GetUpperBound() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.UpperBound
+}
+
+func (p *PricingTierOutput) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *PricingTierOutput) UnmarshalJSON(data []byte) error {
+	type unmarshaler PricingTierOutput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PricingTierOutput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PricingTierOutput) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type PricingTierOutputTierBillingType string
+
+const (
+	PricingTierOutputTierBillingTypeFlat    PricingTierOutputTierBillingType = "flat"
+	PricingTierOutputTierBillingTypePerUnit PricingTierOutputTierBillingType = "perUnit"
+)
+
+func NewPricingTierOutputTierBillingTypeFromString(s string) (PricingTierOutputTierBillingType, error) {
+	switch s {
+	case "flat":
+		return PricingTierOutputTierBillingTypeFlat, nil
+	case "perUnit":
+		return PricingTierOutputTierBillingTypePerUnit, nil
+	}
+	var t PricingTierOutputTierBillingType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p PricingTierOutputTierBillingType) Ptr() *PricingTierOutputTierBillingType {
+	return &p
 }
 
 type RecurringGraduatedInput struct {
@@ -2179,9 +2230,13 @@ func (s SeatBasedPerUnitInputBillingType) Ptr() *SeatBasedPerUnitInputBillingTyp
 }
 
 type SeatBasedPrepaidCreditsInput struct {
-	CreditsCurrencyID            string                                       `json:"creditsCurrencyId" url:"creditsCurrencyId"`
-	CreditCost                   float64                                      `json:"creditCost" url:"creditCost"`
-	UnitValue                    *float64                                     `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	CreditsCurrencyID string `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	// Credit amount, exact to at most 6 decimal places.
+	CreditCost       float64  `json:"creditCost" url:"creditCost"`
+	UnitValue        *float64 `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	OverageUnitPrice *int     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices            map[string]*int                              `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
 	BillingFrequency             SeatBasedPrepaidCreditsInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
 	BillingFrequencyCustomMonths *int                                         `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
 	BillingType                  *SeatBasedPrepaidCreditsInputBillingType     `json:"billingType,omitempty" url:"billingType,omitempty"`
@@ -2210,6 +2265,20 @@ func (s *SeatBasedPrepaidCreditsInput) GetUnitValue() *float64 {
 		return nil
 	}
 	return s.UnitValue
+}
+
+func (s *SeatBasedPrepaidCreditsInput) GetOverageUnitPrice() *int {
+	if s == nil {
+		return nil
+	}
+	return s.OverageUnitPrice
+}
+
+func (s *SeatBasedPrepaidCreditsInput) GetOverageUnitPrices() map[string]*int {
+	if s == nil {
+		return nil
+	}
+	return s.OverageUnitPrices
 }
 
 func (s *SeatBasedPrepaidCreditsInput) GetBillingFrequency() SeatBasedPrepaidCreditsInputBillingFrequency {
@@ -2450,11 +2519,11 @@ func (s SeatBasedVolumeInputBillingType) Ptr() *SeatBasedVolumeInputBillingType 
 
 type SimplePricePoint struct {
 	Currency         string                       `json:"currency" url:"currency"`
-	UnitPrice        float64                      `json:"unitPrice" url:"unitPrice"`
+	UnitPrice        int                          `json:"unitPrice" url:"unitPrice"`
 	Tiers            []*SimplePricePointTiersItem `json:"tiers,omitempty" url:"tiers,omitempty"`
-	MinQuantity      *float64                     `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
-	MaxQuantity      *float64                     `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
-	IncludedQuantity *float64                     `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+	MinQuantity      *int                         `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	MaxQuantity      *int                         `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
+	IncludedQuantity *int                         `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -2467,7 +2536,7 @@ func (s *SimplePricePoint) GetCurrency() string {
 	return s.Currency
 }
 
-func (s *SimplePricePoint) GetUnitPrice() float64 {
+func (s *SimplePricePoint) GetUnitPrice() int {
 	if s == nil {
 		return 0
 	}
@@ -2481,21 +2550,21 @@ func (s *SimplePricePoint) GetTiers() []*SimplePricePointTiersItem {
 	return s.Tiers
 }
 
-func (s *SimplePricePoint) GetMinQuantity() *float64 {
+func (s *SimplePricePoint) GetMinQuantity() *int {
 	if s == nil {
 		return nil
 	}
 	return s.MinQuantity
 }
 
-func (s *SimplePricePoint) GetMaxQuantity() *float64 {
+func (s *SimplePricePoint) GetMaxQuantity() *int {
 	if s == nil {
 		return nil
 	}
 	return s.MaxQuantity
 }
 
-func (s *SimplePricePoint) GetIncludedQuantity() *float64 {
+func (s *SimplePricePoint) GetIncludedQuantity() *int {
 	if s == nil {
 		return nil
 	}
@@ -2535,19 +2604,19 @@ func (s *SimplePricePoint) String() string {
 }
 
 type SimplePricePointTiersItem struct {
-	FlatAmount      *float64                                  `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	FlatAmount      *int                                      `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
 	Index           *float64                                  `json:"index,omitempty" url:"index,omitempty"`
-	LowerBound      float64                                   `json:"lowerBound" url:"lowerBound"`
-	Number          *float64                                  `json:"number,omitempty" url:"number,omitempty"`
+	LowerBound      int                                       `json:"lowerBound" url:"lowerBound"`
+	Number          *int                                      `json:"number,omitempty" url:"number,omitempty"`
 	TierBillingType *SimplePricePointTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
-	UnitAmount      *float64                                  `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
-	UpperBound      *float64                                  `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+	UnitAmount      *int                                      `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound      *int                                      `json:"upperBound,omitempty" url:"upperBound,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (s *SimplePricePointTiersItem) GetFlatAmount() *float64 {
+func (s *SimplePricePointTiersItem) GetFlatAmount() *int {
 	if s == nil {
 		return nil
 	}
@@ -2561,14 +2630,14 @@ func (s *SimplePricePointTiersItem) GetIndex() *float64 {
 	return s.Index
 }
 
-func (s *SimplePricePointTiersItem) GetLowerBound() float64 {
+func (s *SimplePricePointTiersItem) GetLowerBound() int {
 	if s == nil {
 		return 0
 	}
 	return s.LowerBound
 }
 
-func (s *SimplePricePointTiersItem) GetNumber() *float64 {
+func (s *SimplePricePointTiersItem) GetNumber() *int {
 	if s == nil {
 		return nil
 	}
@@ -2582,14 +2651,14 @@ func (s *SimplePricePointTiersItem) GetTierBillingType() *SimplePricePointTiersI
 	return s.TierBillingType
 }
 
-func (s *SimplePricePointTiersItem) GetUnitAmount() *float64 {
+func (s *SimplePricePointTiersItem) GetUnitAmount() *int {
 	if s == nil {
 		return nil
 	}
 	return s.UnitAmount
 }
 
-func (s *SimplePricePointTiersItem) GetUpperBound() *float64 {
+func (s *SimplePricePointTiersItem) GetUpperBound() *int {
 	if s == nil {
 		return nil
 	}
@@ -2652,11 +2721,11 @@ func (s SimplePricePointTiersItemTierBillingType) Ptr() *SimplePricePointTiersIt
 
 type TieredPricePoint struct {
 	Currency         string                       `json:"currency" url:"currency"`
-	UnitPrice        float64                      `json:"unitPrice" url:"unitPrice"`
+	UnitPrice        int                          `json:"unitPrice" url:"unitPrice"`
 	Tiers            []*TieredPricePointTiersItem `json:"tiers" url:"tiers"`
-	MinQuantity      *float64                     `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
-	MaxQuantity      *float64                     `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
-	IncludedQuantity *float64                     `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+	MinQuantity      *int                         `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	MaxQuantity      *int                         `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
+	IncludedQuantity *int                         `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -2669,7 +2738,7 @@ func (t *TieredPricePoint) GetCurrency() string {
 	return t.Currency
 }
 
-func (t *TieredPricePoint) GetUnitPrice() float64 {
+func (t *TieredPricePoint) GetUnitPrice() int {
 	if t == nil {
 		return 0
 	}
@@ -2683,21 +2752,21 @@ func (t *TieredPricePoint) GetTiers() []*TieredPricePointTiersItem {
 	return t.Tiers
 }
 
-func (t *TieredPricePoint) GetMinQuantity() *float64 {
+func (t *TieredPricePoint) GetMinQuantity() *int {
 	if t == nil {
 		return nil
 	}
 	return t.MinQuantity
 }
 
-func (t *TieredPricePoint) GetMaxQuantity() *float64 {
+func (t *TieredPricePoint) GetMaxQuantity() *int {
 	if t == nil {
 		return nil
 	}
 	return t.MaxQuantity
 }
 
-func (t *TieredPricePoint) GetIncludedQuantity() *float64 {
+func (t *TieredPricePoint) GetIncludedQuantity() *int {
 	if t == nil {
 		return nil
 	}
@@ -2737,19 +2806,19 @@ func (t *TieredPricePoint) String() string {
 }
 
 type TieredPricePointTiersItem struct {
-	FlatAmount      *float64                                  `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	FlatAmount      *int                                      `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
 	Index           *float64                                  `json:"index,omitempty" url:"index,omitempty"`
-	LowerBound      float64                                   `json:"lowerBound" url:"lowerBound"`
-	Number          *float64                                  `json:"number,omitempty" url:"number,omitempty"`
+	LowerBound      int                                       `json:"lowerBound" url:"lowerBound"`
+	Number          *int                                      `json:"number,omitempty" url:"number,omitempty"`
 	TierBillingType *TieredPricePointTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
-	UnitAmount      *float64                                  `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
-	UpperBound      *float64                                  `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+	UnitAmount      *int                                      `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound      *int                                      `json:"upperBound,omitempty" url:"upperBound,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
 }
 
-func (t *TieredPricePointTiersItem) GetFlatAmount() *float64 {
+func (t *TieredPricePointTiersItem) GetFlatAmount() *int {
 	if t == nil {
 		return nil
 	}
@@ -2763,14 +2832,14 @@ func (t *TieredPricePointTiersItem) GetIndex() *float64 {
 	return t.Index
 }
 
-func (t *TieredPricePointTiersItem) GetLowerBound() float64 {
+func (t *TieredPricePointTiersItem) GetLowerBound() int {
 	if t == nil {
 		return 0
 	}
 	return t.LowerBound
 }
 
-func (t *TieredPricePointTiersItem) GetNumber() *float64 {
+func (t *TieredPricePointTiersItem) GetNumber() *int {
 	if t == nil {
 		return nil
 	}
@@ -2784,14 +2853,14 @@ func (t *TieredPricePointTiersItem) GetTierBillingType() *TieredPricePointTiersI
 	return t.TierBillingType
 }
 
-func (t *TieredPricePointTiersItem) GetUnitAmount() *float64 {
+func (t *TieredPricePointTiersItem) GetUnitAmount() *int {
 	if t == nil {
 		return nil
 	}
 	return t.UnitAmount
 }
 
-func (t *TieredPricePointTiersItem) GetUpperBound() *float64 {
+func (t *TieredPricePointTiersItem) GetUpperBound() *int {
 	if t == nil {
 		return nil
 	}
@@ -2853,18 +2922,22 @@ func (t TieredPricePointTiersItemTierBillingType) Ptr() *TieredPricePointTiersIt
 }
 
 type UsageBracketedPrepaidCreditsInput struct {
-	EventName                    string                                                     `json:"eventName" url:"eventName"`
-	SignalType                   *UsageBracketedPrepaidCreditsInputSignalType               `json:"signalType,omitempty" url:"signalType,omitempty"`
-	CreditsCurrencyID            *string                                                    `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
-	UnitValue                    *float64                                                   `json:"unitValue,omitempty" url:"unitValue,omitempty"`
-	OverageUnitPrice             *float64                                                   `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	EventName         string                                       `json:"eventName" url:"eventName"`
+	SignalType        *UsageBracketedPrepaidCreditsInputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
+	CreditsCurrencyID *string                                      `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
+	UnitValue         *float64                                     `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	OverageUnitPrice  *int                                         `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
 	CreditRolloverAmount         *float64                                                   `json:"creditRolloverAmount,omitempty" url:"creditRolloverAmount,omitempty"`
 	PricingInput                 *UsageBracketedPrepaidCreditsInputPricingInput             `json:"pricingInput" url:"pricingInput"`
 	CreditUnitBrackets           []*UsageBracketedPrepaidCreditsInputCreditUnitBracketsItem `json:"creditUnitBrackets" url:"creditUnitBrackets"`
 	BillingFrequency             *UsageBracketedPrepaidCreditsInputBillingFrequency         `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                                       `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *UsageBracketedPrepaidCreditsInputBillingType              `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*SimplePricePoint                                        `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *UsageBracketedPrepaidCreditsInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*SimplePricePoint                           `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -2898,11 +2971,18 @@ func (u *UsageBracketedPrepaidCreditsInput) GetUnitValue() *float64 {
 	return u.UnitValue
 }
 
-func (u *UsageBracketedPrepaidCreditsInput) GetOverageUnitPrice() *float64 {
+func (u *UsageBracketedPrepaidCreditsInput) GetOverageUnitPrice() *int {
 	if u == nil {
 		return nil
 	}
 	return u.OverageUnitPrice
+}
+
+func (u *UsageBracketedPrepaidCreditsInput) GetOverageUnitPrices() map[string]*int {
+	if u == nil {
+		return nil
+	}
+	return u.OverageUnitPrices
 }
 
 func (u *UsageBracketedPrepaidCreditsInput) GetCreditRolloverAmount() *float64 {
@@ -3017,6 +3097,7 @@ func (u UsageBracketedPrepaidCreditsInputBillingFrequency) Ptr() *UsageBracketed
 	return &u
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type UsageBracketedPrepaidCreditsInputBillingType string
 
 const (
@@ -3040,8 +3121,11 @@ func (u UsageBracketedPrepaidCreditsInputBillingType) Ptr() *UsageBracketedPrepa
 }
 
 type UsageBracketedPrepaidCreditsInputCreditUnitBracketsItem struct {
-	UpTo        *int `json:"upTo,omitempty" url:"upTo,omitempty"`
-	CreditUnits int  `json:"creditUnits" url:"creditUnits"`
+	UpTo *int `json:"upTo,omitempty" url:"upTo,omitempty"`
+	// Credit amount, exact to at most 6 decimal places.
+	CreditUnits float64 `json:"creditUnits" url:"creditUnits"`
+	// Credits burned per unit in this band (graduated), instead of the flat creditUnits per signal. Brackets must be all flat or all graduated. Requires the graduated-credit-brackets flag.
+	CreditUnitsPerUnit *float64 `json:"creditUnitsPerUnit,omitempty" url:"creditUnitsPerUnit,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3054,11 +3138,18 @@ func (u *UsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetUpTo() *int
 	return u.UpTo
 }
 
-func (u *UsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnits() int {
+func (u *UsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnits() float64 {
 	if u == nil {
 		return 0
 	}
 	return u.CreditUnits
+}
+
+func (u *UsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnitsPerUnit() *float64 {
+	if u == nil {
+		return nil
+	}
+	return u.CreditUnitsPerUnit
 }
 
 func (u *UsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetExtraProperties() map[string]interface{} {
@@ -3194,8 +3285,9 @@ type UsageCostPlusInput struct {
 	SignalType                   *UsageCostPlusInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
 	BillingFrequency             *UsageCostPlusInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *UsageCostPlusInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*SimplePricePoint                 `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *UsageCostPlusInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*SimplePricePoint            `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3306,6 +3398,7 @@ func (u UsageCostPlusInputBillingFrequency) Ptr() *UsageCostPlusInputBillingFreq
 	return &u
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type UsageCostPlusInputBillingType string
 
 const (
@@ -3355,8 +3448,9 @@ type UsageGraduatedInput struct {
 	SignalType                   *UsageGraduatedInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
 	BillingFrequency             *UsageGraduatedInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                 `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *UsageGraduatedInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*TieredPricePoint                  `json:"pricePoints" url:"pricePoints"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *UsageGraduatedInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*TieredPricePoint             `json:"pricePoints" url:"pricePoints"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3467,6 +3561,7 @@ func (u UsageGraduatedInputBillingFrequency) Ptr() *UsageGraduatedInputBillingFr
 	return &u
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type UsageGraduatedInputBillingType string
 
 const (
@@ -3516,8 +3611,9 @@ type UsagePerUnitInput struct {
 	SignalType                   *UsagePerUnitInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
 	BillingFrequency             *UsagePerUnitInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                               `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *UsagePerUnitInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*SimplePricePoint                `json:"pricePoints" url:"pricePoints"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *UsagePerUnitInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*SimplePricePoint           `json:"pricePoints" url:"pricePoints"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3628,6 +3724,7 @@ func (u UsagePerUnitInputBillingFrequency) Ptr() *UsagePerUnitInputBillingFreque
 	return &u
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type UsagePerUnitInputBillingType string
 
 const (
@@ -3673,15 +3770,21 @@ func (u UsagePerUnitInputSignalType) Ptr() *UsagePerUnitInputSignalType {
 }
 
 type UsagePrepaidCreditsInput struct {
-	EventName                    string                                    `json:"eventName" url:"eventName"`
-	SignalType                   *UsagePrepaidCreditsInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
-	CreditsCurrencyID            string                                    `json:"creditsCurrencyId" url:"creditsCurrencyId"`
-	CreditCost                   float64                                   `json:"creditCost" url:"creditCost"`
-	UnitValue                    *float64                                  `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	EventName         string                              `json:"eventName" url:"eventName"`
+	SignalType        *UsagePrepaidCreditsInputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
+	CreditsCurrencyID string                              `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	// Credit amount, exact to at most 6 decimal places.
+	CreditCost       float64  `json:"creditCost" url:"creditCost"`
+	UnitValue        *float64 `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	OverageUnitPrice *int     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
+	OverageUnitPrices            map[string]*int                           `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	PricingInput                 *UsagePrepaidCreditsInputPricingInput     `json:"pricingInput,omitempty" url:"pricingInput,omitempty"`
 	BillingFrequency             *UsagePrepaidCreditsInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                      `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *UsagePrepaidCreditsInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*SimplePricePoint                       `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *UsagePrepaidCreditsInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*SimplePricePoint                  `json:"pricePoints,omitempty" url:"pricePoints,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3720,6 +3823,27 @@ func (u *UsagePrepaidCreditsInput) GetUnitValue() *float64 {
 		return nil
 	}
 	return u.UnitValue
+}
+
+func (u *UsagePrepaidCreditsInput) GetOverageUnitPrice() *int {
+	if u == nil {
+		return nil
+	}
+	return u.OverageUnitPrice
+}
+
+func (u *UsagePrepaidCreditsInput) GetOverageUnitPrices() map[string]*int {
+	if u == nil {
+		return nil
+	}
+	return u.OverageUnitPrices
+}
+
+func (u *UsagePrepaidCreditsInput) GetPricingInput() *UsagePrepaidCreditsInputPricingInput {
+	if u == nil {
+		return nil
+	}
+	return u.PricingInput
 }
 
 func (u *UsagePrepaidCreditsInput) GetBillingFrequency() *UsagePrepaidCreditsInputBillingFrequency {
@@ -3813,6 +3937,7 @@ func (u UsagePrepaidCreditsInputBillingFrequency) Ptr() *UsagePrepaidCreditsInpu
 	return &u
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type UsagePrepaidCreditsInputBillingType string
 
 const (
@@ -3832,6 +3957,80 @@ func NewUsagePrepaidCreditsInputBillingTypeFromString(s string) (UsagePrepaidCre
 }
 
 func (u UsagePrepaidCreditsInputBillingType) Ptr() *UsagePrepaidCreditsInputBillingType {
+	return &u
+}
+
+type UsagePrepaidCreditsInputPricingInput struct {
+	Kind UsagePrepaidCreditsInputPricingInputKind `json:"kind" url:"kind"`
+	// Key in the signal's data payload that supplies the quantity multiplied by creditCost — for a signal with data {"rooms": 3}, use rooms. Dots address nested fields, for example dimensions.pages. Defaults to the top-level quantity field.
+	Path *string `json:"path,omitempty" url:"path,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (u *UsagePrepaidCreditsInputPricingInput) GetKind() UsagePrepaidCreditsInputPricingInputKind {
+	if u == nil {
+		return ""
+	}
+	return u.Kind
+}
+
+func (u *UsagePrepaidCreditsInputPricingInput) GetPath() *string {
+	if u == nil {
+		return nil
+	}
+	return u.Path
+}
+
+func (u *UsagePrepaidCreditsInputPricingInput) GetExtraProperties() map[string]interface{} {
+	return u.extraProperties
+}
+
+func (u *UsagePrepaidCreditsInputPricingInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler UsagePrepaidCreditsInputPricingInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*u = UsagePrepaidCreditsInputPricingInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *u)
+	if err != nil {
+		return err
+	}
+	u.extraProperties = extraProperties
+	u.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (u *UsagePrepaidCreditsInputPricingInput) String() string {
+	if len(u.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(u.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(u); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", u)
+}
+
+type UsagePrepaidCreditsInputPricingInputKind string
+
+const (
+	UsagePrepaidCreditsInputPricingInputKindSignalQuantity UsagePrepaidCreditsInputPricingInputKind = "signalQuantity"
+)
+
+func NewUsagePrepaidCreditsInputPricingInputKindFromString(s string) (UsagePrepaidCreditsInputPricingInputKind, error) {
+	switch s {
+	case "signalQuantity":
+		return UsagePrepaidCreditsInputPricingInputKindSignalQuantity, nil
+	}
+	var t UsagePrepaidCreditsInputPricingInputKind
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (u UsagePrepaidCreditsInputPricingInputKind) Ptr() *UsagePrepaidCreditsInputPricingInputKind {
 	return &u
 }
 
@@ -3862,8 +4061,9 @@ type UsageVolumeInput struct {
 	SignalType                   *UsageVolumeInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
 	BillingFrequency             *UsageVolumeInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                              `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
-	BillingType                  *UsageVolumeInputBillingType      `json:"billingType,omitempty" url:"billingType,omitempty"`
-	PricePoints                  []*TieredPricePoint               `json:"pricePoints" url:"pricePoints"`
+	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
+	BillingType *UsageVolumeInputBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
+	PricePoints []*TieredPricePoint          `json:"pricePoints" url:"pricePoints"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3974,6 +4174,7 @@ func (u UsageVolumeInputBillingFrequency) Ptr() *UsageVolumeInputBillingFrequenc
 	return &u
 }
 
+// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
 type UsageVolumeInputBillingType string
 
 const (

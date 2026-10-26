@@ -4,6 +4,7 @@ package orders
 
 import (
 	context "context"
+	fmt "fmt"
 	paidgo "github.com/paid-ai/paid-go"
 	core "github.com/paid-ai/paid-go/core"
 	internal "github.com/paid-ai/paid-go/internal"
@@ -208,7 +209,7 @@ func (c *Client) GetOrderByID(
 	return response, nil
 }
 
-// Update an order by ID
+// Update an order by ID. creationState must equal the order's current state; activate a draft order with POST /orders/{id}/activate.
 func (c *Client) UpdateOrderByID(
 	ctx context.Context,
 	request *paidgo.UpdateOrderRequest,
@@ -650,6 +651,69 @@ func (c *Client) BatchOrderSeatAssignments(
 	}
 
 	var response *paidgo.BatchSeatAssignmentsResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Creates or updates a customer, an optional contact, the products on the order, and the order with its lines, in one call. Each record is matched by its `externalId`, so you can send the same deal again after it changes in your CRM. Returns 201 Created when the order is new, and 200 OK when an existing draft order with the same `externalId` was updated. Treat both as success. Re-provisioning an order that is already active returns 409 `ORDER_ALREADY_ACTIVE`; change an active order through the amendments API instead. Amounts are whole numbers in minor currency units (cents).
+func (c *Client) UpsertOrderByExternalID(
+	ctx context.Context,
+	request *paidgo.ProvisionRequest,
+	opts ...option.RequestOption,
+) (*paidgo.ProvisionResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := baseURL + "/provision/"
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	headers.Add("idempotency-key", fmt.Sprintf("%v", request.IdempotencyKey))
+	headers.Set("Content-Type", "application/json")
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &paidgo.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &paidgo.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &paidgo.ConflictError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &paidgo.InternalServerError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *paidgo.ProvisionResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

@@ -9,10 +9,89 @@ import (
 	time "time"
 )
 
+type CreateSignalSummaryExportRequest struct {
+	Spec *SignalSummarySpecInput `json:"spec,omitempty" url:"-"`
+	// Reuse the shape of an earlier export, so a monthly run produces the same columns without restating them. Give this or spec, not both.
+	CopyFrom *string `json:"copyFrom,omitempty" url:"-"`
+	// Start of the window, inclusive, snapped down to a period start. Cannot be earlier than 2025-09-01.
+	From string `json:"from" url:"-"`
+	// End of the window, exclusive, snapped down to a period start.
+	To string `json:"to" url:"-"`
+	// Restrict the file to these customers. Accepts Paid IDs, UUIDs, or your external IDs. Omit for every customer.
+	CustomerIDs []string `json:"customerIds,omitempty" url:"-"`
+	// Format of the produced file. `json` gives the columns and one object per customer per month; `csv` gives the wide spreadsheet with three header rows.
+	Format *CreateSignalSummaryExportRequestFormat `json:"format,omitempty" url:"-"`
+}
+
 type BulkSignalsRequest struct {
 	Signals []*Signal `json:"signals,omitempty" url:"-"`
 }
 
+type GetSignalByIDRequest struct {
+	// Signal ID.
+	ID string `json:"-" url:"-"`
+}
+
+type GetSignalSummaryRequest struct {
+	// Window start, inclusive. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	StartDate string `json:"-" url:"startDate"`
+	// Window end, inclusive — a date-only value means through the end of that UTC day. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	EndDate string `json:"-" url:"endDate"`
+	// Period size. Buckets align to UTC hours, calendar days, ISO weeks that start on Monday, or calendar months. An hour is the finest period available.
+	//
+	// The first and last bucket report bounds clipped to your window.
+	//
+	// A request may span at most 250 periods. That is about 10 days at hour, 8 months at day, and 20 years at month. A longer window returns 400 WINDOW_TOO_LARGE.
+	Interval GetSignalSummaryRequestInterval `json:"-" url:"interval"`
+	// Narrow the summary to one customer. Accepts a Paid customer ID or, as a fallback, your external customer ID. Mutually exclusive with externalCustomerId. Omit both to summarize every customer.
+	CustomerID *string `json:"-" url:"customerId,omitempty"`
+	// Your external customer ID. Mutually exclusive with customerId.
+	ExternalCustomerID *string `json:"-" url:"externalCustomerId,omitempty"`
+	// Narrow the summary to these signal names. Repeat the parameter for more than one. Omit to count every signal.
+	SignalNames []*string `json:"-" url:"signalNames,omitempty"`
+	// Split each period into one series per group. signalName groups by the signal's name. dimension groups by a signal-payload key named in dimensionKey — signals per team, for example. Omit for one total per period.
+	//
+	// A grouped request keeps the 100 groups with the most signals. It sums the rest under the key "other".
+	//
+	// Each period total stays complete, but a group inside "other" loses its own figure. Read groups.truncated to learn how many groups lost it. To name every group, narrow the request with signalNames, customerId, or a shorter window.
+	GroupBy *GetSignalSummaryRequestGroupBy `json:"-" url:"groupBy,omitempty"`
+	// The signal-payload key to group by. Required when groupBy is dimension; rejected otherwise. The key must be one your organization has declared for grouping — an undeclared key is refused rather than answered by a full scan. A signal whose payload lacks the key, or holds it empty, groups under an empty groupKey.
+	DimensionKey *string `json:"-" url:"dimensionKey,omitempty"`
+	// Maximum points to return in this page. The response is never silently truncated: when more points exist, hasMore is true and nextCursor is set.
+	Limit *int `json:"-" url:"limit,omitempty"`
+	// Continue from a previous response's nextCursor. Every other parameter must be unchanged.
+	Cursor *string `json:"-" url:"cursor,omitempty"`
+}
+
+type GetSignalSummaryExportRequest struct {
+	ID string `json:"-" url:"-"`
+}
+
+type SignalLookupRequest struct {
+	// Signal IDs to fetch, up to 500 per request. Duplicates are collapsed. For example the `signalId` values from a page of `GET /api/v2/credits/transactions`.
+	IDs []string `json:"ids,omitempty" url:"-"`
+}
+
+type ListSignalsRequest struct {
+	Limit  *int `json:"-" url:"limit,omitempty"`
+	Offset *int `json:"-" url:"offset,omitempty"`
+	// Filter by signal event name (exact match).
+	SignalName *string `json:"-" url:"signalName,omitempty"`
+	// Filter by the Paid customer ID the signal is attributed to.
+	CustomerID *string `json:"-" url:"customerId,omitempty"`
+	// Filter by your external customer ID. Aliases resolve to the attributed customer, and unresolved IDs match raw ingest data.
+	ExternalCustomerID *string `json:"-" url:"externalCustomerId,omitempty"`
+	// Filter by the Paid product ID the signal is attributed to.
+	ProductID *string `json:"-" url:"productId,omitempty"`
+	// Filter by your external product ID.
+	ExternalProductID *string `json:"-" url:"externalProductId,omitempty"`
+	// Only signals created on or after this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	CreatedAtFrom *string `json:"-" url:"createdAtFrom,omitempty"`
+	// Only signals created on or before this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
+	CreatedAtTo *string `json:"-" url:"createdAtTo,omitempty"`
+}
+
+// The product this usage is for, by Paid ID or by your external ID. Optional.
 type Attribution struct {
 	ProductByID         *ProductByID
 	ProductByExternalID *ProductByExternalID
@@ -137,14 +216,67 @@ func (b *BulkSignalsResponse) String() string {
 	return fmt.Sprintf("%#v", b)
 }
 
+// The customer unit (a node in the customer's internal hierarchy) this usage belongs to, by your key for the unit or by an alias that points at it. Paid's unit ID is not accepted. Sent with `customer`, the unit must belong to that customer. Omit to attribute to the customer only.
+type CustomerUnitAttribution struct {
+	// Your external customer unit ID (the unit's key), or an alias that points at a unit. Cannot be `.` or `..`.
+	ExternalCustomerUnitID string `json:"externalCustomerUnitId" url:"externalCustomerUnitId"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CustomerUnitAttribution) GetExternalCustomerUnitID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ExternalCustomerUnitID
+}
+
+func (c *CustomerUnitAttribution) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CustomerUnitAttribution) UnmarshalJSON(data []byte) error {
+	type unmarshaler CustomerUnitAttribution
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CustomerUnitAttribution(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CustomerUnitAttribution) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// One usage event. Name its customer with `customer`, its customer unit with `customerUnit`, or both: at least one is required, and a batch with a signal that names neither is refused with `400 VALIDATION_ERROR`.
 type Signal struct {
-	EventName   string               `json:"eventName" url:"eventName"`
-	Customer    *CustomerAttribution `json:"customer" url:"customer"`
-	Attribution *Attribution         `json:"attribution,omitempty" url:"attribution,omitempty"`
-	// True event timestamp in RFC3339 format with timezone (e.g. 2026-01-31T23:00:00Z)
-	Timestamp      *time.Time             `json:"timestamp,omitempty" url:"timestamp,omitempty"`
-	Data           map[string]interface{} `json:"data,omitempty" url:"data,omitempty"`
-	IdempotencyKey *string                `json:"idempotencyKey,omitempty" url:"idempotencyKey,omitempty"`
+	// The name of the usage event, such as `email_sent`. Meters and usage prices select signals by this name.
+	EventName    string                   `json:"eventName" url:"eventName"`
+	Customer     *CustomerAttribution     `json:"customer,omitempty" url:"customer,omitempty"`
+	CustomerUnit *CustomerUnitAttribution `json:"customerUnit,omitempty" url:"customerUnit,omitempty"`
+	Attribution  *Attribution             `json:"attribution,omitempty" url:"attribution,omitempty"`
+	// True event timestamp in RFC3339 format with timezone (e.g. 2026-01-31T23:00:00Z). Omit it to use the time Paid receives the signal.
+	Timestamp *time.Time `json:"timestamp,omitempty" url:"timestamp,omitempty"`
+	// Your event data. The top-level keys `_derived`, `_dims` and `_billing`, and any top-level key starting with `_billing.`, are reserved for Paid: a batch in which any signal's `data` carries one is refused with `400 RESERVED_SIGNAL_DATA_FIELD`.
+	Data map[string]interface{} `json:"data,omitempty" url:"data,omitempty"`
+	// Your unique key for this event. A signal whose key was already sent, earlier or in the same batch, is skipped and counted in `duplicates` instead of `ingested`.
+	IdempotencyKey *string `json:"idempotencyKey,omitempty" url:"idempotencyKey,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -162,6 +294,13 @@ func (s *Signal) GetCustomer() *CustomerAttribution {
 		return nil
 	}
 	return s.Customer
+}
+
+func (s *Signal) GetCustomerUnit() *CustomerUnitAttribution {
+	if s == nil {
+		return nil
+	}
+	return s.CustomerUnit
 }
 
 func (s *Signal) GetAttribution() *Attribution {
@@ -240,4 +379,1965 @@ func (s *Signal) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", s)
+}
+
+type SignalListItem struct {
+	// Unique signal identifier.
+	ID string `json:"id" url:"id"`
+	// Signal event name as submitted at ingest.
+	Name string `json:"name" url:"name"`
+	// Paid customer ID the signal is attributed to, or null if unattributed.
+	CustomerID *string `json:"customerId,omitempty" url:"customerId,omitempty"`
+	// The external customer ID recorded at ingest, including unresolved IDs, or null if not set.
+	ExternalCustomerID *string `json:"externalCustomerId,omitempty" url:"externalCustomerId,omitempty"`
+	// Paid product ID the signal is attributed to, or null if unattributed.
+	ProductID *string `json:"productId,omitempty" url:"productId,omitempty"`
+	// The external product ID recorded at ingest, including unresolved IDs, or null if not set.
+	ExternalProductID *string `json:"externalProductId,omitempty" url:"externalProductId,omitempty"`
+	// Distributed trace ID, or null if none was recorded.
+	TraceID *string `json:"traceId,omitempty" url:"traceId,omitempty"`
+	// The data payload submitted with the signal. A signal whose active customer unit was not billable in effect when it arrived (`effectiveBillable: false` on the unit) also carries `_billing`: `{ "excluded": true, "externalCustomerUnitId": "<the unit's key>" }`, unless it was sent with a customer API key. A meter's derived signal (one carrying `_derived`) follows the source event it takes its unit from (the window's closing event, else its opening event): it carries `_billing` when that event did and it still resolves to that same active unit. Billing records that usage without billing it. A price whose usage comes from a meter (read from your events when the invoice closes) leaves those signals out as well; a correlation-window meter leaves out a whole window when the event it takes its unit from (the closing event, else the opening one) carries `_billing`.
+	Data map[string]interface{} `json:"data,omitempty" url:"data,omitempty"`
+	// When the signal was ingested (ISO 8601, UTC).
+	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalListItem) GetID() string {
+	if s == nil {
+		return ""
+	}
+	return s.ID
+}
+
+func (s *SignalListItem) GetName() string {
+	if s == nil {
+		return ""
+	}
+	return s.Name
+}
+
+func (s *SignalListItem) GetCustomerID() *string {
+	if s == nil {
+		return nil
+	}
+	return s.CustomerID
+}
+
+func (s *SignalListItem) GetExternalCustomerID() *string {
+	if s == nil {
+		return nil
+	}
+	return s.ExternalCustomerID
+}
+
+func (s *SignalListItem) GetProductID() *string {
+	if s == nil {
+		return nil
+	}
+	return s.ProductID
+}
+
+func (s *SignalListItem) GetExternalProductID() *string {
+	if s == nil {
+		return nil
+	}
+	return s.ExternalProductID
+}
+
+func (s *SignalListItem) GetTraceID() *string {
+	if s == nil {
+		return nil
+	}
+	return s.TraceID
+}
+
+func (s *SignalListItem) GetData() map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.Data
+}
+
+func (s *SignalListItem) GetCreatedAt() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.CreatedAt
+}
+
+func (s *SignalListItem) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalListItem) UnmarshalJSON(data []byte) error {
+	type embed SignalListItem
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*s = SignalListItem(unmarshaler.embed)
+	s.CreatedAt = unmarshaler.CreatedAt.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalListItem) MarshalJSON() ([]byte, error) {
+	type embed SignalListItem
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+	}{
+		embed:     embed(*s),
+		CreatedAt: internal.NewDateTime(s.CreatedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (s *SignalListItem) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalListResponse struct {
+	Data       []*SignalListItem `json:"data" url:"data"`
+	Pagination *Pagination       `json:"pagination" url:"pagination"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalListResponse) GetData() []*SignalListItem {
+	if s == nil {
+		return nil
+	}
+	return s.Data
+}
+
+func (s *SignalListResponse) GetPagination() *Pagination {
+	if s == nil {
+		return nil
+	}
+	return s.Pagination
+}
+
+func (s *SignalListResponse) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalListResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalListResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalListResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalListResponse) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalLookupResponse struct {
+	// The signals found, in the order their IDs were requested. Each item has the same shape as `GET /api/v2/signals/{id}`, including the data payload.
+	Data []*SignalListItem `json:"data" url:"data"`
+	// Requested IDs that match no signal in your organization, in request order. Malformed IDs are reported here rather than rejected.
+	NotFound []string `json:"notFound" url:"notFound"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalLookupResponse) GetData() []*SignalListItem {
+	if s == nil {
+		return nil
+	}
+	return s.Data
+}
+
+func (s *SignalLookupResponse) GetNotFound() []string {
+	if s == nil {
+		return nil
+	}
+	return s.NotFound
+}
+
+func (s *SignalLookupResponse) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalLookupResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalLookupResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalLookupResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalLookupResponse) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryBandsDimension struct {
+	// Key into the signal's data payload. Dots address nested fields, for example dimensions.pages.
+	Path      string                                     `json:"path" url:"path"`
+	AppliesTo []string                                   `json:"appliesTo" url:"appliesTo"`
+	Brackets  []*SignalSummaryBandsDimensionBracketsItem `json:"brackets" url:"brackets"`
+	// Column collecting values that are missing, non-numeric, or below the floor. Always present, even when empty.
+	OverflowSlug *string `json:"overflowSlug,omitempty" url:"overflowSlug,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryBandsDimension) GetPath() string {
+	if s == nil {
+		return ""
+	}
+	return s.Path
+}
+
+func (s *SignalSummaryBandsDimension) GetAppliesTo() []string {
+	if s == nil {
+		return nil
+	}
+	return s.AppliesTo
+}
+
+func (s *SignalSummaryBandsDimension) GetBrackets() []*SignalSummaryBandsDimensionBracketsItem {
+	if s == nil {
+		return nil
+	}
+	return s.Brackets
+}
+
+func (s *SignalSummaryBandsDimension) GetOverflowSlug() *string {
+	if s == nil {
+		return nil
+	}
+	return s.OverflowSlug
+}
+
+func (s *SignalSummaryBandsDimension) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryBandsDimension) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryBandsDimension
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryBandsDimension(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryBandsDimension) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryBandsDimensionBracketsItem struct {
+	// Inclusive lower bound. Only meaningful on the first bracket, where it sets the floor of the banded range. Defaults to 1.
+	From *int `json:"from,omitempty" url:"from,omitempty"`
+	// Inclusive upper bound for this band. Null on the final bracket for an open-ended top band.
+	UpTo  *int    `json:"upTo,omitempty" url:"upTo,omitempty"`
+	Slug  *string `json:"slug,omitempty" url:"slug,omitempty"`
+	Group *string `json:"group,omitempty" url:"group,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryBandsDimensionBracketsItem) GetFrom() *int {
+	if s == nil {
+		return nil
+	}
+	return s.From
+}
+
+func (s *SignalSummaryBandsDimensionBracketsItem) GetUpTo() *int {
+	if s == nil {
+		return nil
+	}
+	return s.UpTo
+}
+
+func (s *SignalSummaryBandsDimensionBracketsItem) GetSlug() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Slug
+}
+
+func (s *SignalSummaryBandsDimensionBracketsItem) GetGroup() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Group
+}
+
+func (s *SignalSummaryBandsDimensionBracketsItem) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryBandsDimensionBracketsItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryBandsDimensionBracketsItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryBandsDimensionBracketsItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryBandsDimensionBracketsItem) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryColumn struct {
+	// Unique column name, as it appears in the file's third header row.
+	Name string `json:"name" url:"name"`
+	// First header row label for this column.
+	SignalGroup string `json:"signalGroup" url:"signalGroup"`
+	// Second header row label, or null when no dimension applies to this column.
+	DimensionGroup *string `json:"dimensionGroup,omitempty" url:"dimensionGroup,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryColumn) GetName() string {
+	if s == nil {
+		return ""
+	}
+	return s.Name
+}
+
+func (s *SignalSummaryColumn) GetSignalGroup() string {
+	if s == nil {
+		return ""
+	}
+	return s.SignalGroup
+}
+
+func (s *SignalSummaryColumn) GetDimensionGroup() *string {
+	if s == nil {
+		return nil
+	}
+	return s.DimensionGroup
+}
+
+func (s *SignalSummaryColumn) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryColumn) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryColumn
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryColumn(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryColumn) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// The shape this export ran, stored here so the file stays explainable. Pass this export's id as copyFrom to reproduce its columns.
+type SignalSummaryDefinitionSpec struct {
+	Name string `json:"name" url:"name"`
+	// Bucket size for each row. Only monthly buckets are supported today.
+	Interval    *SignalSummaryDefinitionSpecInterval         `json:"interval,omitempty" url:"interval,omitempty"`
+	SignalNames []*SignalSummarySignalSelection              `json:"signalNames" url:"signalNames"`
+	Dimensions  []*SignalSummaryDefinitionSpecDimensionsItem `json:"dimensions,omitempty" url:"dimensions,omitempty"`
+	Measures    []*SignalSummaryMeasure                      `json:"measures" url:"measures"`
+	// How a column's name is composed. {signal} is the signal's slug; {dim1} and {dim2} are the slugs of the first and second dimensions that apply to it. Placeholders with no value are dropped, so a signal with no dimensions renders as its slug alone. Use this to control ordering — {dim1}_{signal}_{dim2} yields names like ticket_runs_1_step.
+	ColumnNameTemplate *string `json:"columnNameTemplate,omitempty" url:"columnNameTemplate,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryDefinitionSpec) GetName() string {
+	if s == nil {
+		return ""
+	}
+	return s.Name
+}
+
+func (s *SignalSummaryDefinitionSpec) GetInterval() *SignalSummaryDefinitionSpecInterval {
+	if s == nil {
+		return nil
+	}
+	return s.Interval
+}
+
+func (s *SignalSummaryDefinitionSpec) GetSignalNames() []*SignalSummarySignalSelection {
+	if s == nil {
+		return nil
+	}
+	return s.SignalNames
+}
+
+func (s *SignalSummaryDefinitionSpec) GetDimensions() []*SignalSummaryDefinitionSpecDimensionsItem {
+	if s == nil {
+		return nil
+	}
+	return s.Dimensions
+}
+
+func (s *SignalSummaryDefinitionSpec) GetMeasures() []*SignalSummaryMeasure {
+	if s == nil {
+		return nil
+	}
+	return s.Measures
+}
+
+func (s *SignalSummaryDefinitionSpec) GetColumnNameTemplate() *string {
+	if s == nil {
+		return nil
+	}
+	return s.ColumnNameTemplate
+}
+
+func (s *SignalSummaryDefinitionSpec) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryDefinitionSpec) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryDefinitionSpec
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryDefinitionSpec(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryDefinitionSpec) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryDefinitionSpecDimensionsItem struct {
+	Kind     string
+	Presence *SignalSummaryPresenceDimension
+	Bands    *SignalSummaryBandsDimension
+}
+
+func (s *SignalSummaryDefinitionSpecDimensionsItem) GetKind() string {
+	if s == nil {
+		return ""
+	}
+	return s.Kind
+}
+
+func (s *SignalSummaryDefinitionSpecDimensionsItem) GetPresence() *SignalSummaryPresenceDimension {
+	if s == nil {
+		return nil
+	}
+	return s.Presence
+}
+
+func (s *SignalSummaryDefinitionSpecDimensionsItem) GetBands() *SignalSummaryBandsDimension {
+	if s == nil {
+		return nil
+	}
+	return s.Bands
+}
+
+func (s *SignalSummaryDefinitionSpecDimensionsItem) UnmarshalJSON(data []byte) error {
+	var unmarshaler struct {
+		Kind string `json:"kind"`
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	s.Kind = unmarshaler.Kind
+	if unmarshaler.Kind == "" {
+		return fmt.Errorf("%T did not include discriminant kind", s)
+	}
+	switch unmarshaler.Kind {
+	case "presence":
+		value := new(SignalSummaryPresenceDimension)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		s.Presence = value
+	case "bands":
+		value := new(SignalSummaryBandsDimension)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		s.Bands = value
+	}
+	return nil
+}
+
+func (s SignalSummaryDefinitionSpecDimensionsItem) MarshalJSON() ([]byte, error) {
+	if err := s.validate(); err != nil {
+		return nil, err
+	}
+	if s.Presence != nil {
+		return internal.MarshalJSONWithExtraProperty(s.Presence, "kind", "presence")
+	}
+	if s.Bands != nil {
+		return internal.MarshalJSONWithExtraProperty(s.Bands, "kind", "bands")
+	}
+	return nil, fmt.Errorf("type %T does not define a non-empty union type", s)
+}
+
+type SignalSummaryDefinitionSpecDimensionsItemVisitor interface {
+	VisitPresence(*SignalSummaryPresenceDimension) error
+	VisitBands(*SignalSummaryBandsDimension) error
+}
+
+func (s *SignalSummaryDefinitionSpecDimensionsItem) Accept(visitor SignalSummaryDefinitionSpecDimensionsItemVisitor) error {
+	if s.Presence != nil {
+		return visitor.VisitPresence(s.Presence)
+	}
+	if s.Bands != nil {
+		return visitor.VisitBands(s.Bands)
+	}
+	return fmt.Errorf("type %T does not define a non-empty union type", s)
+}
+
+func (s *SignalSummaryDefinitionSpecDimensionsItem) validate() error {
+	if s == nil {
+		return fmt.Errorf("type %T is nil", s)
+	}
+	var fields []string
+	if s.Presence != nil {
+		fields = append(fields, "presence")
+	}
+	if s.Bands != nil {
+		fields = append(fields, "bands")
+	}
+	if len(fields) == 0 {
+		if s.Kind != "" {
+			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", s, s.Kind)
+		}
+		return fmt.Errorf("type %T is empty", s)
+	}
+	if len(fields) > 1 {
+		return fmt.Errorf("type %T defines values for %s, but only one value is allowed", s, fields)
+	}
+	if s.Kind != "" {
+		field := fields[0]
+		if s.Kind != field {
+			return fmt.Errorf(
+				"type %T defines a discriminant set to %q, but it does not match the %T field; either remove or update the discriminant to match",
+				s,
+				s.Kind,
+				s,
+			)
+		}
+	}
+	return nil
+}
+
+// Bucket size for each row. Only monthly buckets are supported today.
+type SignalSummaryDefinitionSpecInterval string
+
+const (
+	SignalSummaryDefinitionSpecIntervalMonth SignalSummaryDefinitionSpecInterval = "month"
+)
+
+func NewSignalSummaryDefinitionSpecIntervalFromString(s string) (SignalSummaryDefinitionSpecInterval, error) {
+	switch s {
+	case "month":
+		return SignalSummaryDefinitionSpecIntervalMonth, nil
+	}
+	var t SignalSummaryDefinitionSpecInterval
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SignalSummaryDefinitionSpecInterval) Ptr() *SignalSummaryDefinitionSpecInterval {
+	return &s
+}
+
+type SignalSummaryExport struct {
+	ID     string                       `json:"id" url:"id"`
+	Status SignalSummaryExportStatus    `json:"status" url:"status"`
+	Spec   *SignalSummaryDefinitionSpec `json:"spec" url:"spec"`
+	// Columns in the file, in order.
+	Columns []*SignalSummaryColumn `json:"columns" url:"columns"`
+	// Format this export's file was written in.
+	Format   SignalSummaryExportFormat `json:"format" url:"format"`
+	From     string                    `json:"from" url:"from"`
+	To       string                    `json:"to" url:"to"`
+	RowCount *int                      `json:"rowCount,omitempty" url:"rowCount,omitempty"`
+	// Short-lived download link, present only while the export is succeeded and unexpired. A new link is issued each time this export is fetched.
+	DownloadURL *string `json:"downloadUrl,omitempty" url:"downloadUrl,omitempty"`
+	// When the stored file stops being downloadable.
+	ExpiresAt *time.Time `json:"expiresAt,omitempty" url:"expiresAt,omitempty"`
+	// Why the export failed, or null.
+	Error       *string    `json:"error,omitempty" url:"error,omitempty"`
+	CreatedAt   time.Time  `json:"createdAt" url:"createdAt"`
+	CompletedAt *time.Time `json:"completedAt,omitempty" url:"completedAt,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryExport) GetID() string {
+	if s == nil {
+		return ""
+	}
+	return s.ID
+}
+
+func (s *SignalSummaryExport) GetStatus() SignalSummaryExportStatus {
+	if s == nil {
+		return ""
+	}
+	return s.Status
+}
+
+func (s *SignalSummaryExport) GetSpec() *SignalSummaryDefinitionSpec {
+	if s == nil {
+		return nil
+	}
+	return s.Spec
+}
+
+func (s *SignalSummaryExport) GetColumns() []*SignalSummaryColumn {
+	if s == nil {
+		return nil
+	}
+	return s.Columns
+}
+
+func (s *SignalSummaryExport) GetFormat() SignalSummaryExportFormat {
+	if s == nil {
+		return ""
+	}
+	return s.Format
+}
+
+func (s *SignalSummaryExport) GetFrom() string {
+	if s == nil {
+		return ""
+	}
+	return s.From
+}
+
+func (s *SignalSummaryExport) GetTo() string {
+	if s == nil {
+		return ""
+	}
+	return s.To
+}
+
+func (s *SignalSummaryExport) GetRowCount() *int {
+	if s == nil {
+		return nil
+	}
+	return s.RowCount
+}
+
+func (s *SignalSummaryExport) GetDownloadURL() *string {
+	if s == nil {
+		return nil
+	}
+	return s.DownloadURL
+}
+
+func (s *SignalSummaryExport) GetExpiresAt() *time.Time {
+	if s == nil {
+		return nil
+	}
+	return s.ExpiresAt
+}
+
+func (s *SignalSummaryExport) GetError() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Error
+}
+
+func (s *SignalSummaryExport) GetCreatedAt() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.CreatedAt
+}
+
+func (s *SignalSummaryExport) GetCompletedAt() *time.Time {
+	if s == nil {
+		return nil
+	}
+	return s.CompletedAt
+}
+
+func (s *SignalSummaryExport) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryExport) UnmarshalJSON(data []byte) error {
+	type embed SignalSummaryExport
+	var unmarshaler = struct {
+		embed
+		ExpiresAt   *internal.DateTime `json:"expiresAt,omitempty"`
+		CreatedAt   *internal.DateTime `json:"createdAt"`
+		CompletedAt *internal.DateTime `json:"completedAt,omitempty"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*s = SignalSummaryExport(unmarshaler.embed)
+	s.ExpiresAt = unmarshaler.ExpiresAt.TimePtr()
+	s.CreatedAt = unmarshaler.CreatedAt.Time()
+	s.CompletedAt = unmarshaler.CompletedAt.TimePtr()
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryExport) MarshalJSON() ([]byte, error) {
+	type embed SignalSummaryExport
+	var marshaler = struct {
+		embed
+		ExpiresAt   *internal.DateTime `json:"expiresAt,omitempty"`
+		CreatedAt   *internal.DateTime `json:"createdAt"`
+		CompletedAt *internal.DateTime `json:"completedAt,omitempty"`
+	}{
+		embed:       embed(*s),
+		ExpiresAt:   internal.NewOptionalDateTime(s.ExpiresAt),
+		CreatedAt:   internal.NewDateTime(s.CreatedAt),
+		CompletedAt: internal.NewOptionalDateTime(s.CompletedAt),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (s *SignalSummaryExport) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// Format this export's file was written in.
+type SignalSummaryExportFormat string
+
+const (
+	SignalSummaryExportFormatJSON SignalSummaryExportFormat = "json"
+	SignalSummaryExportFormatCsv  SignalSummaryExportFormat = "csv"
+)
+
+func NewSignalSummaryExportFormatFromString(s string) (SignalSummaryExportFormat, error) {
+	switch s {
+	case "json":
+		return SignalSummaryExportFormatJSON, nil
+	case "csv":
+		return SignalSummaryExportFormatCsv, nil
+	}
+	var t SignalSummaryExportFormat
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SignalSummaryExportFormat) Ptr() *SignalSummaryExportFormat {
+	return &s
+}
+
+type SignalSummaryExportStatus string
+
+const (
+	SignalSummaryExportStatusPending   SignalSummaryExportStatus = "pending"
+	SignalSummaryExportStatusRunning   SignalSummaryExportStatus = "running"
+	SignalSummaryExportStatusSucceeded SignalSummaryExportStatus = "succeeded"
+	SignalSummaryExportStatusFailed    SignalSummaryExportStatus = "failed"
+)
+
+func NewSignalSummaryExportStatusFromString(s string) (SignalSummaryExportStatus, error) {
+	switch s {
+	case "pending":
+		return SignalSummaryExportStatusPending, nil
+	case "running":
+		return SignalSummaryExportStatusRunning, nil
+	case "succeeded":
+		return SignalSummaryExportStatusSucceeded, nil
+	case "failed":
+		return SignalSummaryExportStatusFailed, nil
+	}
+	var t SignalSummaryExportStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SignalSummaryExportStatus) Ptr() *SignalSummaryExportStatus {
+	return &s
+}
+
+// How many groups kept their own series, and how many were summed under "other". Present only when groupBy is set.
+type SignalSummaryGroups struct {
+	// Groups that kept their own series. At most 100.
+	Kept float64 `json:"kept" url:"kept"`
+	// Groups summed under the key "other" instead of keeping their own series. Zero means every group kept its own figure, so the breakdown is complete. Above zero, this many groups have no figure of their own in the response.
+	Truncated float64 `json:"truncated" url:"truncated"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryGroups) GetKept() float64 {
+	if s == nil {
+		return 0
+	}
+	return s.Kept
+}
+
+func (s *SignalSummaryGroups) GetTruncated() float64 {
+	if s == nil {
+		return 0
+	}
+	return s.Truncated
+}
+
+func (s *SignalSummaryGroups) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryGroups) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryGroups
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryGroups(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryGroups) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryMeasure struct {
+	Fn SignalSummaryMeasureFn `json:"fn" url:"fn"`
+	// Key into the signal's data payload. Dots address nested fields, for example dimensions.pages.
+	Path *string `json:"path,omitempty" url:"path,omitempty"`
+	Slug *string `json:"slug,omitempty" url:"slug,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryMeasure) GetFn() SignalSummaryMeasureFn {
+	if s == nil {
+		return ""
+	}
+	return s.Fn
+}
+
+func (s *SignalSummaryMeasure) GetPath() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Path
+}
+
+func (s *SignalSummaryMeasure) GetSlug() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Slug
+}
+
+func (s *SignalSummaryMeasure) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryMeasure) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryMeasure
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryMeasure(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryMeasure) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryMeasureFn string
+
+const (
+	SignalSummaryMeasureFnCount SignalSummaryMeasureFn = "count"
+	SignalSummaryMeasureFnSum   SignalSummaryMeasureFn = "sum"
+	SignalSummaryMeasureFnMin   SignalSummaryMeasureFn = "min"
+	SignalSummaryMeasureFnMax   SignalSummaryMeasureFn = "max"
+	SignalSummaryMeasureFnAvg   SignalSummaryMeasureFn = "avg"
+)
+
+func NewSignalSummaryMeasureFnFromString(s string) (SignalSummaryMeasureFn, error) {
+	switch s {
+	case "count":
+		return SignalSummaryMeasureFnCount, nil
+	case "sum":
+		return SignalSummaryMeasureFnSum, nil
+	case "min":
+		return SignalSummaryMeasureFnMin, nil
+	case "max":
+		return SignalSummaryMeasureFnMax, nil
+	case "avg":
+		return SignalSummaryMeasureFnAvg, nil
+	}
+	var t SignalSummaryMeasureFn
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SignalSummaryMeasureFn) Ptr() *SignalSummaryMeasureFn {
+	return &s
+}
+
+type SignalSummaryPage struct {
+	// The page size that applied.
+	Limit float64 `json:"limit" url:"limit"`
+	// Whether more points follow this page.
+	HasMore bool `json:"hasMore" url:"hasMore"`
+	// Pass as cursor to fetch the next page. Null on the last page.
+	NextCursor *string `json:"nextCursor,omitempty" url:"nextCursor,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryPage) GetLimit() float64 {
+	if s == nil {
+		return 0
+	}
+	return s.Limit
+}
+
+func (s *SignalSummaryPage) GetHasMore() bool {
+	if s == nil {
+		return false
+	}
+	return s.HasMore
+}
+
+func (s *SignalSummaryPage) GetNextCursor() *string {
+	if s == nil {
+		return nil
+	}
+	return s.NextCursor
+}
+
+func (s *SignalSummaryPage) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryPage) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryPage
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryPage(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryPage) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryPoint struct {
+	// Start of the period (inclusive), UTC. Clipped to the requested startDate when the window starts mid-period.
+	PeriodStart time.Time `json:"periodStart" url:"periodStart"`
+	// Last instant of the period (inclusive), UTC. Clipped to the requested endDate when the window ends mid-period.
+	PeriodEnd time.Time `json:"periodEnd" url:"periodEnd"`
+	// The group this point belongs to. Present only when groupBy is set. For signalName grouping, the signal's name. For dimension grouping, the payload value of dimensionKey, or an empty string when the signal carries no value.
+	//
+	// The key "other" sums the groups that did not keep their own series. A payload value that is itself literally "other" joins that same bucket.
+	GroupKey *string `json:"groupKey,omitempty" url:"groupKey,omitempty"`
+	// Signals recorded in this period, counted one per signal.
+	SignalCount float64 `json:"signalCount" url:"signalCount"`
+	// Quantity reported by those signals — one signal reporting a batch of 100 adds 100. Equals signalCount when every signal reported a single occurrence.
+	QuantityTotal float64 `json:"quantityTotal" url:"quantityTotal"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryPoint) GetPeriodStart() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.PeriodStart
+}
+
+func (s *SignalSummaryPoint) GetPeriodEnd() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.PeriodEnd
+}
+
+func (s *SignalSummaryPoint) GetGroupKey() *string {
+	if s == nil {
+		return nil
+	}
+	return s.GroupKey
+}
+
+func (s *SignalSummaryPoint) GetSignalCount() float64 {
+	if s == nil {
+		return 0
+	}
+	return s.SignalCount
+}
+
+func (s *SignalSummaryPoint) GetQuantityTotal() float64 {
+	if s == nil {
+		return 0
+	}
+	return s.QuantityTotal
+}
+
+func (s *SignalSummaryPoint) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryPoint) UnmarshalJSON(data []byte) error {
+	type embed SignalSummaryPoint
+	var unmarshaler = struct {
+		embed
+		PeriodStart *internal.DateTime `json:"periodStart"`
+		PeriodEnd   *internal.DateTime `json:"periodEnd"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*s = SignalSummaryPoint(unmarshaler.embed)
+	s.PeriodStart = unmarshaler.PeriodStart.Time()
+	s.PeriodEnd = unmarshaler.PeriodEnd.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryPoint) MarshalJSON() ([]byte, error) {
+	type embed SignalSummaryPoint
+	var marshaler = struct {
+		embed
+		PeriodStart *internal.DateTime `json:"periodStart"`
+		PeriodEnd   *internal.DateTime `json:"periodEnd"`
+	}{
+		embed:       embed(*s),
+		PeriodStart: internal.NewDateTime(s.PeriodStart),
+		PeriodEnd:   internal.NewDateTime(s.PeriodEnd),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (s *SignalSummaryPoint) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryPresenceDimension struct {
+	// Key into the signal's data payload. Dots address nested fields, for example dimensions.pages.
+	Path string `json:"path" url:"path"`
+	// Signal names this dimension breaks down. Signals not listed here get one column and no breakdown.
+	AppliesTo []string                              `json:"appliesTo" url:"appliesTo"`
+	Values    *SignalSummaryPresenceDimensionValues `json:"values" url:"values"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryPresenceDimension) GetPath() string {
+	if s == nil {
+		return ""
+	}
+	return s.Path
+}
+
+func (s *SignalSummaryPresenceDimension) GetAppliesTo() []string {
+	if s == nil {
+		return nil
+	}
+	return s.AppliesTo
+}
+
+func (s *SignalSummaryPresenceDimension) GetValues() *SignalSummaryPresenceDimensionValues {
+	if s == nil {
+		return nil
+	}
+	return s.Values
+}
+
+func (s *SignalSummaryPresenceDimension) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryPresenceDimension) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryPresenceDimension
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryPresenceDimension(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryPresenceDimension) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryPresenceDimensionValues struct {
+	True  *SignalSummaryPresenceDimensionValuesTrue  `json:"true" url:"true"`
+	False *SignalSummaryPresenceDimensionValuesFalse `json:"false" url:"false"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryPresenceDimensionValues) GetTrue() *SignalSummaryPresenceDimensionValuesTrue {
+	if s == nil {
+		return nil
+	}
+	return s.True
+}
+
+func (s *SignalSummaryPresenceDimensionValues) GetFalse() *SignalSummaryPresenceDimensionValuesFalse {
+	if s == nil {
+		return nil
+	}
+	return s.False
+}
+
+func (s *SignalSummaryPresenceDimensionValues) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryPresenceDimensionValues) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryPresenceDimensionValues
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryPresenceDimensionValues(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryPresenceDimensionValues) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryPresenceDimensionValuesFalse struct {
+	Group string  `json:"group" url:"group"`
+	Slug  *string `json:"slug,omitempty" url:"slug,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryPresenceDimensionValuesFalse) GetGroup() string {
+	if s == nil {
+		return ""
+	}
+	return s.Group
+}
+
+func (s *SignalSummaryPresenceDimensionValuesFalse) GetSlug() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Slug
+}
+
+func (s *SignalSummaryPresenceDimensionValuesFalse) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryPresenceDimensionValuesFalse) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryPresenceDimensionValuesFalse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryPresenceDimensionValuesFalse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryPresenceDimensionValuesFalse) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryPresenceDimensionValuesTrue struct {
+	Group string  `json:"group" url:"group"`
+	Slug  *string `json:"slug,omitempty" url:"slug,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryPresenceDimensionValuesTrue) GetGroup() string {
+	if s == nil {
+		return ""
+	}
+	return s.Group
+}
+
+func (s *SignalSummaryPresenceDimensionValuesTrue) GetSlug() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Slug
+}
+
+func (s *SignalSummaryPresenceDimensionValuesTrue) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryPresenceDimensionValuesTrue) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryPresenceDimensionValuesTrue
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryPresenceDimensionValuesTrue(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryPresenceDimensionValuesTrue) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummaryResponse struct {
+	// Period bucket size, echoed from the query.
+	Interval SignalSummaryResponseInterval `json:"interval" url:"interval"`
+	// How the points are grouped. Absent when not grouped.
+	GroupBy *SignalSummaryResponseGroupBy `json:"groupBy,omitempty" url:"groupBy,omitempty"`
+	// The signal-payload key the points are grouped by, echoed from the query. Present only when groupBy is dimension.
+	DimensionKey *string              `json:"dimensionKey,omitempty" url:"dimensionKey,omitempty"`
+	Groups       *SignalSummaryGroups `json:"groups,omitempty" url:"groups,omitempty"`
+	// Points ordered by period, then by group key. Only periods and groups that recorded signals appear — a period with no signals is absent rather than zero, so a chart fills its own gaps.
+	Data       []*SignalSummaryPoint `json:"data" url:"data"`
+	Pagination *SignalSummaryPage    `json:"pagination" url:"pagination"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummaryResponse) GetInterval() SignalSummaryResponseInterval {
+	if s == nil {
+		return ""
+	}
+	return s.Interval
+}
+
+func (s *SignalSummaryResponse) GetGroupBy() *SignalSummaryResponseGroupBy {
+	if s == nil {
+		return nil
+	}
+	return s.GroupBy
+}
+
+func (s *SignalSummaryResponse) GetDimensionKey() *string {
+	if s == nil {
+		return nil
+	}
+	return s.DimensionKey
+}
+
+func (s *SignalSummaryResponse) GetGroups() *SignalSummaryGroups {
+	if s == nil {
+		return nil
+	}
+	return s.Groups
+}
+
+func (s *SignalSummaryResponse) GetData() []*SignalSummaryPoint {
+	if s == nil {
+		return nil
+	}
+	return s.Data
+}
+
+func (s *SignalSummaryResponse) GetPagination() *SignalSummaryPage {
+	if s == nil {
+		return nil
+	}
+	return s.Pagination
+}
+
+func (s *SignalSummaryResponse) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummaryResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummaryResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummaryResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummaryResponse) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// How the points are grouped. Absent when not grouped.
+type SignalSummaryResponseGroupBy string
+
+const (
+	SignalSummaryResponseGroupBySignalName SignalSummaryResponseGroupBy = "signalName"
+	SignalSummaryResponseGroupByDimension  SignalSummaryResponseGroupBy = "dimension"
+)
+
+func NewSignalSummaryResponseGroupByFromString(s string) (SignalSummaryResponseGroupBy, error) {
+	switch s {
+	case "signalName":
+		return SignalSummaryResponseGroupBySignalName, nil
+	case "dimension":
+		return SignalSummaryResponseGroupByDimension, nil
+	}
+	var t SignalSummaryResponseGroupBy
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SignalSummaryResponseGroupBy) Ptr() *SignalSummaryResponseGroupBy {
+	return &s
+}
+
+// Period bucket size, echoed from the query.
+type SignalSummaryResponseInterval string
+
+const (
+	SignalSummaryResponseIntervalHour  SignalSummaryResponseInterval = "hour"
+	SignalSummaryResponseIntervalDay   SignalSummaryResponseInterval = "day"
+	SignalSummaryResponseIntervalWeek  SignalSummaryResponseInterval = "week"
+	SignalSummaryResponseIntervalMonth SignalSummaryResponseInterval = "month"
+)
+
+func NewSignalSummaryResponseIntervalFromString(s string) (SignalSummaryResponseInterval, error) {
+	switch s {
+	case "hour":
+		return SignalSummaryResponseIntervalHour, nil
+	case "day":
+		return SignalSummaryResponseIntervalDay, nil
+	case "week":
+		return SignalSummaryResponseIntervalWeek, nil
+	case "month":
+		return SignalSummaryResponseIntervalMonth, nil
+	}
+	var t SignalSummaryResponseInterval
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SignalSummaryResponseInterval) Ptr() *SignalSummaryResponseInterval {
+	return &s
+}
+
+type SignalSummarySignalSelection struct {
+	// Signal event name, matched exactly.
+	Name string `json:"name" url:"name"`
+	// Label shown in the file's first header row, above every column derived from this signal.
+	Group string `json:"group" url:"group"`
+	// Fragment used to build this signal's column names. Defaults to a slugified group.
+	Slug *string `json:"slug,omitempty" url:"slug,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummarySignalSelection) GetName() string {
+	if s == nil {
+		return ""
+	}
+	return s.Name
+}
+
+func (s *SignalSummarySignalSelection) GetGroup() string {
+	if s == nil {
+		return ""
+	}
+	return s.Group
+}
+
+func (s *SignalSummarySignalSelection) GetSlug() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Slug
+}
+
+func (s *SignalSummarySignalSelection) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummarySignalSelection) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummarySignalSelection
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummarySignalSelection(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummarySignalSelection) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+// The shape of the file: which signals to count, how to break them down, and what each column is called. Required unless copyFrom is given.
+type SignalSummarySpecInput struct {
+	Name string `json:"name" url:"name"`
+	// Bucket size for each row. Only monthly buckets are supported today.
+	Interval    *SignalSummarySpecInputInterval         `json:"interval,omitempty" url:"interval,omitempty"`
+	SignalNames []*SignalSummarySignalSelection         `json:"signalNames" url:"signalNames"`
+	Dimensions  []*SignalSummarySpecInputDimensionsItem `json:"dimensions,omitempty" url:"dimensions,omitempty"`
+	Measures    []*SignalSummaryMeasure                 `json:"measures" url:"measures"`
+	// How a column's name is composed. {signal} is the signal's slug; {dim1} and {dim2} are the slugs of the first and second dimensions that apply to it. Placeholders with no value are dropped, so a signal with no dimensions renders as its slug alone. Use this to control ordering — {dim1}_{signal}_{dim2} yields names like ticket_runs_1_step.
+	ColumnNameTemplate *string `json:"columnNameTemplate,omitempty" url:"columnNameTemplate,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalSummarySpecInput) GetName() string {
+	if s == nil {
+		return ""
+	}
+	return s.Name
+}
+
+func (s *SignalSummarySpecInput) GetInterval() *SignalSummarySpecInputInterval {
+	if s == nil {
+		return nil
+	}
+	return s.Interval
+}
+
+func (s *SignalSummarySpecInput) GetSignalNames() []*SignalSummarySignalSelection {
+	if s == nil {
+		return nil
+	}
+	return s.SignalNames
+}
+
+func (s *SignalSummarySpecInput) GetDimensions() []*SignalSummarySpecInputDimensionsItem {
+	if s == nil {
+		return nil
+	}
+	return s.Dimensions
+}
+
+func (s *SignalSummarySpecInput) GetMeasures() []*SignalSummaryMeasure {
+	if s == nil {
+		return nil
+	}
+	return s.Measures
+}
+
+func (s *SignalSummarySpecInput) GetColumnNameTemplate() *string {
+	if s == nil {
+		return nil
+	}
+	return s.ColumnNameTemplate
+}
+
+func (s *SignalSummarySpecInput) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalSummarySpecInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalSummarySpecInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalSummarySpecInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalSummarySpecInput) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalSummarySpecInputDimensionsItem struct {
+	Kind     string
+	Presence *SignalSummaryPresenceDimension
+	Bands    *SignalSummaryBandsDimension
+}
+
+func (s *SignalSummarySpecInputDimensionsItem) GetKind() string {
+	if s == nil {
+		return ""
+	}
+	return s.Kind
+}
+
+func (s *SignalSummarySpecInputDimensionsItem) GetPresence() *SignalSummaryPresenceDimension {
+	if s == nil {
+		return nil
+	}
+	return s.Presence
+}
+
+func (s *SignalSummarySpecInputDimensionsItem) GetBands() *SignalSummaryBandsDimension {
+	if s == nil {
+		return nil
+	}
+	return s.Bands
+}
+
+func (s *SignalSummarySpecInputDimensionsItem) UnmarshalJSON(data []byte) error {
+	var unmarshaler struct {
+		Kind string `json:"kind"`
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	s.Kind = unmarshaler.Kind
+	if unmarshaler.Kind == "" {
+		return fmt.Errorf("%T did not include discriminant kind", s)
+	}
+	switch unmarshaler.Kind {
+	case "presence":
+		value := new(SignalSummaryPresenceDimension)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		s.Presence = value
+	case "bands":
+		value := new(SignalSummaryBandsDimension)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		s.Bands = value
+	}
+	return nil
+}
+
+func (s SignalSummarySpecInputDimensionsItem) MarshalJSON() ([]byte, error) {
+	if err := s.validate(); err != nil {
+		return nil, err
+	}
+	if s.Presence != nil {
+		return internal.MarshalJSONWithExtraProperty(s.Presence, "kind", "presence")
+	}
+	if s.Bands != nil {
+		return internal.MarshalJSONWithExtraProperty(s.Bands, "kind", "bands")
+	}
+	return nil, fmt.Errorf("type %T does not define a non-empty union type", s)
+}
+
+type SignalSummarySpecInputDimensionsItemVisitor interface {
+	VisitPresence(*SignalSummaryPresenceDimension) error
+	VisitBands(*SignalSummaryBandsDimension) error
+}
+
+func (s *SignalSummarySpecInputDimensionsItem) Accept(visitor SignalSummarySpecInputDimensionsItemVisitor) error {
+	if s.Presence != nil {
+		return visitor.VisitPresence(s.Presence)
+	}
+	if s.Bands != nil {
+		return visitor.VisitBands(s.Bands)
+	}
+	return fmt.Errorf("type %T does not define a non-empty union type", s)
+}
+
+func (s *SignalSummarySpecInputDimensionsItem) validate() error {
+	if s == nil {
+		return fmt.Errorf("type %T is nil", s)
+	}
+	var fields []string
+	if s.Presence != nil {
+		fields = append(fields, "presence")
+	}
+	if s.Bands != nil {
+		fields = append(fields, "bands")
+	}
+	if len(fields) == 0 {
+		if s.Kind != "" {
+			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", s, s.Kind)
+		}
+		return fmt.Errorf("type %T is empty", s)
+	}
+	if len(fields) > 1 {
+		return fmt.Errorf("type %T defines values for %s, but only one value is allowed", s, fields)
+	}
+	if s.Kind != "" {
+		field := fields[0]
+		if s.Kind != field {
+			return fmt.Errorf(
+				"type %T defines a discriminant set to %q, but it does not match the %T field; either remove or update the discriminant to match",
+				s,
+				s.Kind,
+				s,
+			)
+		}
+	}
+	return nil
+}
+
+// Bucket size for each row. Only monthly buckets are supported today.
+type SignalSummarySpecInputInterval string
+
+const (
+	SignalSummarySpecInputIntervalMonth SignalSummarySpecInputInterval = "month"
+)
+
+func NewSignalSummarySpecInputIntervalFromString(s string) (SignalSummarySpecInputInterval, error) {
+	switch s {
+	case "month":
+		return SignalSummarySpecInputIntervalMonth, nil
+	}
+	var t SignalSummarySpecInputInterval
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (s SignalSummarySpecInputInterval) Ptr() *SignalSummarySpecInputInterval {
+	return &s
+}
+
+// Format of the produced file. `json` gives the columns and one object per customer per month; `csv` gives the wide spreadsheet with three header rows.
+type CreateSignalSummaryExportRequestFormat string
+
+const (
+	CreateSignalSummaryExportRequestFormatJSON CreateSignalSummaryExportRequestFormat = "json"
+	CreateSignalSummaryExportRequestFormatCsv  CreateSignalSummaryExportRequestFormat = "csv"
+)
+
+func NewCreateSignalSummaryExportRequestFormatFromString(s string) (CreateSignalSummaryExportRequestFormat, error) {
+	switch s {
+	case "json":
+		return CreateSignalSummaryExportRequestFormatJSON, nil
+	case "csv":
+		return CreateSignalSummaryExportRequestFormatCsv, nil
+	}
+	var t CreateSignalSummaryExportRequestFormat
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (c CreateSignalSummaryExportRequestFormat) Ptr() *CreateSignalSummaryExportRequestFormat {
+	return &c
+}
+
+type GetSignalSummaryRequestGroupBy string
+
+const (
+	GetSignalSummaryRequestGroupBySignalName GetSignalSummaryRequestGroupBy = "signalName"
+	GetSignalSummaryRequestGroupByDimension  GetSignalSummaryRequestGroupBy = "dimension"
+)
+
+func NewGetSignalSummaryRequestGroupByFromString(s string) (GetSignalSummaryRequestGroupBy, error) {
+	switch s {
+	case "signalName":
+		return GetSignalSummaryRequestGroupBySignalName, nil
+	case "dimension":
+		return GetSignalSummaryRequestGroupByDimension, nil
+	}
+	var t GetSignalSummaryRequestGroupBy
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (g GetSignalSummaryRequestGroupBy) Ptr() *GetSignalSummaryRequestGroupBy {
+	return &g
+}
+
+type GetSignalSummaryRequestInterval string
+
+const (
+	GetSignalSummaryRequestIntervalHour  GetSignalSummaryRequestInterval = "hour"
+	GetSignalSummaryRequestIntervalDay   GetSignalSummaryRequestInterval = "day"
+	GetSignalSummaryRequestIntervalWeek  GetSignalSummaryRequestInterval = "week"
+	GetSignalSummaryRequestIntervalMonth GetSignalSummaryRequestInterval = "month"
+)
+
+func NewGetSignalSummaryRequestIntervalFromString(s string) (GetSignalSummaryRequestInterval, error) {
+	switch s {
+	case "hour":
+		return GetSignalSummaryRequestIntervalHour, nil
+	case "day":
+		return GetSignalSummaryRequestIntervalDay, nil
+	case "week":
+		return GetSignalSummaryRequestIntervalWeek, nil
+	case "month":
+		return GetSignalSummaryRequestIntervalMonth, nil
+	}
+	var t GetSignalSummaryRequestInterval
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (g GetSignalSummaryRequestInterval) Ptr() *GetSignalSummaryRequestInterval {
+	return &g
 }
