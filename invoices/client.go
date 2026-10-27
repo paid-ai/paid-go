@@ -4,10 +4,10 @@ package invoices
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Get a list of invoices for the organization
 func (c *Client) ListInvoices(
 	ctx context.Context,
-	request *paidgo.ListInvoicesRequest,
+	request *v2.ListInvoicesRequest,
 	opts ...option.RequestOption,
-) (*paidgo.InvoiceListResponse, error) {
+) (*v2.InvoiceListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,23 +57,23 @@ func (c *Client) ListInvoices(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.InvoiceListResponse
+	var response *v2.InvoiceListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -96,9 +96,9 @@ func (c *Client) ListInvoices(
 // Get an invoice by ID
 func (c *Client) GetInvoiceByID(
 	ctx context.Context,
-	request *paidgo.GetInvoiceByIDRequest,
+	request *v2.GetInvoiceByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Invoice, error) {
+) (*v2.Invoice, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -115,23 +115,23 @@ func (c *Client) GetInvoiceByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Invoice
+	var response *v2.Invoice
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -154,9 +154,9 @@ func (c *Client) GetInvoiceByID(
 // Update an invoice by ID
 func (c *Client) UpdateInvoiceByID(
 	ctx context.Context,
-	request *paidgo.UpdateInvoiceRequest,
+	request *v2.UpdateInvoiceRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Invoice, error) {
+) (*v2.Invoice, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -174,28 +174,28 @@ func (c *Client) UpdateInvoiceByID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Invoice
+	var response *v2.Invoice
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -219,9 +219,9 @@ func (c *Client) UpdateInvoiceByID(
 // Get the invoice lines for an invoice by ID
 func (c *Client) GetInvoiceLines(
 	ctx context.Context,
-	request *paidgo.GetInvoiceLinesRequest,
+	request *v2.GetInvoiceLinesRequest,
 	opts ...option.RequestOption,
-) (*paidgo.InvoiceLinesResponse, error) {
+) (*v2.InvoiceLinesResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -245,23 +245,23 @@ func (c *Client) GetInvoiceLines(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.InvoiceLinesResponse
+	var response *v2.InvoiceLinesResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

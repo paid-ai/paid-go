@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/paid-ai/paid-go/core"
+	"github.com/paid-ai/paid-go/v2/core"
 )
 
 // ErrorDecoder decodes *http.Response errors and returns a

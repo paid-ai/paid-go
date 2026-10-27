@@ -4,10 +4,10 @@ package customers
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Get a list of customers for the organization
 func (c *Client) ListCustomers(
 	ctx context.Context,
-	request *paidgo.ListCustomersRequest,
+	request *v2.ListCustomersRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerListResponse, error) {
+) (*v2.CustomerListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,23 +57,23 @@ func (c *Client) ListCustomers(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerListResponse
+	var response *v2.CustomerListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -96,9 +96,9 @@ func (c *Client) ListCustomers(
 // Creates a new customer for the organization. `externalId` shares one set of ids with customer unit ids and aliases, unique across the organization and ignoring letter case: an external id that another customer already holds as a unit id or alias, or as its external id in another case, is refused with `409 EXTERNAL_ID_IN_USE`. The same id in the same case is `400 DUPLICATE_EXTERNAL_ID`, as before.
 func (c *Client) CreateCustomer(
 	ctx context.Context,
-	request *paidgo.CreateCustomerRequest,
+	request *v2.CreateCustomerRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
+) (*v2.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -113,28 +113,28 @@ func (c *Client) CreateCustomer(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Customer
+	var response *v2.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -158,9 +158,9 @@ func (c *Client) CreateCustomer(
 // List alternate external identifiers that resolve to a customer by Paid display ID.
 func (c *Client) ListCustomerAliases(
 	ctx context.Context,
-	request *paidgo.ListCustomerAliasesRequest,
+	request *v2.ListCustomerAliasesRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAliasListResponse, error) {
+) (*v2.CustomerAliasListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -184,28 +184,28 @@ func (c *Client) ListCustomerAliases(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAliasListResponse
+	var response *v2.CustomerAliasListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -228,9 +228,9 @@ func (c *Client) ListCustomerAliases(
 // Create an alternate external identifier for a customer by Paid display ID. The alias shares one set of ids with customer external ids and unit ids, unique within the organization and ignoring letter case: an alias that another customer already holds as its external id, a unit id or an alias is refused with `409 EXTERNAL_ID_IN_USE` (an exact match keeps its older code, `ALIAS_CONFLICTS_WITH_CUSTOMER_EXTERNAL_ID` or `CUSTOMER_ALIAS_ALREADY_EXISTS`).
 func (c *Client) CreateCustomerAlias(
 	ctx context.Context,
-	request *paidgo.CreateCustomerAliasRequest,
+	request *v2.CreateCustomerAliasRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAlias, error) {
+) (*v2.CustomerAlias, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -248,33 +248,33 @@ func (c *Client) CreateCustomerAlias(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAlias
+	var response *v2.CustomerAlias
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -298,9 +298,9 @@ func (c *Client) CreateCustomerAlias(
 // Remove an alternate external identifier from a customer by Paid display ID.
 func (c *Client) DeleteCustomerAlias(
 	ctx context.Context,
-	request *paidgo.DeleteCustomerAliasRequest,
+	request *v2.DeleteCustomerAliasRequest,
 	opts ...option.RequestOption,
-) (*paidgo.EmptyResponse, error) {
+) (*v2.EmptyResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -318,23 +318,23 @@ func (c *Client) DeleteCustomerAlias(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.EmptyResponse
+	var response *v2.EmptyResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -357,9 +357,9 @@ func (c *Client) DeleteCustomerAlias(
 // Get a customer by Paid display ID. Use the value returned as `customer.id`, for example `cus_abc123`. If you have your own customer ID, use `GET /api/v2/customers/external/{externalId}`.
 func (c *Client) GetCustomerByID(
 	ctx context.Context,
-	request *paidgo.GetCustomerByIDRequest,
+	request *v2.GetCustomerByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
+) (*v2.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -376,23 +376,23 @@ func (c *Client) GetCustomerByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Customer
+	var response *v2.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -415,9 +415,9 @@ func (c *Client) GetCustomerByID(
 // Update a customer by Paid display ID. Use the value returned as `customer.id`, for example `cus_abc123`. If you have your own customer ID, use `PUT /api/v2/customers/external/{externalId}`. Changing `externalId` follows the organization-wide id rule: a new id that another customer already holds as its external id, a unit id or an alias, ignoring letter case, is refused with `409 EXTERNAL_ID_IN_USE`; the same id in the same case stays `400 DUPLICATE_EXTERNAL_ID`. When the id changes, the previous id is kept as an alias of the customer, so signals that still use it keep resolving to it.
 func (c *Client) UpdateCustomerByID(
 	ctx context.Context,
-	request *paidgo.UpdateCustomerByIDRequest,
+	request *v2.UpdateCustomerByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
+) (*v2.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -435,33 +435,33 @@ func (c *Client) UpdateCustomerByID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Customer
+	var response *v2.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -485,9 +485,9 @@ func (c *Client) UpdateCustomerByID(
 // Delete a customer by Paid display ID. Use the value returned as `customer.id`, for example `cus_abc123`. If you have your own customer ID, use `DELETE /api/v2/customers/external/{externalId}`. A customer that still has orders, invoices, payments, contacts, child customers or other linked records is not deleted: the request returns 409 `CUSTOMER_HAS_ASSOCIATIONS` and `details` lists what is linked.
 func (c *Client) DeleteCustomerByID(
 	ctx context.Context,
-	request *paidgo.DeleteCustomerByIDRequest,
+	request *v2.DeleteCustomerByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.EmptyResponse, error) {
+) (*v2.EmptyResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -504,33 +504,33 @@ func (c *Client) DeleteCustomerByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.EmptyResponse
+	var response *v2.EmptyResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -553,9 +553,9 @@ func (c *Client) DeleteCustomerByID(
 // Get the current customer state by Paid display ID
 func (c *Client) GetCustomerStateByID(
 	ctx context.Context,
-	request *paidgo.GetCustomerStateByIDRequest,
+	request *v2.GetCustomerStateByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerState, error) {
+) (*v2.CustomerState, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -572,23 +572,23 @@ func (c *Client) GetCustomerStateByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerState
+	var response *v2.CustomerState
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -611,9 +611,9 @@ func (c *Client) GetCustomerStateByID(
 // List alternate external identifiers that resolve to a customer by external ID.
 func (c *Client) ListCustomerAliasesByExternalID(
 	ctx context.Context,
-	request *paidgo.ListCustomerAliasesByExternalIDRequest,
+	request *v2.ListCustomerAliasesByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAliasListResponse, error) {
+) (*v2.CustomerAliasListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -637,28 +637,28 @@ func (c *Client) ListCustomerAliasesByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAliasListResponse
+	var response *v2.CustomerAliasListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -681,9 +681,9 @@ func (c *Client) ListCustomerAliasesByExternalID(
 // Create an alternate external identifier for a customer by external ID. The alias shares one set of ids with customer external ids and unit ids, unique within the organization and ignoring letter case: an alias that another customer already holds as its external id, a unit id or an alias is refused with `409 EXTERNAL_ID_IN_USE` (an exact match keeps its older code, `ALIAS_CONFLICTS_WITH_CUSTOMER_EXTERNAL_ID` or `CUSTOMER_ALIAS_ALREADY_EXISTS`).
 func (c *Client) CreateCustomerAliasByExternalID(
 	ctx context.Context,
-	request *paidgo.CreateCustomerAliasByExternalIDRequest,
+	request *v2.CreateCustomerAliasByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAlias, error) {
+) (*v2.CustomerAlias, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -701,33 +701,33 @@ func (c *Client) CreateCustomerAliasByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAlias
+	var response *v2.CustomerAlias
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -751,9 +751,9 @@ func (c *Client) CreateCustomerAliasByExternalID(
 // Remove an alternate external identifier from a customer by external ID.
 func (c *Client) DeleteCustomerAliasByExternalID(
 	ctx context.Context,
-	request *paidgo.DeleteCustomerAliasByExternalIDRequest,
+	request *v2.DeleteCustomerAliasByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.EmptyResponse, error) {
+) (*v2.EmptyResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -771,23 +771,23 @@ func (c *Client) DeleteCustomerAliasByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.EmptyResponse
+	var response *v2.EmptyResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -810,9 +810,9 @@ func (c *Client) DeleteCustomerAliasByExternalID(
 // Get a customer by external ID
 func (c *Client) GetCustomerByExternalID(
 	ctx context.Context,
-	request *paidgo.GetCustomerByExternalIDRequest,
+	request *v2.GetCustomerByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
+) (*v2.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -829,23 +829,23 @@ func (c *Client) GetCustomerByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Customer
+	var response *v2.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -868,9 +868,9 @@ func (c *Client) GetCustomerByExternalID(
 // Update a customer by external ID. Changing `externalId` follows the organization-wide id rule: a new id that another customer already holds as its external id, a unit id or an alias, ignoring letter case, is refused with `409 EXTERNAL_ID_IN_USE`; the same id in the same case stays `400 DUPLICATE_EXTERNAL_ID`. When the id changes, the previous id is kept as an alias of the customer, so signals that still use it keep resolving to it.
 func (c *Client) UpdateCustomerByExternalID(
 	ctx context.Context,
-	request *paidgo.UpdateCustomerByExternalIDRequest,
+	request *v2.UpdateCustomerByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Customer, error) {
+) (*v2.Customer, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -888,33 +888,33 @@ func (c *Client) UpdateCustomerByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Customer
+	var response *v2.Customer
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -938,9 +938,9 @@ func (c *Client) UpdateCustomerByExternalID(
 // Delete a customer by external ID. A customer that still has orders, invoices, payments, contacts, child customers or other linked records is not deleted: the request returns 409 `CUSTOMER_HAS_ASSOCIATIONS` and `details` lists what is linked.
 func (c *Client) DeleteCustomerByExternalID(
 	ctx context.Context,
-	request *paidgo.DeleteCustomerByExternalIDRequest,
+	request *v2.DeleteCustomerByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.EmptyResponse, error) {
+) (*v2.EmptyResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -957,33 +957,33 @@ func (c *Client) DeleteCustomerByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.EmptyResponse
+	var response *v2.EmptyResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1006,9 +1006,9 @@ func (c *Client) DeleteCustomerByExternalID(
 // Primary integration endpoint for agents and programmatic clients using their own customer IDs. Use the value you stored on `customer.externalId`, for example `customer_123`.
 func (c *Client) GetCustomerStateByExternalID(
 	ctx context.Context,
-	request *paidgo.GetCustomerStateByExternalIDRequest,
+	request *v2.GetCustomerStateByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerState, error) {
+) (*v2.CustomerState, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1025,23 +1025,23 @@ func (c *Client) GetCustomerStateByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerState
+	var response *v2.CustomerState
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1064,9 +1064,9 @@ func (c *Client) GetCustomerStateByExternalID(
 // Get current customer credit balances grouped by currency for a Paid customer display ID. Use the value returned as `customer.id`, for example `cus_abc123`. If you have your own customer ID, use `/api/v2/customers/external/{externalId}/credits/balances`.
 func (c *Client) GetCustomerCreditBalances(
 	ctx context.Context,
-	request *paidgo.GetCustomerCreditBalancesRequest,
+	request *v2.GetCustomerCreditBalancesRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CreditBalanceListResponse, error) {
+) (*v2.CreditBalanceListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1083,23 +1083,23 @@ func (c *Client) GetCustomerCreditBalances(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CreditBalanceListResponse
+	var response *v2.CreditBalanceListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1122,9 +1122,9 @@ func (c *Client) GetCustomerCreditBalances(
 // Immediately grant credits to a customer using an active credit currency key.
 func (c *Client) GrantCustomerCredits(
 	ctx context.Context,
-	request *paidgo.GrantCustomerCreditsRequest,
+	request *v2.GrantCustomerCreditsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.GrantCustomerCreditsResponse, error) {
+) (*v2.GrantCustomerCreditsResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1142,33 +1142,33 @@ func (c *Client) GrantCustomerCredits(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.GrantCustomerCreditsResponse
+	var response *v2.GrantCustomerCreditsResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1192,9 +1192,9 @@ func (c *Client) GrantCustomerCredits(
 // Get current customer credit balances grouped by currency, looked up by external ID
 func (c *Client) GetCustomerCreditBalancesByExternalID(
 	ctx context.Context,
-	request *paidgo.GetCustomerCreditBalancesByExternalIDRequest,
+	request *v2.GetCustomerCreditBalancesByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CreditBalanceListResponse, error) {
+) (*v2.CreditBalanceListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1211,23 +1211,23 @@ func (c *Client) GetCustomerCreditBalancesByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CreditBalanceListResponse
+	var response *v2.CreditBalanceListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1250,9 +1250,9 @@ func (c *Client) GetCustomerCreditBalancesByExternalID(
 // List credit consumption that was recorded before a matching credit pool existed — for example usage that arrived before an invoice was paid or before a new period's credits were granted. Entries leave this list once they are applied to a pool or settled. Use the value returned as `customer.id`, for example `cus_abc123`. If you have your own customer ID, use `/api/v2/customers/external/{externalId}/credits/pending-consumption`.
 func (c *Client) ListCustomerPendingCreditConsumption(
 	ctx context.Context,
-	request *paidgo.ListCustomerPendingCreditConsumptionRequest,
+	request *v2.ListCustomerPendingCreditConsumptionRequest,
 	opts ...option.RequestOption,
-) (*paidgo.PendingCreditConsumptionListResponse, error) {
+) (*v2.PendingCreditConsumptionListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1276,28 +1276,28 @@ func (c *Client) ListCustomerPendingCreditConsumption(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.PendingCreditConsumptionListResponse
+	var response *v2.PendingCreditConsumptionListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1320,9 +1320,9 @@ func (c *Client) ListCustomerPendingCreditConsumption(
 // List credit consumption recorded before a matching credit pool existed, for a customer looked up by external ID.
 func (c *Client) ListCustomerPendingCreditConsumptionByExternalID(
 	ctx context.Context,
-	request *paidgo.ListCustomerPendingCreditConsumptionByExternalIDRequest,
+	request *v2.ListCustomerPendingCreditConsumptionByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.PendingCreditConsumptionListResponse, error) {
+) (*v2.PendingCreditConsumptionListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1346,28 +1346,28 @@ func (c *Client) ListCustomerPendingCreditConsumptionByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.PendingCreditConsumptionListResponse
+	var response *v2.PendingCreditConsumptionListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1390,9 +1390,9 @@ func (c *Client) ListCustomerPendingCreditConsumptionByExternalID(
 // Immediately grant credits to a customer looked up by external ID using an active credit currency key.
 func (c *Client) GrantCustomerCreditsByExternalID(
 	ctx context.Context,
-	request *paidgo.GrantCustomerCreditsByExternalIDRequest,
+	request *v2.GrantCustomerCreditsByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.GrantCustomerCreditsResponse, error) {
+) (*v2.GrantCustomerCreditsResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1410,33 +1410,33 @@ func (c *Client) GrantCustomerCreditsByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.GrantCustomerCreditsResponse
+	var response *v2.GrantCustomerCreditsResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1460,9 +1460,9 @@ func (c *Client) GrantCustomerCreditsByExternalID(
 // Create or update a customer user using customer and user external IDs
 func (c *Client) UpsertCustomerUserByExternalID(
 	ctx context.Context,
-	request *paidgo.UpsertCustomerUserRequest,
+	request *v2.UpsertCustomerUserRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUser, error) {
+) (*v2.CustomerUser, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1481,28 +1481,28 @@ func (c *Client) UpsertCustomerUserByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUser
+	var response *v2.CustomerUser
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1526,9 +1526,9 @@ func (c *Client) UpsertCustomerUserByExternalID(
 // Returns the virtual bank account (Stripe funding instructions) a customer can pay by bank transfer into, by Paid display ID.
 func (c *Client) GetCustomerFundingInstructions(
 	ctx context.Context,
-	request *paidgo.GetCustomerFundingInstructionsRequest,
+	request *v2.GetCustomerFundingInstructionsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerFundingInstructions, error) {
+) (*v2.CustomerFundingInstructions, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1552,28 +1552,28 @@ func (c *Client) GetCustomerFundingInstructions(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerFundingInstructions
+	var response *v2.CustomerFundingInstructions
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1596,9 +1596,9 @@ func (c *Client) GetCustomerFundingInstructions(
 // Creates a dedicated virtual bank account for the customer to pay invoices by bank transfer, by Paid display ID. Returns the existing account if one already exists for the currency. Requires a live-mode organization with Stripe connected and Bank Transfers enabled on the Stripe account.
 func (c *Client) CreateCustomerFundingInstructions(
 	ctx context.Context,
-	request *paidgo.CreateCustomerFundingInstructionsRequest,
+	request *v2.CreateCustomerFundingInstructionsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerFundingInstructions, error) {
+) (*v2.CustomerFundingInstructions, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1616,33 +1616,33 @@ func (c *Client) CreateCustomerFundingInstructions(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		422: func(apiError *core.APIError) error {
-			return &paidgo.UnprocessableEntityError{
+			return &v2.UnprocessableEntityError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerFundingInstructions
+	var response *v2.CustomerFundingInstructions
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1666,9 +1666,9 @@ func (c *Client) CreateCustomerFundingInstructions(
 // Returns the virtual bank account (Stripe funding instructions) a customer can pay by bank transfer into, by your external ID.
 func (c *Client) GetCustomerFundingInstructionsByExternalID(
 	ctx context.Context,
-	request *paidgo.GetCustomerFundingInstructionsByExternalIDRequest,
+	request *v2.GetCustomerFundingInstructionsByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerFundingInstructions, error) {
+) (*v2.CustomerFundingInstructions, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1692,28 +1692,28 @@ func (c *Client) GetCustomerFundingInstructionsByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerFundingInstructions
+	var response *v2.CustomerFundingInstructions
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1736,9 +1736,9 @@ func (c *Client) GetCustomerFundingInstructionsByExternalID(
 // Creates a dedicated virtual bank account for the customer to pay invoices by bank transfer, by your external ID. Returns the existing account if one already exists for the currency. Requires a live-mode organization with Stripe connected and Bank Transfers enabled on the Stripe account.
 func (c *Client) CreateCustomerFundingInstructionsByExternalID(
 	ctx context.Context,
-	request *paidgo.CreateCustomerFundingInstructionsByExternalIDRequest,
+	request *v2.CreateCustomerFundingInstructionsByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerFundingInstructions, error) {
+) (*v2.CustomerFundingInstructions, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1756,33 +1756,33 @@ func (c *Client) CreateCustomerFundingInstructionsByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		422: func(apiError *core.APIError) error {
-			return &paidgo.UnprocessableEntityError{
+			return &v2.UnprocessableEntityError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerFundingInstructions
+	var response *v2.CustomerFundingInstructions
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1806,9 +1806,9 @@ func (c *Client) CreateCustomerFundingInstructionsByExternalID(
 // Lists the customer's units as a flat list, newest last; assemble the tree from `parentExternalId` (`null` on the root unit, `isRoot: true`). Deleted units are hidden unless `status=DELETED` is given, drafts unless `status=DRAFT`. Filter by `externalType`, or by `parentExternalId` for one level of the tree. Addresses the customer by your external customer id.
 func (c *Client) ListCustomerUnitsByExternalID(
 	ctx context.Context,
-	request *paidgo.ListCustomerUnitsByExternalIDRequest,
+	request *v2.ListCustomerUnitsByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitListResponse, error) {
+) (*v2.CustomerUnitListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1832,28 +1832,28 @@ func (c *Client) ListCustomerUnitsByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitListResponse
+	var response *v2.CustomerUnitListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1876,9 +1876,9 @@ func (c *Client) ListCustomerUnitsByExternalID(
 // Creates a unit for this customer. `externalId` is your own key for it: required, immutable, and unique within the organization (no other customer's unit id, external id or alias may be the same, ignoring letter case); every unit route addresses the unit by it, and `name` defaults to it. Omit `parentExternalId` to create the customer's root unit (its first unit; `409 ROOT_EXISTS` if it already has one — a customer created with an external id usable as a unit key already has its root, keyed by that external id, so name it as the parent instead); otherwise the parent must exist (`409 PARENT_NOT_FOUND`) and be ACTIVE. A create whose `externalId` is one of this customer's `DRAFT` units promotes the draft in place: same unit, same id, now ACTIVE with the request's name, type, metadata and parent (`parentExternalId` is required; a draft sits under the root). A signal that names a unit before it exists is accepted; with draft units enabled for your organization it creates a `DRAFT` unit under the customer's root that holds the key, and creating the unit with that key later promotes the draft; otherwise its spend attaches to the unit once you create it with that key. `409` also when the externalId is taken on this customer (`CUSTOMER_UNIT_EXISTS`) or by another customer of the organization (`EXTERNAL_ID_IN_USE`), the tree would get too deep, the customer is on seat-based billing, or a root unit is sent with `billable: false` (`ROOT_UNIT_ALWAYS_BILLABLE`). `403 FEATURE_NOT_ENABLED` for `billable: false` when non-billable units are not enabled for your organization. Addresses the customer by your external customer id.
 func (c *Client) CreateCustomerUnitByExternalID(
 	ctx context.Context,
-	request *paidgo.CreateCustomerUnitByExternalIDRequest,
+	request *v2.CreateCustomerUnitByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnit, error) {
+) (*v2.CustomerUnit, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1896,33 +1896,33 @@ func (c *Client) CreateCustomerUnitByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnit
+	var response *v2.CustomerUnit
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -1946,9 +1946,9 @@ func (c *Client) CreateCustomerUnitByExternalID(
 // Returns one unit of this customer by its `externalId`, including a deleted one. `404` when the unit does not exist or belongs to another customer. Addresses the customer by your external customer id.
 func (c *Client) GetCustomerUnitByExternalID(
 	ctx context.Context,
-	request *paidgo.GetCustomerUnitByExternalIDRequest,
+	request *v2.GetCustomerUnitByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnit, error) {
+) (*v2.CustomerUnit, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -1966,28 +1966,28 @@ func (c *Client) GetCustomerUnitByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnit
+	var response *v2.CustomerUnit
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2010,9 +2010,9 @@ func (c *Client) GetCustomerUnitByExternalID(
 // Soft-deletes a unit: it stays readable with `status: DELETED` and cannot be reactivated. Spend history that references it is kept, and signals that keep naming it are still attributed to it. A `DRAFT` unit is deleted the same way: it stays readable as DELETED, its key stays reserved, and spend already keyed to it stays its own. `409` while the unit has ACTIVE or DRAFT children or a cap in force or scheduled; the root follows the same rules, and once it is deleted a new root can be created. Addresses the customer by your external customer id.
 func (c *Client) DeleteCustomerUnitByExternalID(
 	ctx context.Context,
-	request *paidgo.DeleteCustomerUnitByExternalIDRequest,
+	request *v2.DeleteCustomerUnitByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnit, error) {
+) (*v2.CustomerUnit, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2030,33 +2030,33 @@ func (c *Client) DeleteCustomerUnitByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnit
+	var response *v2.CustomerUnit
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2079,9 +2079,9 @@ func (c *Client) DeleteCustomerUnitByExternalID(
 // Renames, re-types, re-parents or annotates a unit, the root included. `externalId` cannot change. Re-parenting (`parentExternalId`) moves the unit with everything under it. Spend already recorded keeps naming the unit it landed on; caps are evaluated on the current tree, so from the move on the unit's spend in the running cap period counts toward its new ancestors' caps and no longer toward the old ones. `billable` flips the unit's own setting; moving a unit under a non-billable one makes it non-billable in effect (`effectiveBillable`). `409` for a deleted unit (`CUSTOMER_UNIT_DELETED`), a draft (`CUSTOMER_UNIT_DRAFT`), a parent that does not exist or is not ACTIVE, a move of the root (`ROOT_UNIT_IMMOVABLE`), `billable: false` on the root (`ROOT_UNIT_ALWAYS_BILLABLE`), a move under the unit's own subtree, or a tree that would get too deep. `403 FEATURE_NOT_ENABLED` for `billable: false` when non-billable units are not enabled for your organization. Addresses the customer by your external customer id.
 func (c *Client) UpdateCustomerUnitByExternalID(
 	ctx context.Context,
-	request *paidgo.UpdateCustomerUnitByExternalIDRequest,
+	request *v2.UpdateCustomerUnitByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnit, error) {
+) (*v2.CustomerUnit, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2100,33 +2100,33 @@ func (c *Client) UpdateCustomerUnitByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnit
+	var response *v2.CustomerUnit
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2150,9 +2150,9 @@ func (c *Client) UpdateCustomerUnitByExternalID(
 // Lists the aliases that land signals on this unit. A customer-level alias (created on the customer routes) points at the customer's root unit, so it is listed under the root. Addresses the customer by your external customer id.
 func (c *Client) ListCustomerUnitAliasesByExternalID(
 	ctx context.Context,
-	request *paidgo.ListCustomerUnitAliasesByExternalIDRequest,
+	request *v2.ListCustomerUnitAliasesByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAliasListResponse, error) {
+) (*v2.CustomerAliasListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2177,28 +2177,28 @@ func (c *Client) ListCustomerUnitAliasesByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAliasListResponse
+	var response *v2.CustomerAliasListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2221,9 +2221,9 @@ func (c *Client) ListCustomerUnitAliasesByExternalID(
 // Creates an alias that lands signals on this unit: a signal whose `externalCustomerId` is the alias resolves to this customer and, when it names no `customerUnit`, to this unit. The alias shares one set of ids with customer external ids and unit ids, unique within the organization and ignoring letter case: an alias another customer holds is refused with `409 EXTERNAL_ID_IN_USE`. Addresses the customer by your external customer id.
 func (c *Client) CreateCustomerUnitAliasByExternalID(
 	ctx context.Context,
-	request *paidgo.CreateCustomerUnitAliasByExternalIDRequest,
+	request *v2.CreateCustomerUnitAliasByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAlias, error) {
+) (*v2.CustomerAlias, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2242,33 +2242,33 @@ func (c *Client) CreateCustomerUnitAliasByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAlias
+	var response *v2.CustomerAlias
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2292,9 +2292,9 @@ func (c *Client) CreateCustomerUnitAliasByExternalID(
 // Deletes an alias of this unit. Signals still sent with it then resolve to nothing again. Addresses the customer by your external customer id.
 func (c *Client) DeleteCustomerUnitAliasByExternalID(
 	ctx context.Context,
-	request *paidgo.DeleteCustomerUnitAliasByExternalIDRequest,
+	request *v2.DeleteCustomerUnitAliasByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.DeleteCustomerUnitAliasByExternalIDResponse, error) {
+) (*v2.DeleteCustomerUnitAliasByExternalIDResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2313,28 +2313,28 @@ func (c *Client) DeleteCustomerUnitAliasByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.DeleteCustomerUnitAliasByExternalIDResponse
+	var response *v2.DeleteCustomerUnitAliasByExternalIDResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2357,9 +2357,9 @@ func (c *Client) DeleteCustomerUnitAliasByExternalID(
 // Lists the customer's units as a flat list, newest last; assemble the tree from `parentExternalId` (`null` on the root unit, `isRoot: true`). Deleted units are hidden unless `status=DELETED` is given, drafts unless `status=DRAFT`. Filter by `externalType`, or by `parentExternalId` for one level of the tree. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) ListCustomerUnits(
 	ctx context.Context,
-	request *paidgo.ListCustomerUnitsRequest,
+	request *v2.ListCustomerUnitsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitListResponse, error) {
+) (*v2.CustomerUnitListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2383,28 +2383,28 @@ func (c *Client) ListCustomerUnits(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitListResponse
+	var response *v2.CustomerUnitListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2427,9 +2427,9 @@ func (c *Client) ListCustomerUnits(
 // Creates a unit for this customer. `externalId` is your own key for it: required, immutable, and unique within the organization (no other customer's unit id, external id or alias may be the same, ignoring letter case); every unit route addresses the unit by it, and `name` defaults to it. Omit `parentExternalId` to create the customer's root unit (its first unit; `409 ROOT_EXISTS` if it already has one — a customer created with an external id usable as a unit key already has its root, keyed by that external id, so name it as the parent instead); otherwise the parent must exist (`409 PARENT_NOT_FOUND`) and be ACTIVE. A create whose `externalId` is one of this customer's `DRAFT` units promotes the draft in place: same unit, same id, now ACTIVE with the request's name, type, metadata and parent (`parentExternalId` is required; a draft sits under the root). A signal that names a unit before it exists is accepted; with draft units enabled for your organization it creates a `DRAFT` unit under the customer's root that holds the key, and creating the unit with that key later promotes the draft; otherwise its spend attaches to the unit once you create it with that key. `409` also when the externalId is taken on this customer (`CUSTOMER_UNIT_EXISTS`) or by another customer of the organization (`EXTERNAL_ID_IN_USE`), the tree would get too deep, the customer is on seat-based billing, or a root unit is sent with `billable: false` (`ROOT_UNIT_ALWAYS_BILLABLE`). `403 FEATURE_NOT_ENABLED` for `billable: false` when non-billable units are not enabled for your organization. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) CreateCustomerUnit(
 	ctx context.Context,
-	request *paidgo.CreateCustomerUnitRequest,
+	request *v2.CreateCustomerUnitRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnit, error) {
+) (*v2.CustomerUnit, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2447,33 +2447,33 @@ func (c *Client) CreateCustomerUnit(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnit
+	var response *v2.CustomerUnit
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2497,9 +2497,9 @@ func (c *Client) CreateCustomerUnit(
 // Returns one unit of this customer by its `externalId`, including a deleted one. `404` when the unit does not exist or belongs to another customer. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) GetCustomerUnit(
 	ctx context.Context,
-	request *paidgo.GetCustomerUnitRequest,
+	request *v2.GetCustomerUnitRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnit, error) {
+) (*v2.CustomerUnit, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2517,28 +2517,28 @@ func (c *Client) GetCustomerUnit(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnit
+	var response *v2.CustomerUnit
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2561,9 +2561,9 @@ func (c *Client) GetCustomerUnit(
 // Soft-deletes a unit: it stays readable with `status: DELETED` and cannot be reactivated. Spend history that references it is kept, and signals that keep naming it are still attributed to it. A `DRAFT` unit is deleted the same way: it stays readable as DELETED, its key stays reserved, and spend already keyed to it stays its own. `409` while the unit has ACTIVE or DRAFT children or a cap in force or scheduled; the root follows the same rules, and once it is deleted a new root can be created. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) DeleteCustomerUnit(
 	ctx context.Context,
-	request *paidgo.DeleteCustomerUnitRequest,
+	request *v2.DeleteCustomerUnitRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnit, error) {
+) (*v2.CustomerUnit, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2581,33 +2581,33 @@ func (c *Client) DeleteCustomerUnit(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnit
+	var response *v2.CustomerUnit
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2630,9 +2630,9 @@ func (c *Client) DeleteCustomerUnit(
 // Renames, re-types, re-parents or annotates a unit, the root included. `externalId` cannot change. Re-parenting (`parentExternalId`) moves the unit with everything under it. Spend already recorded keeps naming the unit it landed on; caps are evaluated on the current tree, so from the move on the unit's spend in the running cap period counts toward its new ancestors' caps and no longer toward the old ones. `billable` flips the unit's own setting; moving a unit under a non-billable one makes it non-billable in effect (`effectiveBillable`). `409` for a deleted unit (`CUSTOMER_UNIT_DELETED`), a draft (`CUSTOMER_UNIT_DRAFT`), a parent that does not exist or is not ACTIVE, a move of the root (`ROOT_UNIT_IMMOVABLE`), `billable: false` on the root (`ROOT_UNIT_ALWAYS_BILLABLE`), a move under the unit's own subtree, or a tree that would get too deep. `403 FEATURE_NOT_ENABLED` for `billable: false` when non-billable units are not enabled for your organization. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) UpdateCustomerUnit(
 	ctx context.Context,
-	request *paidgo.UpdateCustomerUnitRequest,
+	request *v2.UpdateCustomerUnitRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnit, error) {
+) (*v2.CustomerUnit, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2651,33 +2651,33 @@ func (c *Client) UpdateCustomerUnit(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnit
+	var response *v2.CustomerUnit
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2701,9 +2701,9 @@ func (c *Client) UpdateCustomerUnit(
 // Lists the aliases that land signals on this unit. A customer-level alias (created on the customer routes) points at the customer's root unit, so it is listed under the root. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) ListCustomerUnitAliases(
 	ctx context.Context,
-	request *paidgo.ListCustomerUnitAliasesRequest,
+	request *v2.ListCustomerUnitAliasesRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAliasListResponse, error) {
+) (*v2.CustomerAliasListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2728,28 +2728,28 @@ func (c *Client) ListCustomerUnitAliases(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAliasListResponse
+	var response *v2.CustomerAliasListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2772,9 +2772,9 @@ func (c *Client) ListCustomerUnitAliases(
 // Creates an alias that lands signals on this unit: a signal whose `externalCustomerId` is the alias resolves to this customer and, when it names no `customerUnit`, to this unit. The alias shares one set of ids with customer external ids and unit ids, unique within the organization and ignoring letter case: an alias another customer holds is refused with `409 EXTERNAL_ID_IN_USE`. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) CreateCustomerUnitAlias(
 	ctx context.Context,
-	request *paidgo.CreateCustomerUnitAliasRequest,
+	request *v2.CreateCustomerUnitAliasRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAlias, error) {
+) (*v2.CustomerAlias, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2793,33 +2793,33 @@ func (c *Client) CreateCustomerUnitAlias(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAlias
+	var response *v2.CustomerAlias
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2843,9 +2843,9 @@ func (c *Client) CreateCustomerUnitAlias(
 // Deletes an alias of this unit. Signals still sent with it then resolve to nothing again. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) DeleteCustomerUnitAlias(
 	ctx context.Context,
-	request *paidgo.DeleteCustomerUnitAliasRequest,
+	request *v2.DeleteCustomerUnitAliasRequest,
 	opts ...option.RequestOption,
-) (*paidgo.DeleteCustomerUnitAliasResponse, error) {
+) (*v2.DeleteCustomerUnitAliasResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2864,28 +2864,28 @@ func (c *Client) DeleteCustomerUnitAlias(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.DeleteCustomerUnitAliasResponse
+	var response *v2.DeleteCustomerUnitAliasResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2908,9 +2908,9 @@ func (c *Client) DeleteCustomerUnitAlias(
 // Returns a unit by its key without naming its customer. The answer carries the customer's ids (`customerId`, `customerExternalId`) so the customer routes are one hop away, but, like the create on this path, not Paid's unit id: a caller of these routes names units by key. The key is looked up across the organization ignoring letter case. When more than one unit carries it in another letter case (legacy duplicates across customers, or case variants on one customer), the exact spelling decides; when that does not single one out either, the answer is `409 CUSTOMER_UNIT_AMBIGUOUS`: use the customer's unit routes, where the key is exact.
 func (c *Client) GetCustomerUnitByKey(
 	ctx context.Context,
-	request *paidgo.GetCustomerUnitByKeyRequest,
+	request *v2.GetCustomerUnitByKeyRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitByKey, error) {
+) (*v2.CustomerUnitByKey, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -2927,33 +2927,33 @@ func (c *Client) GetCustomerUnitByKey(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitByKey
+	var response *v2.CustomerUnitByKey
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -2976,9 +2976,9 @@ func (c *Client) GetCustomerUnitByKey(
 // Lists the aliases that land signals on this unit, without naming its customer. The key is looked up across the organization ignoring letter case. When more than one unit carries it in another letter case (legacy duplicates across customers, or case variants on one customer), the exact spelling decides; when that does not single one out either, the answer is `409 CUSTOMER_UNIT_AMBIGUOUS`: use the customer's unit routes, where the key is exact.
 func (c *Client) ListCustomerUnitAliasesByKey(
 	ctx context.Context,
-	request *paidgo.ListCustomerUnitAliasesByKeyRequest,
+	request *v2.ListCustomerUnitAliasesByKeyRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAliasListResponse, error) {
+) (*v2.CustomerAliasListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3002,33 +3002,33 @@ func (c *Client) ListCustomerUnitAliasesByKey(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAliasListResponse
+	var response *v2.CustomerAliasListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3051,9 +3051,9 @@ func (c *Client) ListCustomerUnitAliasesByKey(
 // Creates an alias that lands signals on this unit, without naming its customer: a signal whose `externalCustomerId` is the alias resolves to the unit's customer and is attributed to this unit. The alias must be unique within the organization ignoring letter case (`409 EXTERNAL_ID_IN_USE`). The key is looked up across the organization ignoring letter case. When more than one unit carries it in another letter case (legacy duplicates across customers, or case variants on one customer), the exact spelling decides; when that does not single one out either, the answer is `409 CUSTOMER_UNIT_AMBIGUOUS`: use the customer's unit routes, where the key is exact.
 func (c *Client) CreateCustomerUnitAliasByKey(
 	ctx context.Context,
-	request *paidgo.CreateCustomerUnitAliasByKeyRequest,
+	request *v2.CreateCustomerUnitAliasByKeyRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAlias, error) {
+) (*v2.CustomerAlias, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3071,33 +3071,33 @@ func (c *Client) CreateCustomerUnitAliasByKey(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAlias
+	var response *v2.CustomerAlias
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3121,9 +3121,9 @@ func (c *Client) CreateCustomerUnitAliasByKey(
 // Deletes an alias of this unit, without naming its customer. Signals still sent with it then resolve to nothing again. The key is looked up across the organization ignoring letter case. When more than one unit carries it in another letter case (legacy duplicates across customers, or case variants on one customer), the exact spelling decides; when that does not single one out either, the answer is `409 CUSTOMER_UNIT_AMBIGUOUS`: use the customer's unit routes, where the key is exact.
 func (c *Client) DeleteCustomerUnitAliasByKey(
 	ctx context.Context,
-	request *paidgo.DeleteCustomerUnitAliasByKeyRequest,
+	request *v2.DeleteCustomerUnitAliasByKeyRequest,
 	opts ...option.RequestOption,
-) (*paidgo.DeleteCustomerUnitAliasByKeyResponse, error) {
+) (*v2.DeleteCustomerUnitAliasByKeyResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3141,33 +3141,33 @@ func (c *Client) DeleteCustomerUnitAliasByKey(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.DeleteCustomerUnitAliasByKeyResponse
+	var response *v2.DeleteCustomerUnitAliasByKeyResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3190,9 +3190,9 @@ func (c *Client) DeleteCustomerUnitAliasByKey(
 // Creates a unit by naming its parent alone; the customer is whoever the parent belongs to, so a caller that only knows its own ids never needs the customer routes. `parentExternalId` is looked up across the organization, ignoring letter case, among unit ids, customer external ids and aliases: a unit becomes the parent; a customer (by external id or alias) stands for the top of its tree, so the new unit goes under the root unit, or becomes the root when the customer has none. The parent is only ever named by your id, never by a Paid id, so a customer with no external id takes its units through the customer's unit routes. The answer carries the unit's `externalId` and its customer's ids, not Paid's unit id. `externalId` follows the same rules as on the customer-scoped create: required, immutable, unique within the organization ignoring letter case. `409 PARENT_NOT_FOUND` when nothing matches, `PARENT_NOT_ACTIVE` for a deleted or draft parent, `PARENT_AMBIGUOUS` when legacy rows let the id name more than one customer (use that customer's unit routes), `PARENT_CHANGED` when the reference pointed elsewhere by the time the create ran (send it again), and otherwise the customer-scoped create's 409s (`CUSTOMER_UNIT_EXISTS`, `EXTERNAL_ID_IN_USE`, `DEPTH_EXCEEDED`, `SEAT_BILLING`, and `ROOT_UNIT_ALWAYS_BILLABLE` for `billable: false` on a unit that would become the root). `403 FEATURE_NOT_ENABLED` for `billable: false` when non-billable units are not enabled for your organization.
 func (c *Client) CreateCustomerUnitUnderParent(
 	ctx context.Context,
-	request *paidgo.CustomerUnitCreateUnderParent,
+	request *v2.CustomerUnitCreateUnderParent,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitCreatedUnderParent, error) {
+) (*v2.CustomerUnitCreatedUnderParent, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3207,28 +3207,28 @@ func (c *Client) CreateCustomerUnitUnderParent(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitCreatedUnderParent
+	var response *v2.CustomerUnitCreatedUnderParent
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3252,9 +3252,9 @@ func (c *Client) CreateCustomerUnitUnderParent(
 // Lists this customer's API keys, newest first and paginated, revoked and expired ones included. The secret is never returned; `keyPrefix` and `last4` identify each key. Addresses the customer by your external customer id.
 func (c *Client) ListCustomerAPIKeysByExternalID(
 	ctx context.Context,
-	request *paidgo.ListCustomerAPIKeysByExternalIDRequest,
+	request *v2.ListCustomerAPIKeysByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAPIKeyList, error) {
+) (*v2.CustomerAPIKeyList, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3278,28 +3278,28 @@ func (c *Client) ListCustomerAPIKeysByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAPIKeyList
+	var response *v2.CustomerAPIKeyList
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3322,9 +3322,9 @@ func (c *Client) ListCustomerAPIKeysByExternalID(
 // Creates an API key bound to this customer. The response carries the secret in `key`, returned only this once: store it immediately, as Paid keeps only its hash. The key acts for this customer alone: it can send signals for this customer through `POST /api/v2/signals/bulk`, and every other route refuses it. Requires `write:api-keys`, which full-access keys hold; a restricted key needs the scope granted explicitly. Addresses the customer by your external customer id.
 func (c *Client) CreateCustomerAPIKeyByExternalID(
 	ctx context.Context,
-	request *paidgo.CreateCustomerAPIKeyByExternalIDRequest,
+	request *v2.CreateCustomerAPIKeyByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAPIKeyCreated, error) {
+) (*v2.CustomerAPIKeyCreated, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3342,28 +3342,28 @@ func (c *Client) CreateCustomerAPIKeyByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAPIKeyCreated
+	var response *v2.CustomerAPIKeyCreated
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3387,9 +3387,9 @@ func (c *Client) CreateCustomerAPIKeyByExternalID(
 // Revokes one of this customer's keys, which then stops authenticating. Keys are never deleted: a revoked key stays listed with `revokedAt` set, and deleting the customer revokes its keys too. Revoking an already revoked key returns it unchanged. `404` when the key does not belong to this customer. Addresses the customer by your external customer id.
 func (c *Client) RevokeCustomerAPIKeyByExternalID(
 	ctx context.Context,
-	request *paidgo.RevokeCustomerAPIKeyByExternalIDRequest,
+	request *v2.RevokeCustomerAPIKeyByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAPIKey, error) {
+) (*v2.CustomerAPIKey, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3407,28 +3407,28 @@ func (c *Client) RevokeCustomerAPIKeyByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAPIKey
+	var response *v2.CustomerAPIKey
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3451,9 +3451,9 @@ func (c *Client) RevokeCustomerAPIKeyByExternalID(
 // Lists this customer's API keys, newest first and paginated, revoked and expired ones included. The secret is never returned; `keyPrefix` and `last4` identify each key. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) ListCustomerAPIKeys(
 	ctx context.Context,
-	request *paidgo.ListCustomerAPIKeysRequest,
+	request *v2.ListCustomerAPIKeysRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAPIKeyList, error) {
+) (*v2.CustomerAPIKeyList, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3477,28 +3477,28 @@ func (c *Client) ListCustomerAPIKeys(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAPIKeyList
+	var response *v2.CustomerAPIKeyList
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3521,9 +3521,9 @@ func (c *Client) ListCustomerAPIKeys(
 // Creates an API key bound to this customer. The response carries the secret in `key`, returned only this once: store it immediately, as Paid keeps only its hash. The key acts for this customer alone: it can send signals for this customer through `POST /api/v2/signals/bulk`, and every other route refuses it. Requires `write:api-keys`, which full-access keys hold; a restricted key needs the scope granted explicitly. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) CreateCustomerAPIKey(
 	ctx context.Context,
-	request *paidgo.CreateCustomerAPIKeyRequest,
+	request *v2.CreateCustomerAPIKeyRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAPIKeyCreated, error) {
+) (*v2.CustomerAPIKeyCreated, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3541,28 +3541,28 @@ func (c *Client) CreateCustomerAPIKey(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAPIKeyCreated
+	var response *v2.CustomerAPIKeyCreated
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3586,9 +3586,9 @@ func (c *Client) CreateCustomerAPIKey(
 // Revokes one of this customer's keys, which then stops authenticating. Keys are never deleted: a revoked key stays listed with `revokedAt` set, and deleting the customer revokes its keys too. Revoking an already revoked key returns it unchanged. `404` when the key does not belong to this customer. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) RevokeCustomerAPIKey(
 	ctx context.Context,
-	request *paidgo.RevokeCustomerAPIKeyRequest,
+	request *v2.RevokeCustomerAPIKeyRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerAPIKey, error) {
+) (*v2.CustomerAPIKey, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3606,28 +3606,28 @@ func (c *Client) RevokeCustomerAPIKey(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerAPIKey
+	var response *v2.CustomerAPIKey
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3650,9 +3650,9 @@ func (c *Client) RevokeCustomerAPIKey(
 // Returns the cap in force on this customer unit for one credits currency, with usage in the current period when available. Select the currency with `creditsCurrencyId`; it may be omitted only when the organization has exactly one credits currency, which is then used and echoed back. `404` when the customer or the unit does not exist, or the unit has no cap in force for that currency. The usage figures are advisory: other spend may land between this read and the next burn. Addresses the customer by your external customer id.
 func (c *Client) GetCustomerUnitCapByExternalID(
 	ctx context.Context,
-	request *paidgo.GetCustomerUnitCapByExternalIDRequest,
+	request *v2.GetCustomerUnitCapByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitCapResponse, error) {
+) (*v2.CustomerUnitCapResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3677,28 +3677,28 @@ func (c *Client) GetCustomerUnitCapByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitCapResponse
+	var response *v2.CustomerUnitCapResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3721,9 +3721,9 @@ func (c *Client) GetCustomerUnitCapByExternalID(
 // Sets the cap on this customer unit for one credits currency. Returns `changed: false` without creating a version when the effective timeline is unchanged; otherwise records a new version, preserving earlier rows. The newest version wins where they overlap. `effectiveFrom` controls applicability; `schedule` defines monthly UTC boundaries independently. Omit schedule to inherit the version covering effectiveFrom, or use the creation-time UTC day if none applies. Select the currency with `creditsCurrencyId` in the body; it may be omitted only when the organization has exactly one credits currency. A cap covers the unit and every unit beneath it, so a cap on the customer's root unit covers every unit of that customer; spend from a signal that names no unit counts toward no cap. `404` when the customer or the unit does not exist. `409` for customers on seat-based billing, a deleted unit (`CUSTOMER_UNIT_DELETED`) or a draft (`CUSTOMER_UNIT_DRAFT`). Addresses the customer by your external customer id.
 func (c *Client) SetCustomerUnitCapByExternalID(
 	ctx context.Context,
-	request *paidgo.SetCustomerUnitCapByExternalIDRequest,
+	request *v2.SetCustomerUnitCapByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitCapSetResponse, error) {
+) (*v2.CustomerUnitCapSetResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3742,33 +3742,33 @@ func (c *Client) SetCustomerUnitCapByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitCapSetResponse
+	var response *v2.CustomerUnitCapSetResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3792,9 +3792,9 @@ func (c *Client) SetCustomerUnitCapByExternalID(
 // Ends the cap on this customer unit for one credits currency by setting `effectiveUntil` to now on every open version — the one in force, older overlapping versions still open, and versions scheduled to start later — so nothing can resurface or activate afterwards; nothing is deleted and history is kept. Select the currency with `creditsCurrencyId`; it may be omitted only when the organization has exactly one credits currency. `404` when the customer or the unit does not exist, or there is no open version for that currency. Addresses the customer by your external customer id.
 func (c *Client) EndCustomerUnitCapByExternalID(
 	ctx context.Context,
-	request *paidgo.EndCustomerUnitCapByExternalIDRequest,
+	request *v2.EndCustomerUnitCapByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitCapEndResponse, error) {
+) (*v2.CustomerUnitCapEndResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3819,33 +3819,33 @@ func (c *Client) EndCustomerUnitCapByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitCapEndResponse
+	var response *v2.CustomerUnitCapEndResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3868,9 +3868,9 @@ func (c *Client) EndCustomerUnitCapByExternalID(
 // Returns the credits of one credits currency spent by this customer unit and every unit beneath it during a window, whether or not the unit has a cap. The window runs from `start` (inclusive) to `end` (exclusive), at most 366 days; omit both for the current calendar month (UTC). For a capped unit over its cap's current period, `spent` equals the cap's `used`. Spend from a signal that names no unit counts toward no unit. Select the currency with `creditsCurrencyId`; it may be omitted only when the organization has exactly one credits currency, which is then used and echoed back. `404` when the customer or the unit does not exist. Addresses the customer by your external customer id.
 func (c *Client) GetCustomerUnitSpendByExternalID(
 	ctx context.Context,
-	request *paidgo.GetCustomerUnitSpendByExternalIDRequest,
+	request *v2.GetCustomerUnitSpendByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitSpendResponse, error) {
+) (*v2.CustomerUnitSpendResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3895,28 +3895,28 @@ func (c *Client) GetCustomerUnitSpendByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitSpendResponse
+	var response *v2.CustomerUnitSpendResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -3939,9 +3939,9 @@ func (c *Client) GetCustomerUnitSpendByExternalID(
 // Returns the cap in force on this customer unit for one credits currency, with usage in the current period when available. Select the currency with `creditsCurrencyId`; it may be omitted only when the organization has exactly one credits currency, which is then used and echoed back. `404` when the customer or the unit does not exist, or the unit has no cap in force for that currency. The usage figures are advisory: other spend may land between this read and the next burn. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) GetCustomerUnitCap(
 	ctx context.Context,
-	request *paidgo.GetCustomerUnitCapRequest,
+	request *v2.GetCustomerUnitCapRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitCapResponse, error) {
+) (*v2.CustomerUnitCapResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -3966,28 +3966,28 @@ func (c *Client) GetCustomerUnitCap(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitCapResponse
+	var response *v2.CustomerUnitCapResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -4010,9 +4010,9 @@ func (c *Client) GetCustomerUnitCap(
 // Sets the cap on this customer unit for one credits currency. Returns `changed: false` without creating a version when the effective timeline is unchanged; otherwise records a new version, preserving earlier rows. The newest version wins where they overlap. `effectiveFrom` controls applicability; `schedule` defines monthly UTC boundaries independently. Omit schedule to inherit the version covering effectiveFrom, or use the creation-time UTC day if none applies. Select the currency with `creditsCurrencyId` in the body; it may be omitted only when the organization has exactly one credits currency. A cap covers the unit and every unit beneath it, so a cap on the customer's root unit covers every unit of that customer; spend from a signal that names no unit counts toward no cap. `404` when the customer or the unit does not exist. `409` for customers on seat-based billing, a deleted unit (`CUSTOMER_UNIT_DELETED`) or a draft (`CUSTOMER_UNIT_DRAFT`). Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) SetCustomerUnitCap(
 	ctx context.Context,
-	request *paidgo.SetCustomerUnitCapRequest,
+	request *v2.SetCustomerUnitCapRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitCapSetResponse, error) {
+) (*v2.CustomerUnitCapSetResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -4031,33 +4031,33 @@ func (c *Client) SetCustomerUnitCap(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitCapSetResponse
+	var response *v2.CustomerUnitCapSetResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -4081,9 +4081,9 @@ func (c *Client) SetCustomerUnitCap(
 // Ends the cap on this customer unit for one credits currency by setting `effectiveUntil` to now on every open version — the one in force, older overlapping versions still open, and versions scheduled to start later — so nothing can resurface or activate afterwards; nothing is deleted and history is kept. Select the currency with `creditsCurrencyId`; it may be omitted only when the organization has exactly one credits currency. `404` when the customer or the unit does not exist, or there is no open version for that currency. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) EndCustomerUnitCap(
 	ctx context.Context,
-	request *paidgo.EndCustomerUnitCapRequest,
+	request *v2.EndCustomerUnitCapRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitCapEndResponse, error) {
+) (*v2.CustomerUnitCapEndResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -4108,33 +4108,33 @@ func (c *Client) EndCustomerUnitCap(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitCapEndResponse
+	var response *v2.CustomerUnitCapEndResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -4157,9 +4157,9 @@ func (c *Client) EndCustomerUnitCap(
 // Returns the credits of one credits currency spent by this customer unit and every unit beneath it during a window, whether or not the unit has a cap. The window runs from `start` (inclusive) to `end` (exclusive), at most 366 days; omit both for the current calendar month (UTC). For a capped unit over its cap's current period, `spent` equals the cap's `used`. Spend from a signal that names no unit counts toward no unit. Select the currency with `creditsCurrencyId`; it may be omitted only when the organization has exactly one credits currency, which is then used and echoed back. `404` when the customer or the unit does not exist. Use the value returned as `customer.id`, for example `cus_abc123`; if you have your own customer ID, use the `/api/v2/customers/external/{externalId}/…` twin.
 func (c *Client) GetCustomerUnitSpend(
 	ctx context.Context,
-	request *paidgo.GetCustomerUnitSpendRequest,
+	request *v2.GetCustomerUnitSpendRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CustomerUnitSpendResponse, error) {
+) (*v2.CustomerUnitSpendResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -4184,28 +4184,28 @@ func (c *Client) GetCustomerUnitSpend(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CustomerUnitSpendResponse
+	var response *v2.CustomerUnitSpendResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

@@ -4,7 +4,7 @@ package api
 
 import (
 	json "encoding/json"
-	core "github.com/paid-ai/paid-go/core"
+	core "github.com/paid-ai/paid-go/v2/core"
 )
 
 // 400

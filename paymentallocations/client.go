@@ -4,10 +4,10 @@ package paymentallocations
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Lists payment allocations for a payment or an invoice
 func (c *Client) ListPaymentAllocations(
 	ctx context.Context,
-	request *paidgo.ListPaymentAllocationsRequest,
+	request *v2.ListPaymentAllocationsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.PaymentAllocationListResponse, error) {
+) (*v2.PaymentAllocationListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,28 +57,28 @@ func (c *Client) ListPaymentAllocations(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.PaymentAllocationListResponse
+	var response *v2.PaymentAllocationListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -101,9 +101,9 @@ func (c *Client) ListPaymentAllocations(
 // Allocates a payment across one or more invoice lines of posted invoices, in the payment's currency. When an invoice becomes fully paid, its credit entitlements are processed. Returns 409 when a concurrent allocation has already spent the balance.
 func (c *Client) CreatePaymentAllocation(
 	ctx context.Context,
-	request *paidgo.CreatePaymentAllocationRequest,
+	request *v2.CreatePaymentAllocationRequest,
 	opts ...option.RequestOption,
-) (*paidgo.PaymentAllocationCreateResponse, error) {
+) (*v2.PaymentAllocationCreateResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -118,33 +118,33 @@ func (c *Client) CreatePaymentAllocation(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.PaymentAllocationCreateResponse
+	var response *v2.PaymentAllocationCreateResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

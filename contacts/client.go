@@ -4,10 +4,10 @@ package contacts
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Get a list of contacts for the organization
 func (c *Client) ListContacts(
 	ctx context.Context,
-	request *paidgo.ListContactsRequest,
+	request *v2.ListContactsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ContactListResponse, error) {
+) (*v2.ContactListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,23 +57,23 @@ func (c *Client) ListContacts(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ContactListResponse
+	var response *v2.ContactListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -96,9 +96,9 @@ func (c *Client) ListContacts(
 // Creates a new contact for the organization
 func (c *Client) CreateContact(
 	ctx context.Context,
-	request *paidgo.CreateContactRequest,
+	request *v2.CreateContactRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Contact, error) {
+) (*v2.Contact, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -113,23 +113,23 @@ func (c *Client) CreateContact(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Contact
+	var response *v2.Contact
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -153,9 +153,9 @@ func (c *Client) CreateContact(
 // Get a contact by its ID
 func (c *Client) GetContactByID(
 	ctx context.Context,
-	request *paidgo.GetContactByIDRequest,
+	request *v2.GetContactByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Contact, error) {
+) (*v2.Contact, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -172,23 +172,23 @@ func (c *Client) GetContactByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Contact
+	var response *v2.Contact
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -211,9 +211,9 @@ func (c *Client) GetContactByID(
 // Update a contact by its ID. A contact can move to another customer only if no orders or invoices reference it; otherwise a different `customerId` returns 400 `CONTACT_CUSTOMER_IMMUTABLE`.
 func (c *Client) UpdateContactByID(
 	ctx context.Context,
-	request *paidgo.UpdateContactByIDRequest,
+	request *v2.UpdateContactByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Contact, error) {
+) (*v2.Contact, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -231,28 +231,28 @@ func (c *Client) UpdateContactByID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Contact
+	var response *v2.Contact
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -276,9 +276,9 @@ func (c *Client) UpdateContactByID(
 // Delete a contact by its ID. A contact referenced by an order or an unsettled invoice cannot be deleted (409 `CONTACT_HAS_ASSOCIATIONS`). Posted paid invoices, voided invoices and canceled invoices do not block deletion.
 func (c *Client) DeleteContactByID(
 	ctx context.Context,
-	request *paidgo.DeleteContactByIDRequest,
+	request *v2.DeleteContactByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.EmptyResponse, error) {
+) (*v2.EmptyResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -295,28 +295,28 @@ func (c *Client) DeleteContactByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.EmptyResponse
+	var response *v2.EmptyResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -339,9 +339,9 @@ func (c *Client) DeleteContactByID(
 // Get a contact by its external ID
 func (c *Client) GetContactByExternalID(
 	ctx context.Context,
-	request *paidgo.GetContactByExternalIDRequest,
+	request *v2.GetContactByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Contact, error) {
+) (*v2.Contact, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -358,23 +358,23 @@ func (c *Client) GetContactByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Contact
+	var response *v2.Contact
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -397,9 +397,9 @@ func (c *Client) GetContactByExternalID(
 // Update a contact by its external ID. A contact can move to another customer only if no orders or invoices reference it; otherwise a different `customerId` returns 400 `CONTACT_CUSTOMER_IMMUTABLE`.
 func (c *Client) UpdateContactByExternalID(
 	ctx context.Context,
-	request *paidgo.UpdateContactByExternalIDRequest,
+	request *v2.UpdateContactByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Contact, error) {
+) (*v2.Contact, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -417,28 +417,28 @@ func (c *Client) UpdateContactByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Contact
+	var response *v2.Contact
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -462,9 +462,9 @@ func (c *Client) UpdateContactByExternalID(
 // Delete a contact by its external ID. A contact referenced by an order or an unsettled invoice cannot be deleted (409 `CONTACT_HAS_ASSOCIATIONS`). Posted paid invoices, voided invoices and canceled invoices do not block deletion.
 func (c *Client) DeleteContactByExternalID(
 	ctx context.Context,
-	request *paidgo.DeleteContactByExternalIDRequest,
+	request *v2.DeleteContactByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.EmptyResponse, error) {
+) (*v2.EmptyResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -481,28 +481,28 @@ func (c *Client) DeleteContactByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.EmptyResponse
+	var response *v2.EmptyResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/paid-ai/paid-go/core"
+	"github.com/paid-ai/paid-go/v2/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

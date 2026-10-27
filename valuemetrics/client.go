@@ -4,10 +4,10 @@ package valuemetrics
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Returns the value metrics in the current value model, without their formulas. Archived metrics are hidden unless includeArchived is true.
 func (c *Client) ListValueMetrics(
 	ctx context.Context,
-	request *paidgo.ListValueMetricsRequest,
+	request *v2.ListValueMetricsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ValueMetricListResponse, error) {
+) (*v2.ValueMetricListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,18 +57,18 @@ func (c *Client) ListValueMetrics(
 	)
 	errorCodes := internal.ErrorCodes{
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ValueMetricListResponse
+	var response *v2.ValueMetricListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -91,9 +91,9 @@ func (c *Client) ListValueMetrics(
 // Adds one value metric — its unit, formula, signal binding and optional monetary conversion — to the value model. The signal must already exist: an event name your organization has sent, or one referenced by usage pricing on an active product. Publishes a new value model version that values NEW signals going forward; it does NOT recalculate historical delivered value. Re-rating history is a separate, explicit action (POST /api/v2/value-models/backfill).
 func (c *Client) CreateValueMetric(
 	ctx context.Context,
-	request *paidgo.CreateValueMetricRequest,
+	request *v2.CreateValueMetricRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ValueMetricWriteAck, error) {
+) (*v2.ValueMetricWriteAck, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -108,28 +108,28 @@ func (c *Client) CreateValueMetric(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ValueMetricWriteAck
+	var response *v2.ValueMetricWriteAck
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -153,9 +153,9 @@ func (c *Client) CreateValueMetric(
 // Returns one value metric with its formula, signal binding and monetary conversion joined together. Call getCurrentValueModel if you need the active version number to guard a follow-up write.
 func (c *Client) GetValueMetric(
 	ctx context.Context,
-	request *paidgo.GetValueMetricRequest,
+	request *v2.GetValueMetricRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ValueMetricDetail, error) {
+) (*v2.ValueMetricDetail, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -172,18 +172,18 @@ func (c *Client) GetValueMetric(
 	)
 	errorCodes := internal.ErrorCodes{
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ValueMetricDetail
+	var response *v2.ValueMetricDetail
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -206,9 +206,9 @@ func (c *Client) GetValueMetric(
 // Marks a value metric archived so it stops appearing in listValueMetrics. Its formula and signal bindings are deliberately kept, so historical delivered value and sealed value receipts still resolve — which also means an archived metric's signals continue to be ingested and can still surface on value receipts. Removing it from receipts entirely requires deleting its signal bindings. Restore it with updateValueMetric and archivedAt null.
 func (c *Client) ArchiveValueMetric(
 	ctx context.Context,
-	request *paidgo.ArchiveValueMetricRequest,
+	request *v2.ArchiveValueMetricRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ValueMetricWriteAck, error) {
+) (*v2.ValueMetricWriteAck, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -232,28 +232,28 @@ func (c *Client) ArchiveValueMetric(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ValueMetricWriteAck
+	var response *v2.ValueMetricWriteAck
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -276,9 +276,9 @@ func (c *Client) ArchiveValueMetric(
 // Changes one value metric. Omitted fields are left alone. You can change its name, category, unit, customer-facing copy, sources, monetary rate, archive state, and the value, label or display format of any variable its formula declares. The formula expression and the signal it is bound to cannot be changed — recreate the metric, or use the whole value-model upload. Publishes a new value model version.
 func (c *Client) UpdateValueMetric(
 	ctx context.Context,
-	request *paidgo.UpdateValueMetricRequest,
+	request *v2.UpdateValueMetricRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ValueMetricWriteAck, error) {
+) (*v2.ValueMetricWriteAck, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -296,28 +296,28 @@ func (c *Client) UpdateValueMetric(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ValueMetricWriteAck
+	var response *v2.ValueMetricWriteAck
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

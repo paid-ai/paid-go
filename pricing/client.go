@@ -4,10 +4,10 @@ package pricing
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Returns pricing for all product attributes of a product. Each entry includes the attribute's pricing configuration and credit benefits.
 func (c *Client) ListPricing(
 	ctx context.Context,
-	request *paidgo.ListPricingRequest,
+	request *v2.ListPricingRequest,
 	opts ...option.RequestOption,
-) (*paidgo.PricingListResponse, error) {
+) (*v2.PricingListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,18 +57,18 @@ func (c *Client) ListPricing(
 	)
 	errorCodes := internal.ErrorCodes{
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.PricingListResponse
+	var response *v2.PricingListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -91,9 +91,9 @@ func (c *Client) ListPricing(
 // Returns pricing and credit benefits for a single product attribute.
 func (c *Client) GetPricing(
 	ctx context.Context,
-	request *paidgo.GetPricingRequest,
+	request *v2.GetPricingRequest,
 	opts ...option.RequestOption,
-) (*paidgo.PricingResponse, error) {
+) (*v2.PricingResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -110,18 +110,18 @@ func (c *Client) GetPricing(
 	)
 	errorCodes := internal.ErrorCodes{
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.PricingResponse
+	var response *v2.PricingResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -144,9 +144,9 @@ func (c *Client) GetPricing(
 // Updates pricing on an existing product attribute. To create a new attribute, use the update product endpoint (updateProductById), which upserts productAttributes. If creditBenefits is provided, it fully replaces existing benefits. If omitted, existing benefits are preserved.
 func (c *Client) UpdatePricing(
 	ctx context.Context,
-	request *paidgo.UpdatePricingRequest,
+	request *v2.UpdatePricingRequest,
 	opts ...option.RequestOption,
-) (*paidgo.PricingResponse, error) {
+) (*v2.PricingResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -164,23 +164,23 @@ func (c *Client) UpdatePricing(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.PricingResponse
+	var response *v2.PricingResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
