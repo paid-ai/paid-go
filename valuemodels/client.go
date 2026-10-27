@@ -4,10 +4,10 @@ package valuemodels
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -35,7 +35,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 func (c *Client) GetCurrentValueModel(
 	ctx context.Context,
 	opts ...option.RequestOption,
-) (*paidgo.ValueModelDetail, error) {
+) (*v2.ValueModelDetail, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -49,18 +49,18 @@ func (c *Client) GetCurrentValueModel(
 	)
 	errorCodes := internal.ErrorCodes{
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ValueModelDetail
+	var response *v2.ValueModelDetail
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -83,9 +83,9 @@ func (c *Client) GetCurrentValueModel(
 // Uploads a new value model version. Validates the content, creates a new version, archives the previous active version, and syncs to ClickHouse. This updates how value is calculated going forward — new signals are valued under the new model. It does NOT re-rate historical signals; run POST /api/v2/value-models/backfill to re-rate history as a separate, explicit action. Any unpublished draft saved in the Paid app is discarded. Send expectedActiveVersion to get a 409 instead of overwriting a version published since you read it.
 func (c *Client) UpdateValueModel(
 	ctx context.Context,
-	request *paidgo.ValueModelUploadRequest,
+	request *v2.ValueModelUploadRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ValueModelDetail, error) {
+) (*v2.ValueModelDetail, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -100,23 +100,23 @@ func (c *Client) UpdateValueModel(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ValueModelDetail
+	var response *v2.ValueModelDetail
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -140,9 +140,9 @@ func (c *Client) UpdateValueModel(
 // Returns all value model versions sorted by version descending. Does not include the full content.
 func (c *Client) ListValueModelVersions(
 	ctx context.Context,
-	request *paidgo.ListValueModelVersionsRequest,
+	request *v2.ListValueModelVersionsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ValueModelVersionListResponse, error) {
+) (*v2.ValueModelVersionListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -163,13 +163,13 @@ func (c *Client) ListValueModelVersions(
 	)
 	errorCodes := internal.ErrorCodes{
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ValueModelVersionListResponse
+	var response *v2.ValueModelVersionListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -192,9 +192,9 @@ func (c *Client) ListValueModelVersions(
 // Returns a specific historical value model version by version number, including full content.
 func (c *Client) GetValueModelVersion(
 	ctx context.Context,
-	request *paidgo.GetValueModelVersionRequest,
+	request *v2.GetValueModelVersionRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ValueModelDetail, error) {
+) (*v2.ValueModelDetail, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -211,18 +211,18 @@ func (c *Client) GetValueModelVersion(
 	)
 	errorCodes := internal.ErrorCodes{
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ValueModelDetail
+	var response *v2.ValueModelDetail
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -245,9 +245,9 @@ func (c *Client) GetValueModelVersion(
 // Manually triggers a recalculation of all ClickHouse rows against the current value model. Returns 422 when the backfill would scan more signals than the ceiling allows — that is deterministic, so retrying without narrowing the scope will not help.
 func (c *Client) RefreshValueModelBackfill(
 	ctx context.Context,
-	request *paidgo.RefreshValueModelBackfillRequest,
+	request *v2.RefreshValueModelBackfillRequest,
 	opts ...option.RequestOption,
-) (*paidgo.BackfillResponse, error) {
+) (*v2.BackfillResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -262,23 +262,23 @@ func (c *Client) RefreshValueModelBackfill(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		422: func(apiError *core.APIError) error {
-			return &paidgo.UnprocessableEntityError{
+			return &v2.UnprocessableEntityError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.BackfillResponse
+	var response *v2.BackfillResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

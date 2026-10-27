@@ -4,10 +4,10 @@ package deliveredvalue
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Returns the value delivered to a customer over a period, computed live from your active value model on every call — per value metric: its definition, a display-ready calculation, the measured unit total, monetary total, and signal counts, plus a per-event signal breakdown. The same data a value receipt presents, without creating one — built for value dashboards and reporting. Figures always reflect the currently active value model. Shortly after you publish a model change, totals can still be priced under the previous model's rates.
 func (c *Client) GetDeliveredValue(
 	ctx context.Context,
-	request *paidgo.GetDeliveredValueRequest,
+	request *v2.GetDeliveredValueRequest,
 	opts ...option.RequestOption,
-) (*paidgo.DeliveredValueResponse, error) {
+) (*v2.DeliveredValueResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,38 +57,38 @@ func (c *Client) GetDeliveredValue(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		408: func(apiError *core.APIError) error {
-			return &paidgo.RequestTimeoutError{
+			return &v2.RequestTimeoutError{
 				APIError: apiError,
 			}
 		},
 		429: func(apiError *core.APIError) error {
-			return &paidgo.TooManyRequestsError{
+			return &v2.TooManyRequestsError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.DeliveredValueResponse
+	var response *v2.DeliveredValueResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -111,9 +111,9 @@ func (c *Client) GetDeliveredValue(
 // Aggregates delivered value into period buckets for charting value over time, grouped by value metric, by a signal-payload key (for example, value delivered per team_id), or by the formula condition band that priced each row (for example, value delivered per workflow complexity). Any grouping can be narrowed to a single value metric, which is also what lets a dimension grouping state a unit total. Reads the same rows as GET /delivered-value, so summing every bucket's monetaryTotal matches that endpoint's total for the same customer and window. Figures always reflect the currently active value model. Shortly after you publish a model change, totals can still be priced under the previous model's rates. Grouping by band reads a figure recorded when the row was priced, so value delivered before this grouping existed reports under the "none" band until a value-model backfill re-derives it.
 func (c *Client) GetDeliveredValueSummary(
 	ctx context.Context,
-	request *paidgo.GetDeliveredValueSummaryRequest,
+	request *v2.GetDeliveredValueSummaryRequest,
 	opts ...option.RequestOption,
-) (*paidgo.DeliveredValueSummaryResponse, error) {
+) (*v2.DeliveredValueSummaryResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -134,38 +134,38 @@ func (c *Client) GetDeliveredValueSummary(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		408: func(apiError *core.APIError) error {
-			return &paidgo.RequestTimeoutError{
+			return &v2.RequestTimeoutError{
 				APIError: apiError,
 			}
 		},
 		429: func(apiError *core.APIError) error {
-			return &paidgo.TooManyRequestsError{
+			return &v2.TooManyRequestsError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.DeliveredValueSummaryResponse
+	var response *v2.DeliveredValueSummaryResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

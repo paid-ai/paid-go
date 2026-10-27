@@ -5,10 +5,10 @@ package orders
 import (
 	context "context"
 	fmt "fmt"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -35,9 +35,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Get a list of orders for the organization
 func (c *Client) ListOrders(
 	ctx context.Context,
-	request *paidgo.ListOrdersRequest,
+	request *v2.ListOrdersRequest,
 	opts ...option.RequestOption,
-) (*paidgo.OrderListResponse, error) {
+) (*v2.OrderListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -58,23 +58,23 @@ func (c *Client) ListOrders(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.OrderListResponse
+	var response *v2.OrderListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -97,9 +97,9 @@ func (c *Client) ListOrders(
 // Creates a new order for the organization
 func (c *Client) CreateOrder(
 	ctx context.Context,
-	request *paidgo.CreateOrderRequest,
+	request *v2.CreateOrderRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Order, error) {
+) (*v2.Order, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -114,23 +114,23 @@ func (c *Client) CreateOrder(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Order
+	var response *v2.Order
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -154,9 +154,9 @@ func (c *Client) CreateOrder(
 // Get an order by ID
 func (c *Client) GetOrderByID(
 	ctx context.Context,
-	request *paidgo.GetOrderByIDRequest,
+	request *v2.GetOrderByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Order, error) {
+) (*v2.Order, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -173,23 +173,23 @@ func (c *Client) GetOrderByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Order
+	var response *v2.Order
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -212,9 +212,9 @@ func (c *Client) GetOrderByID(
 // Update an order by ID. creationState must equal the order's current state; activate a draft order with POST /orders/{id}/activate.
 func (c *Client) UpdateOrderByID(
 	ctx context.Context,
-	request *paidgo.UpdateOrderRequest,
+	request *v2.UpdateOrderRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Order, error) {
+) (*v2.Order, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -232,28 +232,28 @@ func (c *Client) UpdateOrderByID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Order
+	var response *v2.Order
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -277,9 +277,9 @@ func (c *Client) UpdateOrderByID(
 // Delete an order by ID
 func (c *Client) DeleteOrderByID(
 	ctx context.Context,
-	request *paidgo.DeleteOrderByIDRequest,
+	request *v2.DeleteOrderByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.EmptyResponse, error) {
+) (*v2.EmptyResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -296,23 +296,23 @@ func (c *Client) DeleteOrderByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.EmptyResponse
+	var response *v2.EmptyResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -335,9 +335,9 @@ func (c *Client) DeleteOrderByID(
 // Activate a draft order by ID. Activation starts billing for the order using the same validation and side effects as the dashboard activation flow.
 func (c *Client) ActivateOrderByID(
 	ctx context.Context,
-	request *paidgo.ActivateOrderByIDRequest,
+	request *v2.ActivateOrderByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Order, error) {
+) (*v2.Order, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -354,28 +354,28 @@ func (c *Client) ActivateOrderByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Order
+	var response *v2.Order
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -398,9 +398,9 @@ func (c *Client) ActivateOrderByID(
 // Get the order lines for an order by ID
 func (c *Client) GetOrderLines(
 	ctx context.Context,
-	request *paidgo.GetOrderLinesRequest,
+	request *v2.GetOrderLinesRequest,
 	opts ...option.RequestOption,
-) (*paidgo.OrderLinesResponse, error) {
+) (*v2.OrderLinesResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -424,23 +424,23 @@ func (c *Client) GetOrderLines(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.OrderLinesResponse
+	var response *v2.OrderLinesResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -463,9 +463,9 @@ func (c *Client) GetOrderLines(
 // List seats for an order
 func (c *Client) ListOrderSeats(
 	ctx context.Context,
-	request *paidgo.ListOrderSeatsRequest,
+	request *v2.ListOrderSeatsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.OrderSeatListResponse, error) {
+) (*v2.OrderSeatListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -489,28 +489,28 @@ func (c *Client) ListOrderSeats(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.OrderSeatListResponse
+	var response *v2.OrderSeatListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -533,9 +533,9 @@ func (c *Client) ListOrderSeats(
 // Assign or unassign a single seat on an order
 func (c *Client) UpdateOrderSeatAssignment(
 	ctx context.Context,
-	request *paidgo.UpdateSeatAssignmentRequest,
+	request *v2.UpdateSeatAssignmentRequest,
 	opts ...option.RequestOption,
-) (*paidgo.OrderSeat, error) {
+) (*v2.OrderSeat, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -554,33 +554,33 @@ func (c *Client) UpdateOrderSeatAssignment(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.OrderSeat
+	var response *v2.OrderSeat
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -604,9 +604,9 @@ func (c *Client) UpdateOrderSeatAssignment(
 // Assign or unassign seats in batch for an order
 func (c *Client) BatchOrderSeatAssignments(
 	ctx context.Context,
-	request *paidgo.BatchSeatAssignmentsRequest,
+	request *v2.BatchSeatAssignmentsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.BatchSeatAssignmentsResponse, error) {
+) (*v2.BatchSeatAssignmentsResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -624,33 +624,33 @@ func (c *Client) BatchOrderSeatAssignments(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.BatchSeatAssignmentsResponse
+	var response *v2.BatchSeatAssignmentsResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -674,9 +674,9 @@ func (c *Client) BatchOrderSeatAssignments(
 // Creates or updates a customer, an optional contact, the products on the order, and the order with its lines, in one call. Each record is matched by its `externalId`, so you can send the same deal again after it changes in your CRM. Returns 201 Created when the order is new, and 200 OK when an existing draft order with the same `externalId` was updated. Treat both as success. Re-provisioning an order that is already active returns 409 `ORDER_ALREADY_ACTIVE`; change an active order through the amendments API instead. Amounts are whole numbers in minor currency units (cents).
 func (c *Client) UpsertOrderByExternalID(
 	ctx context.Context,
-	request *paidgo.ProvisionRequest,
+	request *v2.ProvisionRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ProvisionResponse, error) {
+) (*v2.ProvisionResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -692,28 +692,28 @@ func (c *Client) UpsertOrderByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ProvisionResponse
+	var response *v2.ProvisionResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

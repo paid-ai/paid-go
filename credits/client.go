@@ -4,10 +4,10 @@ package credits
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // List credit currencies for the organization. Includes active and archived currencies by default; use the status query parameter to filter.
 func (c *Client) ListCreditCurrencies(
 	ctx context.Context,
-	request *paidgo.ListCreditCurrenciesRequest,
+	request *v2.ListCreditCurrenciesRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CreditCurrencyListResponse, error) {
+) (*v2.CreditCurrencyListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,18 +57,18 @@ func (c *Client) ListCreditCurrencies(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CreditCurrencyListResponse
+	var response *v2.CreditCurrencyListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -91,9 +91,9 @@ func (c *Client) ListCreditCurrencies(
 // Creates a credit currency for the organization.
 func (c *Client) CreateCreditCurrency(
 	ctx context.Context,
-	request *paidgo.CreateCreditCurrencyRequest,
+	request *v2.CreateCreditCurrencyRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CreditCurrency, error) {
+) (*v2.CreditCurrency, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -108,23 +108,23 @@ func (c *Client) CreateCreditCurrency(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CreditCurrency
+	var response *v2.CreditCurrency
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -148,9 +148,9 @@ func (c *Client) CreateCreditCurrency(
 // List credit ledger transactions (grants, spends, and pending grants) for the organization, newest first. Filter by customer, credit currency, type, order, or date range.
 func (c *Client) ListCreditTransactions(
 	ctx context.Context,
-	request *paidgo.ListCreditTransactionsRequest,
+	request *v2.ListCreditTransactionsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CreditTransactionListResponse, error) {
+) (*v2.CreditTransactionListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -171,23 +171,23 @@ func (c *Client) ListCreditTransactions(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CreditTransactionListResponse
+	var response *v2.CreditTransactionListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -210,9 +210,9 @@ func (c *Client) ListCreditTransactions(
 // Aggregate credit ledger transactions of one type into period buckets grouped by a dimension, for charting credit consumption over time. Accepts the same filters as the transaction list and reads the same ledger, so bucket totals always match summing that list over the same filters and the same `type` — pass this endpoint's effective `type` (it defaults to `spend`) to the list, which has no default and otherwise returns every type.
 func (c *Client) GetCreditTransactionSummary(
 	ctx context.Context,
-	request *paidgo.GetCreditTransactionSummaryRequest,
+	request *v2.GetCreditTransactionSummaryRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CreditTransactionSummaryResponse, error) {
+) (*v2.CreditTransactionSummaryResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -233,23 +233,23 @@ func (c *Client) GetCreditTransactionSummary(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CreditTransactionSummaryResponse
+	var response *v2.CreditTransactionSummaryResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -272,9 +272,9 @@ func (c *Client) GetCreditTransactionSummary(
 // Update a credit currency description or set its active/archive status.
 func (c *Client) UpdateCreditCurrencyByID(
 	ctx context.Context,
-	request *paidgo.UpdateCreditCurrencyRequest,
+	request *v2.UpdateCreditCurrencyRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CreditCurrency, error) {
+) (*v2.CreditCurrency, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -292,28 +292,28 @@ func (c *Client) UpdateCreditCurrencyByID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CreditCurrency
+	var response *v2.CreditCurrency
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

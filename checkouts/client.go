@@ -4,10 +4,10 @@ package checkouts
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Get a list of checkouts for the organization
 func (c *Client) ListCheckouts(
 	ctx context.Context,
-	request *paidgo.ListCheckoutsRequest,
+	request *v2.ListCheckoutsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CheckoutListResponse, error) {
+) (*v2.CheckoutListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,23 +57,23 @@ func (c *Client) ListCheckouts(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CheckoutListResponse
+	var response *v2.CheckoutListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -96,9 +96,9 @@ func (c *Client) ListCheckouts(
 // Creates a checkout link that generates a URL for a customer to complete a purchase
 func (c *Client) CreateCheckout(
 	ctx context.Context,
-	request *paidgo.CreateCheckoutRequest,
+	request *v2.CreateCheckoutRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Checkout, error) {
+) (*v2.Checkout, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -113,28 +113,28 @@ func (c *Client) CreateCheckout(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Checkout
+	var response *v2.Checkout
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -158,9 +158,9 @@ func (c *Client) CreateCheckout(
 // Get a checkout by ID
 func (c *Client) GetCheckout(
 	ctx context.Context,
-	request *paidgo.GetCheckoutRequest,
+	request *v2.GetCheckoutRequest,
 	opts ...option.RequestOption,
-) (*paidgo.CheckoutDetails, error) {
+) (*v2.CheckoutDetails, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -177,23 +177,23 @@ func (c *Client) GetCheckout(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.CheckoutDetails
+	var response *v2.CheckoutDetails
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -216,9 +216,9 @@ func (c *Client) GetCheckout(
 // Archive a checkout by ID so it can no longer be paid. A completed (paid) checkout can't be archived and returns 409.
 func (c *Client) ArchiveCheckout(
 	ctx context.Context,
-	request *paidgo.ArchiveCheckoutRequest,
+	request *v2.ArchiveCheckoutRequest,
 	opts ...option.RequestOption,
-) (*paidgo.EmptyResponse, error) {
+) (*v2.EmptyResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -235,28 +235,28 @@ func (c *Client) ArchiveCheckout(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		409: func(apiError *core.APIError) error {
-			return &paidgo.ConflictError{
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.EmptyResponse
+	var response *v2.EmptyResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

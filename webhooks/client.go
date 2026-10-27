@@ -4,10 +4,10 @@ package webhooks
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -35,7 +35,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 func (c *Client) ListWebhooks(
 	ctx context.Context,
 	opts ...option.RequestOption,
-) (*paidgo.WebhookListResponse, error) {
+) (*v2.WebhookListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -49,18 +49,18 @@ func (c *Client) ListWebhooks(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.WebhookListResponse
+	var response *v2.WebhookListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -83,9 +83,9 @@ func (c *Client) ListWebhooks(
 // Enable or disable a webhook and configure the destination URL for the authenticated organization.
 func (c *Client) UpdateWebhook(
 	ctx context.Context,
-	request *paidgo.UpdateWebhookRequest,
+	request *v2.UpdateWebhookRequest,
 	opts ...option.RequestOption,
-) (*paidgo.WebhookUpdateResponse, error) {
+) (*v2.WebhookUpdateResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -103,28 +103,28 @@ func (c *Client) UpdateWebhook(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.WebhookUpdateResponse
+	var response *v2.WebhookUpdateResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -148,9 +148,9 @@ func (c *Client) UpdateWebhook(
 // Send a synthetic webhook delivery to the configured destination for this webhook.
 func (c *Client) TestWebhook(
 	ctx context.Context,
-	request *paidgo.TestWebhookRequest,
+	request *v2.TestWebhookRequest,
 	opts ...option.RequestOption,
-) (*paidgo.WebhookTestResponse, error) {
+) (*v2.WebhookTestResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -168,28 +168,28 @@ func (c *Client) TestWebhook(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.WebhookTestResponse
+	var response *v2.WebhookTestResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -213,9 +213,9 @@ func (c *Client) TestWebhook(
 // Generate a new HMAC signing secret used by every webhook in this organization and return it exactly once. The previous secret is invalidated immediately on next delivery.
 func (c *Client) RotateWebhookSecret(
 	ctx context.Context,
-	request *paidgo.RotateWebhookSecretRequest,
+	request *v2.RotateWebhookSecretRequest,
 	opts ...option.RequestOption,
-) (*paidgo.RotateWebhookSecretResponse, error) {
+) (*v2.RotateWebhookSecretResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -230,23 +230,23 @@ func (c *Client) RotateWebhookSecret(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.RotateWebhookSecretResponse
+	var response *v2.RotateWebhookSecretResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

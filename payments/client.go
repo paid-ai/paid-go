@@ -4,10 +4,10 @@ package payments
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Lists payments for your organization
 func (c *Client) ListPayments(
 	ctx context.Context,
-	request *paidgo.ListPaymentsRequest,
+	request *v2.ListPaymentsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.PaymentListResponse, error) {
+) (*v2.PaymentListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,28 +57,28 @@ func (c *Client) ListPayments(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.PaymentListResponse
+	var response *v2.PaymentListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -101,9 +101,9 @@ func (c *Client) ListPayments(
 // Records a payment received from a customer, e.g. a bank transfer or check collected outside Paid. Allocate it to invoice lines with the payment allocations endpoints.
 func (c *Client) CreatePayment(
 	ctx context.Context,
-	request *paidgo.CreatePaymentRequest,
+	request *v2.CreatePaymentRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Payment, error) {
+) (*v2.Payment, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -118,28 +118,28 @@ func (c *Client) CreatePayment(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Payment
+	var response *v2.Payment
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -163,9 +163,9 @@ func (c *Client) CreatePayment(
 // Get a payment by its ID
 func (c *Client) GetPayment(
 	ctx context.Context,
-	request *paidgo.GetPaymentRequest,
+	request *v2.GetPaymentRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Payment, error) {
+) (*v2.Payment, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -182,28 +182,28 @@ func (c *Client) GetPayment(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Payment
+	var response *v2.Payment
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

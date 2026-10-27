@@ -3,7 +3,7 @@
 package client
 
 import (
-	option "github.com/paid-ai/paid-go/option"
+	option "github.com/paid-ai/paid-go/v2/option"
 	assert "github.com/stretchr/testify/assert"
 	http "net/http"
 	testing "testing"

@@ -4,10 +4,10 @@ package analyticsexperimental
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -40,9 +40,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Limits: 30 seconds of execution time and 10,000 result rows (truncation is flagged via `meta.truncated`). Queries exceeding the 4 GB memory allowance return HTTP 422 with code `QUERY_MEMORY_LIMIT_EXCEEDED`. Prefer aggregates and a `created_at` date filter on large tables — this endpoint is for interactive analytics, not bulk export.
 func (c *Client) ExecuteExperimentalAnalyticsQuery(
 	ctx context.Context,
-	request *paidgo.AnalyticsQueryRequest,
+	request *v2.AnalyticsQueryRequest,
 	opts ...option.RequestOption,
-) (*paidgo.AnalyticsQueryResponse, error) {
+) (*v2.AnalyticsQueryResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,38 +57,38 @@ func (c *Client) ExecuteExperimentalAnalyticsQuery(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		408: func(apiError *core.APIError) error {
-			return &paidgo.RequestTimeoutError{
+			return &v2.RequestTimeoutError{
 				APIError: apiError,
 			}
 		},
 		422: func(apiError *core.APIError) error {
-			return &paidgo.UnprocessableEntityError{
+			return &v2.UnprocessableEntityError{
 				APIError: apiError,
 			}
 		},
 		429: func(apiError *core.APIError) error {
-			return &paidgo.TooManyRequestsError{
+			return &v2.TooManyRequestsError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.AnalyticsQueryResponse
+	var response *v2.AnalyticsQueryResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -115,7 +115,7 @@ func (c *Client) ExecuteExperimentalAnalyticsQuery(
 func (c *Client) GetExperimentalAnalyticsSchema(
 	ctx context.Context,
 	opts ...option.RequestOption,
-) (*paidgo.AnalyticsSchemaResponse, error) {
+) (*v2.AnalyticsSchemaResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -129,13 +129,13 @@ func (c *Client) GetExperimentalAnalyticsSchema(
 	)
 	errorCodes := internal.ErrorCodes{
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.AnalyticsSchemaResponse
+	var response *v2.AnalyticsSchemaResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -160,9 +160,9 @@ func (c *Client) GetExperimentalAnalyticsSchema(
 // Lists the JSON paths (and their observed types) present in the `data` payload of your signals within a time window (default: last 30 days), grouped by signal name. Use the returned paths in queries against `fact_signal`, e.g. `WHERE data.<path>::String = '...'`. Keys declared as grouping dimensions are marked `declared` with their `slot` and listed first. Where available, each path also carries `firstSeen`, `lastSeen` and a `signals` count; these span all time, and the window only selects which paths and types are returned.
 func (c *Client) GetExperimentalSignalsMetadata(
 	ctx context.Context,
-	request *paidgo.GetExperimentalSignalsMetadataRequest,
+	request *v2.GetExperimentalSignalsMetadataRequest,
 	opts ...option.RequestOption,
-) (*paidgo.SignalsMetadataResponse, error) {
+) (*v2.SignalsMetadataResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -183,18 +183,18 @@ func (c *Client) GetExperimentalSignalsMetadata(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.SignalsMetadataResponse
+	var response *v2.SignalsMetadataResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

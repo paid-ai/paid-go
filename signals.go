@@ -5,7 +5,7 @@ package api
 import (
 	json "encoding/json"
 	fmt "fmt"
-	internal "github.com/paid-ai/paid-go/internal"
+	internal "github.com/paid-ai/paid-go/v2/internal"
 	time "time"
 )
 

@@ -4,10 +4,10 @@ package plans
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Returns plans for your organization, including archived plans by default, optionally filtered to a product.
 func (c *Client) ListPlans(
 	ctx context.Context,
-	request *paidgo.ListPlansRequest,
+	request *v2.ListPlansRequest,
 	opts ...option.RequestOption,
-) (*paidgo.PlanListResponse, error) {
+) (*v2.PlanListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,28 +57,28 @@ func (c *Client) ListPlans(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.PlanListResponse
+	var response *v2.PlanListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -101,9 +101,9 @@ func (c *Client) ListPlans(
 // Creates a new plan for a product.
 func (c *Client) CreatePlan(
 	ctx context.Context,
-	request *paidgo.CreatePlanRequest,
+	request *v2.CreatePlanRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Plan, error) {
+) (*v2.Plan, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -118,28 +118,28 @@ func (c *Client) CreatePlan(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Plan
+	var response *v2.Plan
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -163,9 +163,9 @@ func (c *Client) CreatePlan(
 // Updates upgrade path ordering for plans within a product, grouped by billing frequency.
 func (c *Client) UpdatePlanUpgradePath(
 	ctx context.Context,
-	request *paidgo.UpdatePlanUpgradePathRequest,
+	request *v2.UpdatePlanUpgradePathRequest,
 	opts ...option.RequestOption,
-) (*paidgo.PlanUpgradePathResponse, error) {
+) (*v2.PlanUpgradePathResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -180,28 +180,28 @@ func (c *Client) UpdatePlanUpgradePath(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.PlanUpgradePathResponse
+	var response *v2.PlanUpgradePathResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -225,9 +225,9 @@ func (c *Client) UpdatePlanUpgradePath(
 // Get a plan by Paid plan ID.
 func (c *Client) GetPlanByID(
 	ctx context.Context,
-	request *paidgo.GetPlanByIDRequest,
+	request *v2.GetPlanByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Plan, error) {
+) (*v2.Plan, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -244,23 +244,23 @@ func (c *Client) GetPlanByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Plan
+	var response *v2.Plan
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -283,9 +283,9 @@ func (c *Client) GetPlanByID(
 // Update a plan by Paid plan ID. If attributes are provided, they replace the plan's existing attributes. Set status to archive or restore the plan.
 func (c *Client) UpdatePlanByID(
 	ctx context.Context,
-	request *paidgo.UpdatePlanByIDRequest,
+	request *v2.UpdatePlanByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Plan, error) {
+) (*v2.Plan, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -303,28 +303,28 @@ func (c *Client) UpdatePlanByID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Plan
+	var response *v2.Plan
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -348,9 +348,9 @@ func (c *Client) UpdatePlanByID(
 // Get a plan by your external plan ID.
 func (c *Client) GetPlanByExternalID(
 	ctx context.Context,
-	request *paidgo.GetPlanByExternalIDRequest,
+	request *v2.GetPlanByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Plan, error) {
+) (*v2.Plan, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -367,23 +367,23 @@ func (c *Client) GetPlanByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Plan
+	var response *v2.Plan
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -406,9 +406,9 @@ func (c *Client) GetPlanByExternalID(
 // Update a plan by your external plan ID. If attributes are provided, they replace the plan's existing attributes. Set status to archive or restore the plan.
 func (c *Client) UpdatePlanByExternalID(
 	ctx context.Context,
-	request *paidgo.UpdatePlanByExternalIDRequest,
+	request *v2.UpdatePlanByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Plan, error) {
+) (*v2.Plan, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -426,28 +426,28 @@ func (c *Client) UpdatePlanByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Plan
+	var response *v2.Plan
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

@@ -4,10 +4,10 @@ package products
 
 import (
 	context "context"
-	paidgo "github.com/paid-ai/paid-go"
-	core "github.com/paid-ai/paid-go/core"
-	internal "github.com/paid-ai/paid-go/internal"
-	option "github.com/paid-ai/paid-go/option"
+	v2 "github.com/paid-ai/paid-go/v2"
+	core "github.com/paid-ai/paid-go/v2/core"
+	internal "github.com/paid-ai/paid-go/v2/internal"
+	option "github.com/paid-ai/paid-go/v2/option"
 	http "net/http"
 )
 
@@ -34,9 +34,9 @@ func NewClient(opts ...option.RequestOption) *Client {
 // Get a list of products for the organization
 func (c *Client) ListProducts(
 	ctx context.Context,
-	request *paidgo.ListProductsRequest,
+	request *v2.ListProductsRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ProductListResponse, error) {
+) (*v2.ProductListResponse, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -57,23 +57,23 @@ func (c *Client) ListProducts(
 	)
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ProductListResponse
+	var response *v2.ProductListResponse
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -96,9 +96,9 @@ func (c *Client) ListProducts(
 // Creates a new product for the organization. Products are created without pricing: to create product attributes and set their pricing, call the update product endpoint (updateProductById / updateProductByExternalId), which upserts productAttributes.
 func (c *Client) CreateProduct(
 	ctx context.Context,
-	request *paidgo.CreateProductRequest,
+	request *v2.CreateProductRequest,
 	opts ...option.RequestOption,
-) (*paidgo.Product, error) {
+) (*v2.Product, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -113,23 +113,23 @@ func (c *Client) CreateProduct(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.Product
+	var response *v2.Product
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -153,9 +153,9 @@ func (c *Client) CreateProduct(
 // Get a product by ID, including its product attributes with pricing details
 func (c *Client) GetProductByID(
 	ctx context.Context,
-	request *paidgo.GetProductByIDRequest,
+	request *v2.GetProductByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ProductDetail, error) {
+) (*v2.ProductDetail, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -172,23 +172,23 @@ func (c *Client) GetProductByID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ProductDetail
+	var response *v2.ProductDetail
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -211,9 +211,9 @@ func (c *Client) GetProductByID(
 // Update a product by ID. Also creates and edits product attributes: productAttributes upserts attributes and sets their pricing (metering event, price points, credit brackets). This is the endpoint to use to add pricing to a product created without any.
 func (c *Client) UpdateProductByID(
 	ctx context.Context,
-	request *paidgo.UpdateProductByIDRequest,
+	request *v2.UpdateProductByIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ProductDetail, error) {
+) (*v2.ProductDetail, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -231,28 +231,28 @@ func (c *Client) UpdateProductByID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ProductDetail
+	var response *v2.ProductDetail
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -276,9 +276,9 @@ func (c *Client) UpdateProductByID(
 // Get a product by external ID, including its product attributes with pricing details
 func (c *Client) GetProductByExternalID(
 	ctx context.Context,
-	request *paidgo.GetProductByExternalIDRequest,
+	request *v2.GetProductByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ProductDetail, error) {
+) (*v2.ProductDetail, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -295,23 +295,23 @@ func (c *Client) GetProductByExternalID(
 	)
 	errorCodes := internal.ErrorCodes{
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ProductDetail
+	var response *v2.ProductDetail
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{
@@ -334,9 +334,9 @@ func (c *Client) GetProductByExternalID(
 // Update a product by external ID. Also creates and edits product attributes: productAttributes upserts attributes and sets their pricing (metering event, price points, credit brackets). This is the endpoint to use to add pricing to a product created without any.
 func (c *Client) UpdateProductByExternalID(
 	ctx context.Context,
-	request *paidgo.UpdateProductByExternalIDRequest,
+	request *v2.UpdateProductByExternalIDRequest,
 	opts ...option.RequestOption,
-) (*paidgo.ProductDetail, error) {
+) (*v2.ProductDetail, error) {
 	options := core.NewRequestOptions(opts...)
 	baseURL := internal.ResolveBaseURL(
 		options.BaseURL,
@@ -354,28 +354,28 @@ func (c *Client) UpdateProductByExternalID(
 	headers.Set("Content-Type", "application/json")
 	errorCodes := internal.ErrorCodes{
 		400: func(apiError *core.APIError) error {
-			return &paidgo.BadRequestError{
+			return &v2.BadRequestError{
 				APIError: apiError,
 			}
 		},
 		403: func(apiError *core.APIError) error {
-			return &paidgo.ForbiddenError{
+			return &v2.ForbiddenError{
 				APIError: apiError,
 			}
 		},
 		404: func(apiError *core.APIError) error {
-			return &paidgo.NotFoundError{
+			return &v2.NotFoundError{
 				APIError: apiError,
 			}
 		},
 		500: func(apiError *core.APIError) error {
-			return &paidgo.InternalServerError{
+			return &v2.InternalServerError{
 				APIError: apiError,
 			}
 		},
 	}
 
-	var response *paidgo.ProductDetail
+	var response *v2.ProductDetail
 	if err := c.caller.Call(
 		ctx,
 		&internal.CallParams{

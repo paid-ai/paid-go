@@ -5,7 +5,7 @@ package api
 import (
 	json "encoding/json"
 	fmt "fmt"
-	internal "github.com/paid-ai/paid-go/internal"
+	internal "github.com/paid-ai/paid-go/v2/internal"
 	time "time"
 )
 
@@ -255,7 +255,6 @@ func (w *WebhookListResponse) String() string {
 type WebhookName string
 
 const (
-	WebhookNameBillingInvoiceCreated    WebhookName = "billing-invoice-created"
 	WebhookNameBillingInvoicePaid       WebhookName = "billing-invoice-paid"
 	WebhookNameBillingInvoicePosted     WebhookName = "billing-invoice-posted"
 	WebhookNameBillingCheckoutCreated   WebhookName = "billing-checkout-created"
@@ -270,8 +269,6 @@ const (
 
 func NewWebhookNameFromString(s string) (WebhookName, error) {
 	switch s {
-	case "billing-invoice-created":
-		return WebhookNameBillingInvoiceCreated, nil
 	case "billing-invoice-paid":
 		return WebhookNameBillingInvoicePaid, nil
 	case "billing-invoice-posted":
@@ -471,7 +468,6 @@ func (w *WebhookUpdateResponse) String() string {
 type WebhookUpdateResponseName string
 
 const (
-	WebhookUpdateResponseNameBillingInvoiceCreated    WebhookUpdateResponseName = "billing-invoice-created"
 	WebhookUpdateResponseNameBillingInvoicePaid       WebhookUpdateResponseName = "billing-invoice-paid"
 	WebhookUpdateResponseNameBillingInvoicePosted     WebhookUpdateResponseName = "billing-invoice-posted"
 	WebhookUpdateResponseNameBillingCheckoutCreated   WebhookUpdateResponseName = "billing-checkout-created"
@@ -486,8 +482,6 @@ const (
 
 func NewWebhookUpdateResponseNameFromString(s string) (WebhookUpdateResponseName, error) {
 	switch s {
-	case "billing-invoice-created":
-		return WebhookUpdateResponseNameBillingInvoiceCreated, nil
 	case "billing-invoice-paid":
 		return WebhookUpdateResponseNameBillingInvoicePaid, nil
 	case "billing-invoice-posted":
@@ -520,7 +514,6 @@ func (w WebhookUpdateResponseName) Ptr() *WebhookUpdateResponseName {
 type TestWebhookRequestWebhookName string
 
 const (
-	TestWebhookRequestWebhookNameBillingInvoiceCreated    TestWebhookRequestWebhookName = "billing-invoice-created"
 	TestWebhookRequestWebhookNameBillingInvoicePaid       TestWebhookRequestWebhookName = "billing-invoice-paid"
 	TestWebhookRequestWebhookNameBillingInvoicePosted     TestWebhookRequestWebhookName = "billing-invoice-posted"
 	TestWebhookRequestWebhookNameBillingCheckoutCreated   TestWebhookRequestWebhookName = "billing-checkout-created"
@@ -535,8 +528,6 @@ const (
 
 func NewTestWebhookRequestWebhookNameFromString(s string) (TestWebhookRequestWebhookName, error) {
 	switch s {
-	case "billing-invoice-created":
-		return TestWebhookRequestWebhookNameBillingInvoiceCreated, nil
 	case "billing-invoice-paid":
 		return TestWebhookRequestWebhookNameBillingInvoicePaid, nil
 	case "billing-invoice-posted":
@@ -569,7 +560,6 @@ func (t TestWebhookRequestWebhookName) Ptr() *TestWebhookRequestWebhookName {
 type UpdateWebhookRequestWebhookName string
 
 const (
-	UpdateWebhookRequestWebhookNameBillingInvoiceCreated    UpdateWebhookRequestWebhookName = "billing-invoice-created"
 	UpdateWebhookRequestWebhookNameBillingInvoicePaid       UpdateWebhookRequestWebhookName = "billing-invoice-paid"
 	UpdateWebhookRequestWebhookNameBillingInvoicePosted     UpdateWebhookRequestWebhookName = "billing-invoice-posted"
 	UpdateWebhookRequestWebhookNameBillingCheckoutCreated   UpdateWebhookRequestWebhookName = "billing-checkout-created"
@@ -584,8 +574,6 @@ const (
 
 func NewUpdateWebhookRequestWebhookNameFromString(s string) (UpdateWebhookRequestWebhookName, error) {
 	switch s {
-	case "billing-invoice-created":
-		return UpdateWebhookRequestWebhookNameBillingInvoiceCreated, nil
 	case "billing-invoice-paid":
 		return UpdateWebhookRequestWebhookNameBillingInvoicePaid, nil
 	case "billing-invoice-posted":
