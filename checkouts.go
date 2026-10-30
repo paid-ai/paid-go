@@ -458,7 +458,7 @@ type CheckoutDetails struct {
 	CustomCards []*CheckoutCustomCard `json:"customCards,omitempty" url:"customCards,omitempty"`
 	CreatedAt   time.Time             `json:"createdAt" url:"createdAt"`
 	UpdatedAt   time.Time             `json:"updatedAt" url:"updatedAt"`
-	// The resulting order ID once checkout has completed. Null until an order is created.
+	// The resulting order ID once a single-use checkout has completed. Null until an order is created, and always null on a reusable checkout (`singleUse: false`), where each payment creates its own order: use the `billing-checkout-completed` webhook to see each one.
 	OrderID         *string                  `json:"orderId,omitempty" url:"orderId,omitempty"`
 	SelectedProduct *CheckoutSelectedProduct `json:"selectedProduct,omitempty" url:"selectedProduct,omitempty"`
 
@@ -945,7 +945,7 @@ func (c *CheckoutProductInput) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// The product and plan the customer selected, once checkout completes. Null before completion.
+// The product and plan the customer selected, once a single-use checkout completes. Null before completion, and always null on a reusable checkout (`singleUse: false`).
 type CheckoutSelectedProduct struct {
 	ID   string   `json:"id" url:"id"`
 	Plan *PlanRef `json:"plan,omitempty" url:"plan,omitempty"`
