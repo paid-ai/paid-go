@@ -18,8 +18,10 @@ type CreateCheckoutRequest struct {
 	CustomerID *string                 `json:"customerId,omitempty" url:"-"`
 	// External customer identifier. Creates the customer on first use, resolves to the existing customer on subsequent uses.
 	ExternalCustomerID *string `json:"externalCustomerId,omitempty" url:"-"`
-	SuccessURL         string  `json:"successUrl" url:"-"`
-	CancelURL          *string `json:"cancelUrl,omitempty" url:"-"`
+	// Where the customer goes after paying. `{CHECKOUT_ID}` is replaced with this checkout's ID when it's created, and `{CHECKOUT_SESSION_ID}` with the customer's own checkout session ID (`cs_…`) when they start paying, so on a reusable checkout each customer returns with their own.
+	SuccessURL string `json:"successUrl" url:"-"`
+	// Where the customer goes if they leave without paying. Takes the same `{CHECKOUT_ID}` and `{CHECKOUT_SESSION_ID}` placeholders as `successUrl`.
+	CancelURL *string `json:"cancelUrl,omitempty" url:"-"`
 	// When the checkout link expires. Must be in the future. Defaults to 24 hours after creation.
 	ExpiresAt      *time.Time             `json:"expiresAt,omitempty" url:"-"`
 	Metadata       map[string]interface{} `json:"metadata,omitempty" url:"-"`
