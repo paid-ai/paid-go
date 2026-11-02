@@ -479,6 +479,60 @@ func (a *AnalyticsSchemaView) String() string {
 	return fmt.Sprintf("%#v", a)
 }
 
+type CheckoutSelectedProduct struct {
+	ID   string   `json:"id" url:"id"`
+	Plan *PlanRef `json:"plan,omitempty" url:"plan,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CheckoutSelectedProduct) GetID() string {
+	if c == nil {
+		return ""
+	}
+	return c.ID
+}
+
+func (c *CheckoutSelectedProduct) GetPlan() *PlanRef {
+	if c == nil {
+		return nil
+	}
+	return c.Plan
+}
+
+func (c *CheckoutSelectedProduct) GetExtraProperties() map[string]interface{} {
+	return c.extraProperties
+}
+
+func (c *CheckoutSelectedProduct) UnmarshalJSON(data []byte) error {
+	type unmarshaler CheckoutSelectedProduct
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CheckoutSelectedProduct(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CheckoutSelectedProduct) String() string {
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
 type ContactBillingAddress struct {
 	Street  *string `json:"street,omitempty" url:"street,omitempty"`
 	City    *string `json:"city,omitempty" url:"city,omitempty"`
@@ -2007,6 +2061,68 @@ func (p *Pagination) UnmarshalJSON(data []byte) error {
 }
 
 func (p *Pagination) String() string {
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+type PlanRef struct {
+	ID         string  `json:"id" url:"id"`
+	Name       *string `json:"name,omitempty" url:"name,omitempty"`
+	ExternalID *string `json:"externalId,omitempty" url:"externalId,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *PlanRef) GetID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ID
+}
+
+func (p *PlanRef) GetName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.Name
+}
+
+func (p *PlanRef) GetExternalID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.ExternalID
+}
+
+func (p *PlanRef) GetExtraProperties() map[string]interface{} {
+	return p.extraProperties
+}
+
+func (p *PlanRef) UnmarshalJSON(data []byte) error {
+	type unmarshaler PlanRef
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = PlanRef(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *PlanRef) String() string {
 	if len(p.rawJSON) > 0 {
 		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
 			return value

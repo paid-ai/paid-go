@@ -7,6 +7,7 @@ import (
 	analytics "github.com/paid-ai/paid-go/v2/analytics"
 	analyticsexperimental "github.com/paid-ai/paid-go/v2/analyticsexperimental"
 	checkouts "github.com/paid-ai/paid-go/v2/checkouts"
+	checkoutsessions "github.com/paid-ai/paid-go/v2/checkoutsessions"
 	contacts "github.com/paid-ai/paid-go/v2/contacts"
 	core "github.com/paid-ai/paid-go/v2/core"
 	costs "github.com/paid-ai/paid-go/v2/costs"
@@ -47,6 +48,7 @@ type Client struct {
 	Signals                 *signals.Client
 	Credits                 *credits.Client
 	Checkouts               *checkouts.Client
+	CheckoutSessions        *checkoutsessions.Client
 	CustomerPortals         *customerportals.Client
 	ValueReceipts           *valuereceipts.Client
 	DeliveredValue          *deliveredvalue.Client
@@ -84,6 +86,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 		Signals:                 signals.NewClient(opts...),
 		Credits:                 credits.NewClient(opts...),
 		Checkouts:               checkouts.NewClient(opts...),
+		CheckoutSessions:        checkoutsessions.NewClient(opts...),
 		CustomerPortals:         customerportals.NewClient(opts...),
 		ValueReceipts:           valuereceipts.NewClient(opts...),
 		DeliveredValue:          deliveredvalue.NewClient(opts...),
