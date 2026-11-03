@@ -545,7 +545,7 @@ type ListCustomerUnitsRequest struct {
 	ID     string `json:"-" url:"-"`
 	Limit  *int   `json:"-" url:"limit,omitempty"`
 	Offset *int   `json:"-" url:"offset,omitempty"`
-	// Filter by status (default ACTIVE; drafts are listed only with DRAFT).
+	// Filter by status (default ACTIVE).
 	Status *ListCustomerUnitsRequestStatus `json:"-" url:"status,omitempty"`
 	// Filter by external type.
 	ExternalType *string `json:"-" url:"externalType,omitempty"`
@@ -558,7 +558,7 @@ type ListCustomerUnitsByExternalIDRequest struct {
 	ExternalID string `json:"-" url:"-"`
 	Limit      *int   `json:"-" url:"limit,omitempty"`
 	Offset     *int   `json:"-" url:"offset,omitempty"`
-	// Filter by status (default ACTIVE; drafts are listed only with DRAFT).
+	// Filter by status (default ACTIVE).
 	Status *ListCustomerUnitsByExternalIDRequestStatus `json:"-" url:"status,omitempty"`
 	// Filter by external type.
 	ExternalType *string `json:"-" url:"externalType,omitempty"`
@@ -3710,7 +3710,7 @@ type CustomerUnit struct {
 	Name string `json:"name" url:"name"`
 	// Your structural vocabulary for the unit.
 	ExternalType *string `json:"externalType,omitempty" url:"externalType,omitempty"`
-	// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+	// ACTIVE, or DELETED after a soft delete (one-way).
 	Status CustomerUnitStatus `json:"status" url:"status"`
 	// `externalId` of the parent unit; `null` only on the customer's root unit.
 	ParentExternalID *string `json:"parentExternalId,omitempty" url:"parentExternalId,omitempty"`
@@ -3892,7 +3892,7 @@ type CustomerUnitByKey struct {
 	Name string `json:"name" url:"name"`
 	// Your structural vocabulary for the unit.
 	ExternalType *string `json:"externalType,omitempty" url:"externalType,omitempty"`
-	// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+	// ACTIVE, or DELETED after a soft delete (one-way).
 	Status CustomerUnitByKeyStatus `json:"status" url:"status"`
 	// `externalId` of the parent unit; `null` only on the customer's root unit.
 	ParentExternalID *string `json:"parentExternalId,omitempty" url:"parentExternalId,omitempty"`
@@ -4055,13 +4055,12 @@ func (c *CustomerUnitByKey) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+// ACTIVE, or DELETED after a soft delete (one-way).
 type CustomerUnitByKeyStatus string
 
 const (
 	CustomerUnitByKeyStatusActive  CustomerUnitByKeyStatus = "ACTIVE"
 	CustomerUnitByKeyStatusDeleted CustomerUnitByKeyStatus = "DELETED"
-	CustomerUnitByKeyStatusDraft   CustomerUnitByKeyStatus = "DRAFT"
 )
 
 func NewCustomerUnitByKeyStatusFromString(s string) (CustomerUnitByKeyStatus, error) {
@@ -4070,8 +4069,6 @@ func NewCustomerUnitByKeyStatusFromString(s string) (CustomerUnitByKeyStatus, er
 		return CustomerUnitByKeyStatusActive, nil
 	case "DELETED":
 		return CustomerUnitByKeyStatusDeleted, nil
-	case "DRAFT":
-		return CustomerUnitByKeyStatusDraft, nil
 	}
 	var t CustomerUnitByKeyStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -5200,7 +5197,7 @@ type CustomerUnitCreatedUnderParent struct {
 	Name string `json:"name" url:"name"`
 	// Your structural vocabulary for the unit.
 	ExternalType *string `json:"externalType,omitempty" url:"externalType,omitempty"`
-	// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+	// ACTIVE, or DELETED after a soft delete (one-way).
 	Status CustomerUnitCreatedUnderParentStatus `json:"status" url:"status"`
 	// `externalId` of the parent unit; `null` only on the customer's root unit.
 	ParentExternalID *string `json:"parentExternalId,omitempty" url:"parentExternalId,omitempty"`
@@ -5363,13 +5360,12 @@ func (c *CustomerUnitCreatedUnderParent) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+// ACTIVE, or DELETED after a soft delete (one-way).
 type CustomerUnitCreatedUnderParentStatus string
 
 const (
 	CustomerUnitCreatedUnderParentStatusActive  CustomerUnitCreatedUnderParentStatus = "ACTIVE"
 	CustomerUnitCreatedUnderParentStatusDeleted CustomerUnitCreatedUnderParentStatus = "DELETED"
-	CustomerUnitCreatedUnderParentStatusDraft   CustomerUnitCreatedUnderParentStatus = "DRAFT"
 )
 
 func NewCustomerUnitCreatedUnderParentStatusFromString(s string) (CustomerUnitCreatedUnderParentStatus, error) {
@@ -5378,8 +5374,6 @@ func NewCustomerUnitCreatedUnderParentStatusFromString(s string) (CustomerUnitCr
 		return CustomerUnitCreatedUnderParentStatusActive, nil
 	case "DELETED":
 		return CustomerUnitCreatedUnderParentStatusDeleted, nil
-	case "DRAFT":
-		return CustomerUnitCreatedUnderParentStatusDraft, nil
 	}
 	var t CustomerUnitCreatedUnderParentStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -5605,13 +5599,12 @@ func (c *CustomerUnitSpendWindow) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// ACTIVE; DELETED after a soft delete (one-way); or DRAFT, a placeholder that holds the key for this customer until you create the unit with that key (which promotes it) or delete it (soft, the key stays reserved, as for any unit). A draft is never a parent and never carries a cap.
+// ACTIVE, or DELETED after a soft delete (one-way).
 type CustomerUnitStatus string
 
 const (
 	CustomerUnitStatusActive  CustomerUnitStatus = "ACTIVE"
 	CustomerUnitStatusDeleted CustomerUnitStatus = "DELETED"
-	CustomerUnitStatusDraft   CustomerUnitStatus = "DRAFT"
 )
 
 func NewCustomerUnitStatusFromString(s string) (CustomerUnitStatus, error) {
@@ -5620,8 +5613,6 @@ func NewCustomerUnitStatusFromString(s string) (CustomerUnitStatus, error) {
 		return CustomerUnitStatusActive, nil
 	case "DELETED":
 		return CustomerUnitStatusDeleted, nil
-	case "DRAFT":
-		return CustomerUnitStatusDraft, nil
 	}
 	var t CustomerUnitStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -6515,7 +6506,6 @@ type ListCustomerUnitsByExternalIDRequestStatus string
 const (
 	ListCustomerUnitsByExternalIDRequestStatusActive  ListCustomerUnitsByExternalIDRequestStatus = "ACTIVE"
 	ListCustomerUnitsByExternalIDRequestStatusDeleted ListCustomerUnitsByExternalIDRequestStatus = "DELETED"
-	ListCustomerUnitsByExternalIDRequestStatusDraft   ListCustomerUnitsByExternalIDRequestStatus = "DRAFT"
 )
 
 func NewListCustomerUnitsByExternalIDRequestStatusFromString(s string) (ListCustomerUnitsByExternalIDRequestStatus, error) {
@@ -6524,8 +6514,6 @@ func NewListCustomerUnitsByExternalIDRequestStatusFromString(s string) (ListCust
 		return ListCustomerUnitsByExternalIDRequestStatusActive, nil
 	case "DELETED":
 		return ListCustomerUnitsByExternalIDRequestStatusDeleted, nil
-	case "DRAFT":
-		return ListCustomerUnitsByExternalIDRequestStatusDraft, nil
 	}
 	var t ListCustomerUnitsByExternalIDRequestStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -6540,7 +6528,6 @@ type ListCustomerUnitsRequestStatus string
 const (
 	ListCustomerUnitsRequestStatusActive  ListCustomerUnitsRequestStatus = "ACTIVE"
 	ListCustomerUnitsRequestStatusDeleted ListCustomerUnitsRequestStatus = "DELETED"
-	ListCustomerUnitsRequestStatusDraft   ListCustomerUnitsRequestStatus = "DRAFT"
 )
 
 func NewListCustomerUnitsRequestStatusFromString(s string) (ListCustomerUnitsRequestStatus, error) {
@@ -6549,8 +6536,6 @@ func NewListCustomerUnitsRequestStatusFromString(s string) (ListCustomerUnitsReq
 		return ListCustomerUnitsRequestStatusActive, nil
 	case "DELETED":
 		return ListCustomerUnitsRequestStatusDeleted, nil
-	case "DRAFT":
-		return ListCustomerUnitsRequestStatusDraft, nil
 	}
 	var t ListCustomerUnitsRequestStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
