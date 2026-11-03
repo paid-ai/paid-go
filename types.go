@@ -5885,17 +5885,13 @@ func (s *SignalsMetadataResponseSignalsItem) String() string {
 type SignalsMetadataResponseSignalsItemPathsItem struct {
 	// JSON path inside the signal `data` payload, usable in queries as e.g. `data.<path>::String`.
 	Path string `json:"path" url:"path"`
-	// ClickHouse dynamic types observed for this path within the window.
+	// ClickHouse dynamic types observed for this path within the window's hours.
 	Types []string `json:"types" url:"types"`
 	// True when this key is declared as a grouping dimension for your organization. Declared keys are listed first.
 	Declared bool `json:"declared" url:"declared"`
 	// The dimension slot a declared key fills. Present only when `declared` is true.
 	Slot *SignalsMetadataResponseSignalsItemPathsItemSlot `json:"slot,omitempty" url:"slot,omitempty"`
-	// When a signal carrying this path was first received, across all time rather than only the window. Omitted when not available.
-	FirstSeen *time.Time `json:"firstSeen,omitempty" url:"firstSeen,omitempty"`
-	// When a signal carrying this path was last received, across all time rather than only the window. Omitted when not available.
-	LastSeen *time.Time `json:"lastSeen,omitempty" url:"lastSeen,omitempty"`
-	// How many times a signal of this name has been received carrying this path, across all time rather than only the window. Each revision of an edited signal counts again and deleted signals stay counted, so read it as a measure of use rather than a count of distinct or live signals. Omitted when not available.
+	// How many signals of this name received in the window's hours carried this path. Each revision of an edited signal counts again and deleted signals stay counted, so read it as a measure of use rather than a count of distinct or live signals. Omitted when not available.
 	Signals *int `json:"signals,omitempty" url:"signals,omitempty"`
 
 	extraProperties map[string]interface{}
@@ -5930,20 +5926,6 @@ func (s *SignalsMetadataResponseSignalsItemPathsItem) GetSlot() *SignalsMetadata
 	return s.Slot
 }
 
-func (s *SignalsMetadataResponseSignalsItemPathsItem) GetFirstSeen() *time.Time {
-	if s == nil {
-		return nil
-	}
-	return s.FirstSeen
-}
-
-func (s *SignalsMetadataResponseSignalsItemPathsItem) GetLastSeen() *time.Time {
-	if s == nil {
-		return nil
-	}
-	return s.LastSeen
-}
-
 func (s *SignalsMetadataResponseSignalsItemPathsItem) GetSignals() *int {
 	if s == nil {
 		return nil
@@ -5956,20 +5938,12 @@ func (s *SignalsMetadataResponseSignalsItemPathsItem) GetExtraProperties() map[s
 }
 
 func (s *SignalsMetadataResponseSignalsItemPathsItem) UnmarshalJSON(data []byte) error {
-	type embed SignalsMetadataResponseSignalsItemPathsItem
-	var unmarshaler = struct {
-		embed
-		FirstSeen *internal.DateTime `json:"firstSeen,omitempty"`
-		LastSeen  *internal.DateTime `json:"lastSeen,omitempty"`
-	}{
-		embed: embed(*s),
-	}
-	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+	type unmarshaler SignalsMetadataResponseSignalsItemPathsItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	*s = SignalsMetadataResponseSignalsItemPathsItem(unmarshaler.embed)
-	s.FirstSeen = unmarshaler.FirstSeen.TimePtr()
-	s.LastSeen = unmarshaler.LastSeen.TimePtr()
+	*s = SignalsMetadataResponseSignalsItemPathsItem(value)
 	extraProperties, err := internal.ExtractExtraProperties(data, *s)
 	if err != nil {
 		return err
@@ -5977,20 +5951,6 @@ func (s *SignalsMetadataResponseSignalsItemPathsItem) UnmarshalJSON(data []byte)
 	s.extraProperties = extraProperties
 	s.rawJSON = json.RawMessage(data)
 	return nil
-}
-
-func (s *SignalsMetadataResponseSignalsItemPathsItem) MarshalJSON() ([]byte, error) {
-	type embed SignalsMetadataResponseSignalsItemPathsItem
-	var marshaler = struct {
-		embed
-		FirstSeen *internal.DateTime `json:"firstSeen,omitempty"`
-		LastSeen  *internal.DateTime `json:"lastSeen,omitempty"`
-	}{
-		embed:     embed(*s),
-		FirstSeen: internal.NewOptionalDateTime(s.FirstSeen),
-		LastSeen:  internal.NewOptionalDateTime(s.LastSeen),
-	}
-	return json.Marshal(marshaler)
 }
 
 func (s *SignalsMetadataResponseSignalsItemPathsItem) String() string {
