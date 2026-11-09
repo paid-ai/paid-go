@@ -10,7 +10,9 @@ import (
 )
 
 type CreateProductRequest struct {
-	Name        string                 `json:"name" url:"-"`
+	Name string `json:"name" url:"-"`
+	// What your customers see on invoices, up to 250 characters. Omit it or send null to use the product name.
+	DisplayName *string                `json:"displayName,omitempty" url:"-"`
 	Description *string                `json:"description,omitempty" url:"-"`
 	Active      *bool                  `json:"active,omitempty" url:"-"`
 	ProductCode *string                `json:"productCode,omitempty" url:"-"`
@@ -38,8 +40,10 @@ type ListProductsRequest struct {
 }
 
 type Product struct {
-	ID          string                 `json:"id" url:"id"`
-	Name        string                 `json:"name" url:"name"`
+	ID   string `json:"id" url:"id"`
+	Name string `json:"name" url:"name"`
+	// What your customers see on invoices. Null means invoices show the product name.
+	DisplayName *string                `json:"displayName,omitempty" url:"displayName,omitempty"`
 	Description *string                `json:"description,omitempty" url:"description,omitempty"`
 	CreatedAt   time.Time              `json:"createdAt" url:"createdAt"`
 	UpdatedAt   time.Time              `json:"updatedAt" url:"updatedAt"`
@@ -65,6 +69,13 @@ func (p *Product) GetName() string {
 		return ""
 	}
 	return p.Name
+}
+
+func (p *Product) GetDisplayName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.DisplayName
 }
 
 func (p *Product) GetDescription() *string {
@@ -481,8 +492,10 @@ func (p *ProductCreditBenefitOutput) String() string {
 }
 
 type ProductDetail struct {
-	ID                string                    `json:"id" url:"id"`
-	Name              string                    `json:"name" url:"name"`
+	ID   string `json:"id" url:"id"`
+	Name string `json:"name" url:"name"`
+	// What your customers see on invoices. Null means invoices show the product name.
+	DisplayName       *string                   `json:"displayName,omitempty" url:"displayName,omitempty"`
 	Description       *string                   `json:"description,omitempty" url:"description,omitempty"`
 	CreatedAt         time.Time                 `json:"createdAt" url:"createdAt"`
 	UpdatedAt         time.Time                 `json:"updatedAt" url:"updatedAt"`
@@ -509,6 +522,13 @@ func (p *ProductDetail) GetName() string {
 		return ""
 	}
 	return p.Name
+}
+
+func (p *ProductDetail) GetDisplayName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.DisplayName
 }
 
 func (p *ProductDetail) GetDescription() *string {
@@ -1146,7 +1166,9 @@ func (p ProductPricingTierOutputTierBillingType) Ptr() *ProductPricingTierOutput
 }
 
 type UpdateProductRequest struct {
-	Name              *string                   `json:"name,omitempty" url:"name,omitempty"`
+	Name *string `json:"name,omitempty" url:"name,omitempty"`
+	// What your customers see on invoices, up to 250 characters. Omit it or send null to use the product name.
+	DisplayName       *string                   `json:"displayName,omitempty" url:"displayName,omitempty"`
 	Description       *string                   `json:"description,omitempty" url:"description,omitempty"`
 	Active            *bool                     `json:"active,omitempty" url:"active,omitempty"`
 	ProductCode       *string                   `json:"productCode,omitempty" url:"productCode,omitempty"`
@@ -1163,6 +1185,13 @@ func (u *UpdateProductRequest) GetName() *string {
 		return nil
 	}
 	return u.Name
+}
+
+func (u *UpdateProductRequest) GetDisplayName() *string {
+	if u == nil {
+		return nil
+	}
+	return u.DisplayName
 }
 
 func (u *UpdateProductRequest) GetDescription() *string {
