@@ -242,7 +242,7 @@ func (c *Client) GetValueModelVersion(
 	return response, nil
 }
 
-// Manually triggers a recalculation of all ClickHouse rows against the current value model. Returns 422 when the backfill would scan more signals than the ceiling allows — that is deterministic, so retrying without narrowing the scope will not help.
+// Manually triggers a recalculation of all ClickHouse rows against the current value model.
 func (c *Client) RefreshValueModelBackfill(
 	ctx context.Context,
 	request *v2.RefreshValueModelBackfillRequest,
@@ -263,11 +263,6 @@ func (c *Client) RefreshValueModelBackfill(
 	errorCodes := internal.ErrorCodes{
 		404: func(apiError *core.APIError) error {
 			return &v2.NotFoundError{
-				APIError: apiError,
-			}
-		},
-		422: func(apiError *core.APIError) error {
-			return &v2.UnprocessableEntityError{
 				APIError: apiError,
 			}
 		},
