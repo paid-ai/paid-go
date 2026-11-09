@@ -5887,9 +5887,9 @@ type SignalsMetadataResponseSignalsItemPathsItem struct {
 	Path string `json:"path" url:"path"`
 	// ClickHouse dynamic types observed for this path within the window's hours.
 	Types []string `json:"types" url:"types"`
-	// True when this key is declared as a grouping dimension for your organization. Declared keys are listed first.
+	// True when a signal summary can be grouped by this key for your organization. Declared keys are listed first.
 	Declared bool `json:"declared" url:"declared"`
-	// The dimension slot a declared key fills. Present only when `declared` is true.
+	// Deprecated: no longer returned. Use `declared` to tell whether a summary can be grouped by this key.
 	Slot *SignalsMetadataResponseSignalsItemPathsItemSlot `json:"slot,omitempty" url:"slot,omitempty"`
 	// How many signals of this name received in the window's hours carried this path. Each revision of an edited signal counts again and deleted signals stay counted, so read it as a measure of use rather than a count of distinct or live signals. Omitted when not available.
 	Signals *int `json:"signals,omitempty" url:"signals,omitempty"`
@@ -5965,7 +5965,7 @@ func (s *SignalsMetadataResponseSignalsItemPathsItem) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
-// The dimension slot a declared key fills. Present only when `declared` is true.
+// Deprecated: no longer returned. Use `declared` to tell whether a summary can be grouped by this key.
 type SignalsMetadataResponseSignalsItemPathsItemSlot string
 
 const (
