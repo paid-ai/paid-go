@@ -281,9 +281,9 @@ type CreditTransaction struct {
 	ID             string                     `json:"id" url:"id"`
 	Customer       *CreditTransactionCustomer `json:"customer" url:"customer"`
 	CreditCurrency *CreditTransactionCurrency `json:"creditCurrency" url:"creditCurrency"`
-	// Transaction type: `grant` adds credits, `spend` consumes them (negative amount), `pendingGrant` records credits awaiting payment.
+	// Transaction type: `grant` adds credits, `spend` consumes them (negative amount), except a reversal, which is a `spend` with a positive amount that undoes an earlier spend, `pendingGrant` records credits awaiting payment.
 	Type CreditTransactionType `json:"type" url:"type"`
-	// Exact signed transaction amount in credits, as a decimal string: positive for grants, negative for spends. Exact at any magnitude, and at the full 6 decimal places.
+	// Exact signed transaction amount in credits, as a decimal string: positive for grants, negative for spends, except a reversal, which is a `spend` with a positive amount. Exact at any magnitude, and at the full 6 decimal places.
 	Amount string `json:"amount" url:"amount"`
 	// Origin of the credit pool this transaction touched (e.g. `purchased`, or a custom label). `unknown` when the transaction is not linked to a pool with an origin.
 	OriginCode string `json:"originCode" url:"originCode"`
@@ -291,10 +291,12 @@ type CreditTransaction struct {
 	EventName *string `json:"eventName,omitempty" url:"eventName,omitempty"`
 	// ID of the usage signal that produced this spend, resolvable via `GET /api/v2/signals/{id}`, or in bulk for a whole page via `POST /api/v2/signals/lookup` (both include the signal's data payload). Null for grants and non-signal spends.
 	SignalID *string `json:"signalId,omitempty" url:"signalId,omitempty"`
+	// ID of the spend transaction this row reverses: the `id` of that spend, which may be on another page or outside the date range of the same request. Set only on the reversal that undoes the spend of a voided signal (a `spend` row with a positive amount); null on every other row. A reversal undoes the spend, but does not by itself mean spendable credits were restored: credits that have already expired are not.
+	ReversesTransactionID *string `json:"reversesTransactionId,omitempty" url:"reversesTransactionId,omitempty"`
 	// Paid order display ID this transaction is linked to, if any.
 	OrderID *string                   `json:"orderId,omitempty" url:"orderId,omitempty"`
 	Product *CreditTransactionProduct `json:"product,omitempty" url:"product,omitempty"`
-	// When the originating signal was recorded, or when the transaction was recorded if it has no signal.
+	// When the originating signal was recorded, or when the transaction was recorded if it has no signal. For a reversal, when the reversal was recorded: the time of the void, which is the date the list filters and orders it by.
 	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
 
 	extraProperties map[string]interface{}
@@ -355,6 +357,13 @@ func (c *CreditTransaction) GetSignalID() *string {
 		return nil
 	}
 	return c.SignalID
+}
+
+func (c *CreditTransaction) GetReversesTransactionID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.ReversesTransactionID
 }
 
 func (c *CreditTransaction) GetOrderID() *string {
@@ -978,7 +987,7 @@ func (c CreditTransactionSummaryResponseType) Ptr() *CreditTransactionSummaryRes
 	return &c
 }
 
-// Transaction type: `grant` adds credits, `spend` consumes them (negative amount), `pendingGrant` records credits awaiting payment.
+// Transaction type: `grant` adds credits, `spend` consumes them (negative amount), except a reversal, which is a `spend` with a positive amount that undoes an earlier spend, `pendingGrant` records credits awaiting payment.
 type CreditTransactionType string
 
 const (
