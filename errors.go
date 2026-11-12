@@ -7,6 +7,30 @@ import (
 	core "github.com/paid-ai/paid-go/v2/core"
 )
 
+// 502
+type BadGatewayError struct {
+	*core.APIError
+	Body *ErrorResponse
+}
+
+func (b *BadGatewayError) UnmarshalJSON(data []byte) error {
+	var body *ErrorResponse
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	b.StatusCode = 502
+	b.Body = body
+	return nil
+}
+
+func (b *BadGatewayError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b.Body)
+}
+
+func (b *BadGatewayError) Unwrap() error {
+	return b.APIError
+}
+
 // 400
 type BadRequestError struct {
 	*core.APIError
@@ -149,6 +173,30 @@ func (r *RequestTimeoutError) MarshalJSON() ([]byte, error) {
 
 func (r *RequestTimeoutError) Unwrap() error {
 	return r.APIError
+}
+
+// 503
+type ServiceUnavailableError struct {
+	*core.APIError
+	Body *ErrorResponse
+}
+
+func (s *ServiceUnavailableError) UnmarshalJSON(data []byte) error {
+	var body *ErrorResponse
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	s.StatusCode = 503
+	s.Body = body
+	return nil
+}
+
+func (s *ServiceUnavailableError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Body)
+}
+
+func (s *ServiceUnavailableError) Unwrap() error {
+	return s.APIError
 }
 
 // 429

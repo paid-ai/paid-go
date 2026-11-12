@@ -71,6 +71,11 @@ func (c *Client) ListSignals(
 				APIError: apiError,
 			}
 		},
+		422: func(apiError *core.APIError) error {
+			return &v2.UnprocessableEntityError{
+				APIError: apiError,
+			}
+		},
 		429: func(apiError *core.APIError) error {
 			return &v2.TooManyRequestsError{
 				APIError: apiError,
@@ -78,6 +83,11 @@ func (c *Client) ListSignals(
 		},
 		500: func(apiError *core.APIError) error {
 			return &v2.InternalServerError{
+				APIError: apiError,
+			}
+		},
+		503: func(apiError *core.APIError) error {
+			return &v2.ServiceUnavailableError{
 				APIError: apiError,
 			}
 		},
@@ -103,7 +113,7 @@ func (c *Client) ListSignals(
 	return response, nil
 }
 
-// Get a single ingested signal (usage event) by its ID, including the data payload submitted at ingest.
+// Get a single ingested signal (usage event) by its ID, including the data payload submitted at ingest. A voided signal answers 404 unless the request passes `includeVoided=true`.
 func (c *Client) GetSignalByID(
 	ctx context.Context,
 	request *v2.GetSignalByIDRequest,
@@ -119,6 +129,13 @@ func (c *Client) GetSignalByID(
 		baseURL+"/signals/%v",
 		request.ID,
 	)
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
 	headers := internal.MergeHeaders(
 		c.header.Clone(),
 		options.ToHeader(),
@@ -189,6 +206,13 @@ func (c *Client) GetSignalsByIDs(
 		"https://api.agentpaid.io/api/v2",
 	)
 	endpointURL := baseURL + "/signals/lookup"
+	queryParams, err := internal.QueryValues(request)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryParams) > 0 {
+		endpointURL += "?" + queryParams.Encode()
+	}
 	headers := internal.MergeHeaders(
 		c.header.Clone(),
 		options.ToHeader(),
@@ -285,6 +309,176 @@ func (c *Client) CreateSignals(
 		&internal.CallParams{
 			URL:             endpointURL,
 			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Early access. Voids one ingested signal by its ID, so it no longer counts as usage. Voiding a signal that is already voided answers 200 with the same void. An organization without signal voiding gets 404.
+func (c *Client) VoidSignal(
+	ctx context.Context,
+	request *v2.VoidSignalRequest,
+	opts ...option.RequestOption,
+) (*v2.SignalVoidResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/signals/%v/void",
+		request.ID,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	headers.Set("Content-Type", "application/json")
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &v2.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &v2.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &v2.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &v2.ConflictError{
+				APIError: apiError,
+			}
+		},
+		429: func(apiError *core.APIError) error {
+			return &v2.TooManyRequestsError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &v2.InternalServerError{
+				APIError: apiError,
+			}
+		},
+		502: func(apiError *core.APIError) error {
+			return &v2.BadGatewayError{
+				APIError: apiError,
+			}
+		},
+		503: func(apiError *core.APIError) error {
+			return &v2.ServiceUnavailableError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *v2.SignalVoidResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPut,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(errorCodes),
+		},
+	); err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// Early access. Voids one ingested signal by the idempotency key it was sent with, as voidSignal does by ID. The key is matched exactly as stored: a signal sent with a customer-scoped API key is stored under a namespaced key and is voided by its ID. A key that names no signal answers 404; a key that names more than one answers 409 and voids nothing. A signal whose key is `.` or `..` cannot be addressed by key: void it by ID. An organization without signal voiding gets 404.
+func (c *Client) VoidSignalByIdempotencyKey(
+	ctx context.Context,
+	request *v2.VoidSignalByIdempotencyKeyRequest,
+	opts ...option.RequestOption,
+) (*v2.SignalVoidResponse, error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		c.baseURL,
+		"https://api.agentpaid.io/api/v2",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/signals/idempotency-key/%v/void",
+		request.IdempotencyKey,
+	)
+	headers := internal.MergeHeaders(
+		c.header.Clone(),
+		options.ToHeader(),
+	)
+	headers.Set("Content-Type", "application/json")
+	errorCodes := internal.ErrorCodes{
+		400: func(apiError *core.APIError) error {
+			return &v2.BadRequestError{
+				APIError: apiError,
+			}
+		},
+		403: func(apiError *core.APIError) error {
+			return &v2.ForbiddenError{
+				APIError: apiError,
+			}
+		},
+		404: func(apiError *core.APIError) error {
+			return &v2.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &v2.ConflictError{
+				APIError: apiError,
+			}
+		},
+		429: func(apiError *core.APIError) error {
+			return &v2.TooManyRequestsError{
+				APIError: apiError,
+			}
+		},
+		500: func(apiError *core.APIError) error {
+			return &v2.InternalServerError{
+				APIError: apiError,
+			}
+		},
+		502: func(apiError *core.APIError) error {
+			return &v2.BadGatewayError{
+				APIError: apiError,
+			}
+		},
+		503: func(apiError *core.APIError) error {
+			return &v2.ServiceUnavailableError{
+				APIError: apiError,
+			}
+		},
+	}
+
+	var response *v2.SignalVoidResponse
+	if err := c.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPut,
 			Headers:         headers,
 			MaxAttempts:     options.MaxAttempts,
 			BodyProperties:  options.BodyProperties,

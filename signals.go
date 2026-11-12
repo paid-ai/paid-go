@@ -30,6 +30,8 @@ type BulkSignalsRequest struct {
 type GetSignalByIDRequest struct {
 	// Signal ID.
 	ID string `json:"-" url:"-"`
+	// Include voided signals in the response. Defaults to false, and an absent value and false behave the same: a voided signal is one you withdrew, so the read leaves it out (a list leaves it out of its rows and of `pagination.total`; the read by ID answers a voided signal as not found; the bulk lookup reports it under `notFound`) and no signal carries a `voided` field. With true, voided signals are included and every signal returned carries `voided`, true or false. For an organization without signal voiding the option is ignored and no signal carries `voided`.
+	IncludeVoided *bool `json:"-" url:"includeVoided,omitempty"`
 }
 
 type GetSignalSummaryRequest struct {
@@ -68,6 +70,8 @@ type GetSignalSummaryExportRequest struct {
 }
 
 type SignalLookupRequest struct {
+	// Include voided signals in the response. Defaults to false, and an absent value and false behave the same: a voided signal is one you withdrew, so the read leaves it out (a list leaves it out of its rows and of `pagination.total`; the read by ID answers a voided signal as not found; the bulk lookup reports it under `notFound`) and no signal carries a `voided` field. With true, voided signals are included and every signal returned carries `voided`, true or false. For an organization without signal voiding the option is ignored and no signal carries `voided`.
+	IncludeVoided *bool `json:"-" url:"includeVoided,omitempty"`
 	// Signal IDs to fetch, up to 500 per request. Duplicates are collapsed. For example the `signalId` values from a page of `GET /api/v2/credits/transactions`.
 	IDs []string `json:"ids,omitempty" url:"-"`
 }
@@ -89,6 +93,8 @@ type ListSignalsRequest struct {
 	CreatedAtFrom *string `json:"-" url:"createdAtFrom,omitempty"`
 	// Only signals created on or before this date. Accepts an ISO 8601 date or date-time. Date-only values (e.g. 2026-06-30) are treated as UTC; date-times without an explicit timezone offset are ambiguous, so include one (e.g. 2026-06-30T00:00:00-05:00) when precision matters.
 	CreatedAtTo *string `json:"-" url:"createdAtTo,omitempty"`
+	// Include voided signals in the response. Defaults to false, and an absent value and false behave the same: a voided signal is one you withdrew, so the read leaves it out (a list leaves it out of its rows and of `pagination.total`; the read by ID answers a voided signal as not found; the bulk lookup reports it under `notFound`) and no signal carries a `voided` field. With true, voided signals are included and every signal returned carries `voided`, true or false. For an organization without signal voiding the option is ignored and no signal carries `voided`.
+	IncludeVoided *bool `json:"-" url:"includeVoided,omitempty"`
 }
 
 // The product this usage is for, by Paid ID or by your external ID. Optional.
@@ -154,10 +160,16 @@ func (a *Attribution) Accept(visitor AttributionVisitor) error {
 	return fmt.Errorf("type %T does not include a non-empty union type", a)
 }
 
+// The four counts add up to the number of signals in the request.
 type BulkSignalsResponse struct {
-	Ingested   int `json:"ingested" url:"ingested"`
+	// Signals accepted and stored.
+	Ingested int `json:"ingested" url:"ingested"`
+	// Signals skipped because their idempotency key was already sent, earlier or in the same batch. A resend of a key whose signal you voided is counted in `voided`, not here.
 	Duplicates int `json:"duplicates" url:"duplicates"`
-	Failed     int `json:"failed" url:"failed"`
+	// Signals that could not be ingested.
+	Failed int `json:"failed" url:"failed"`
+	// Signals skipped because their idempotency key belongs to a signal you voided. A voided signal keeps its key, so a resend under it is not stored. Counted here and not in `duplicates`. 0 when none apply.
+	Voided int `json:"voided" url:"voided"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -182,6 +194,13 @@ func (b *BulkSignalsResponse) GetFailed() int {
 		return 0
 	}
 	return b.Failed
+}
+
+func (b *BulkSignalsResponse) GetVoided() int {
+	if b == nil {
+		return 0
+	}
+	return b.Voided
 }
 
 func (b *BulkSignalsResponse) GetExtraProperties() map[string]interface{} {
@@ -275,7 +294,7 @@ type Signal struct {
 	Timestamp *time.Time `json:"timestamp,omitempty" url:"timestamp,omitempty"`
 	// Your event data. The top-level keys `_derived`, `_dims` and `_billing`, and any top-level key starting with `_derived.`, `_dims.` or `_billing.`, are reserved for Paid: a batch in which any signal's `data` carries one is refused with `400 RESERVED_SIGNAL_DATA_FIELD`.
 	Data map[string]interface{} `json:"data,omitempty" url:"data,omitempty"`
-	// Your unique key for this event. A signal whose key was already sent, earlier or in the same batch, is skipped and counted in `duplicates` instead of `ingested`.
+	// Your unique key for this event. A signal whose key was already sent, earlier or in the same batch, is skipped and counted in `duplicates` instead of `ingested`. A resend of a key whose signal you voided is counted in `voided`, not in `duplicates`.
 	IdempotencyKey *string `json:"idempotencyKey,omitempty" url:"idempotencyKey,omitempty"`
 
 	extraProperties map[string]interface{}
@@ -400,6 +419,8 @@ type SignalListItem struct {
 	Data map[string]interface{} `json:"data,omitempty" url:"data,omitempty"`
 	// When the signal was ingested (ISO 8601, UTC).
 	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
+	// True when the signal was voided. A voided signal no longer counts as usage; it is kept. Present on every signal only when the read passes `includeVoided=true`, and only for an organization with signal voiding.
+	Voided *bool `json:"voided,omitempty" url:"voided,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -466,6 +487,13 @@ func (s *SignalListItem) GetCreatedAt() time.Time {
 		return time.Time{}
 	}
 	return s.CreatedAt
+}
+
+func (s *SignalListItem) GetVoided() *bool {
+	if s == nil {
+		return nil
+	}
+	return s.Voided
 }
 
 func (s *SignalListItem) GetExtraProperties() map[string]interface{} {
@@ -575,7 +603,7 @@ func (s *SignalListResponse) String() string {
 type SignalLookupResponse struct {
 	// The signals found, in the order their IDs were requested. Each item has the same shape as `GET /api/v2/signals/{id}`, including the data payload.
 	Data []*SignalListItem `json:"data" url:"data"`
-	// Requested IDs that match no signal in your organization, in request order. Malformed IDs are reported here rather than rejected.
+	// Requested IDs that match no signal in your organization, in request order. Malformed IDs are reported here rather than rejected. A voided signal is reported here too unless the request passes `includeVoided=true`.
 	NotFound []string `json:"notFound" url:"notFound"`
 
 	extraProperties map[string]interface{}
@@ -2269,6 +2297,311 @@ func (s SignalSummarySpecInputInterval) Ptr() *SignalSummarySpecInputInterval {
 	return &s
 }
 
+type SignalVoidCellEffect struct {
+	// The ID of the order attribute (an order line's priced item) whose usage this void took back.
+	OrderLineAttributeID string `json:"orderLineAttributeId" url:"orderLineAttributeId"`
+	// The billing date of the billing period this usage was counted in, as an RFC 3339 timestamp in UTC. With `orderLineAttributeId` it identifies the period.
+	NextBillingDate time.Time `json:"nextBillingDate" url:"nextBillingDate"`
+	// How much usage was taken back from this billing period, in the attribute's own usage units: the signal's net quantity there.
+	Quantity float64 `json:"quantity" url:"quantity"`
+	// True when the usage taken back was tracked but never billed, because the signal's customer unit is not billable; false for billable usage.
+	NonBillable bool `json:"nonBillable" url:"nonBillable"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalVoidCellEffect) GetOrderLineAttributeID() string {
+	if s == nil {
+		return ""
+	}
+	return s.OrderLineAttributeID
+}
+
+func (s *SignalVoidCellEffect) GetNextBillingDate() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.NextBillingDate
+}
+
+func (s *SignalVoidCellEffect) GetQuantity() float64 {
+	if s == nil {
+		return 0
+	}
+	return s.Quantity
+}
+
+func (s *SignalVoidCellEffect) GetNonBillable() bool {
+	if s == nil {
+		return false
+	}
+	return s.NonBillable
+}
+
+func (s *SignalVoidCellEffect) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalVoidCellEffect) UnmarshalJSON(data []byte) error {
+	type embed SignalVoidCellEffect
+	var unmarshaler = struct {
+		embed
+		NextBillingDate *internal.DateTime `json:"nextBillingDate"`
+	}{
+		embed: embed(*s),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*s = SignalVoidCellEffect(unmarshaler.embed)
+	s.NextBillingDate = unmarshaler.NextBillingDate.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalVoidCellEffect) MarshalJSON() ([]byte, error) {
+	type embed SignalVoidCellEffect
+	var marshaler = struct {
+		embed
+		NextBillingDate *internal.DateTime `json:"nextBillingDate"`
+	}{
+		embed:           embed(*s),
+		NextBillingDate: internal.NewDateTime(s.NextBillingDate),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (s *SignalVoidCellEffect) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalVoidCreditEffect struct {
+	// The ID of the credits currency these amounts are in.
+	CreditsCurrencyID string `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	// Credits the void gave back, as a decimal string: credits returned to the customer's balance, plus any overage the void cleared (usage beyond the customer's credits, which would have been charged).
+	Restored string `json:"restored" url:"restored"`
+	// Credits the void could not return, as a decimal string, for example because the credits they were spent from have expired or were used up.
+	Forfeited string `json:"forfeited" url:"forfeited"`
+	// How many of the signal's credit spends the void reversed.
+	Reversals int `json:"reversals" url:"reversals"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalVoidCreditEffect) GetCreditsCurrencyID() string {
+	if s == nil {
+		return ""
+	}
+	return s.CreditsCurrencyID
+}
+
+func (s *SignalVoidCreditEffect) GetRestored() string {
+	if s == nil {
+		return ""
+	}
+	return s.Restored
+}
+
+func (s *SignalVoidCreditEffect) GetForfeited() string {
+	if s == nil {
+		return ""
+	}
+	return s.Forfeited
+}
+
+func (s *SignalVoidCreditEffect) GetReversals() int {
+	if s == nil {
+		return 0
+	}
+	return s.Reversals
+}
+
+func (s *SignalVoidCreditEffect) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalVoidCreditEffect) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalVoidCreditEffect
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalVoidCreditEffect(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalVoidCreditEffect) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalVoidRequest struct {
+	// Why you are voiding the signal, kept with the void. At most 500 characters.
+	Reason *string `json:"reason,omitempty" url:"reason,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalVoidRequest) GetReason() *string {
+	if s == nil {
+		return nil
+	}
+	return s.Reason
+}
+
+func (s *SignalVoidRequest) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalVoidRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalVoidRequest
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalVoidRequest(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalVoidRequest) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
+type SignalVoidResponse struct {
+	// The ID of the record of this void.
+	SignalCorrectionID string `json:"signalCorrectionId" url:"signalCorrectionId"`
+	// True when the signal was already voided and this answers with that earlier void; nothing changed.
+	AlreadyVoided bool `json:"alreadyVoided" url:"alreadyVoided"`
+	// How many of the signal's usage records the void took back: one for each entry in `cells`. 0 when the signal was not counted in any billing period. On a repeat of an earlier void this is that void's count, and `cells` is empty.
+	FactsReverted int `json:"factsReverted" url:"factsReverted"`
+	// How many of the signal's credit charges that had not yet been applied the void cancelled. 0 when there were none. On a repeat of an earlier void this is that void's count.
+	PendingCancelled int `json:"pendingCancelled" url:"pendingCancelled"`
+	// The usage the void took back, one entry per order attribute and billing period the signal was counted in, and a second entry for the same period when it also held tracked-only usage (`nonBillable` true). Empty when the signal was not counted anywhere, and on a repeat of an earlier void.
+	Cells []*SignalVoidCellEffect `json:"cells" url:"cells"`
+	// What the void did to the credits the signal spent, one entry per credit currency. Empty when the signal spent none.
+	Credits []*SignalVoidCreditEffect `json:"credits" url:"credits"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SignalVoidResponse) GetSignalCorrectionID() string {
+	if s == nil {
+		return ""
+	}
+	return s.SignalCorrectionID
+}
+
+func (s *SignalVoidResponse) GetAlreadyVoided() bool {
+	if s == nil {
+		return false
+	}
+	return s.AlreadyVoided
+}
+
+func (s *SignalVoidResponse) GetFactsReverted() int {
+	if s == nil {
+		return 0
+	}
+	return s.FactsReverted
+}
+
+func (s *SignalVoidResponse) GetPendingCancelled() int {
+	if s == nil {
+		return 0
+	}
+	return s.PendingCancelled
+}
+
+func (s *SignalVoidResponse) GetCells() []*SignalVoidCellEffect {
+	if s == nil {
+		return nil
+	}
+	return s.Cells
+}
+
+func (s *SignalVoidResponse) GetCredits() []*SignalVoidCreditEffect {
+	if s == nil {
+		return nil
+	}
+	return s.Credits
+}
+
+func (s *SignalVoidResponse) GetExtraProperties() map[string]interface{} {
+	return s.extraProperties
+}
+
+func (s *SignalVoidResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler SignalVoidResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SignalVoidResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SignalVoidResponse) String() string {
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
+}
+
 // Format of the produced file. `json` gives the columns and one object per customer per month; `csv` gives the wide spreadsheet with three header rows.
 type CreateSignalSummaryExportRequestFormat string
 
@@ -2340,4 +2673,41 @@ func NewGetSignalSummaryRequestIntervalFromString(s string) (GetSignalSummaryReq
 
 func (g GetSignalSummaryRequestInterval) Ptr() *GetSignalSummaryRequestInterval {
 	return &g
+}
+
+type VoidSignalRequest struct {
+	// The signal's ID: 24 hexadecimal characters, in any case.
+	ID   string             `json:"-" url:"-"`
+	Body *SignalVoidRequest `json:"-" url:"-"`
+}
+
+func (v *VoidSignalRequest) UnmarshalJSON(data []byte) error {
+	body := new(SignalVoidRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	v.Body = body
+	return nil
+}
+
+func (v *VoidSignalRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Body)
+}
+
+type VoidSignalByIdempotencyKeyRequest struct {
+	IdempotencyKey string             `json:"-" url:"-"`
+	Body           *SignalVoidRequest `json:"-" url:"-"`
+}
+
+func (v *VoidSignalByIdempotencyKeyRequest) UnmarshalJSON(data []byte) error {
+	body := new(SignalVoidRequest)
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	v.Body = body
+	return nil
+}
+
+func (v *VoidSignalByIdempotencyKeyRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Body)
 }
