@@ -184,7 +184,7 @@ func (a *AnalyticsQueryRequest) String() string {
 
 type AnalyticsQueryResponse struct {
 	Columns []*AnalyticsColumn `json:"columns" url:"columns"`
-	// Result rows; values are ordered to match `columns`. 64-bit integers (UInt64/Int64 — counts, sums, amounts in cents, ids) are returned as JSON strings to preserve precision; parse them client-side as needed. Decimal columns (fractional cents, and credit amounts and balances) are returned as JSON numbers rather than strings, so a value beyond 2^53 is already rounded in this response. Select toString(col) for exact digits.
+	// Result rows; values are ordered to match `columns`. 64-bit integers (UInt64/Int64 — counts, sums, amounts in the currency's stored minor units, ids) are returned as JSON strings to preserve precision; parse them client-side as needed. Decimal columns (fractional cents, and credit amounts and balances) are returned as JSON numbers rather than strings, so a value beyond 2^53 is already rounded in this response. Select toString(col) for exact digits.
 	Rows [][]interface{}             `json:"rows" url:"rows"`
 	Meta *AnalyticsQueryResponseMeta `json:"meta" url:"meta"`
 
@@ -250,6 +250,8 @@ type AnalyticsQueryResponseMeta struct {
 	ElapsedMs float64 `json:"elapsedMs" url:"elapsedMs"`
 	// True when the result hit the row cap and was truncated. Narrow the query (shorter date range, LIMIT, coarser grouping) to see the rest.
 	Truncated bool `json:"truncated" url:"truncated"`
+	// The decimals Paid stores each listed currency's amounts at, where they differ from the currency's own minor unit. Divide a listed currency's amounts by 10 to this power: `{ "JPY": 2 }` means yen are stored in hundredths (150000 is ¥1,500), `{ "JPY": 0 }` whole yen. A currency not listed uses its own minor unit. `fact_cost.cost_amount` and `fact_delivered_value.delivered_value_cents` are exceptions: always hundredths of `cost_currency` and `delivered_value_currency`, respectively (the major unit × 100), whatever this says.
+	StoredCurrencyDecimals map[string]int `json:"storedCurrencyDecimals" url:"storedCurrencyDecimals"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -274,6 +276,13 @@ func (a *AnalyticsQueryResponseMeta) GetTruncated() bool {
 		return false
 	}
 	return a.Truncated
+}
+
+func (a *AnalyticsQueryResponseMeta) GetStoredCurrencyDecimals() map[string]int {
+	if a == nil {
+		return nil
+	}
+	return a.StoredCurrencyDecimals
 }
 
 func (a *AnalyticsQueryResponseMeta) GetExtraProperties() map[string]interface{} {
@@ -1169,7 +1178,9 @@ func (c CustomViewPreviewHarnessColumnType) Ptr() *CustomViewPreviewHarnessColum
 }
 
 type CustomViewPreviewHarnessRequest struct {
-	Context *CustomViewDataContext `json:"context,omitempty" url:"context,omitempty"`
+	// The decimals Paid stores each listed currency's amounts at, where they differ from the currency's own minor unit. Divide a listed currency's amounts by 10 to this power: `{ "JPY": 2 }` means yen are stored in hundredths (150000 is ¥1,500), `{ "JPY": 0 }` whole yen. A currency not listed uses its own minor unit. `fact_cost.cost_amount` and `fact_delivered_value.delivered_value_cents` are exceptions: always hundredths of `cost_currency` and `delivered_value_currency`, respectively (the major unit × 100), whatever this says.
+	StoredCurrencyDecimals map[string]int         `json:"storedCurrencyDecimals,omitempty" url:"storedCurrencyDecimals,omitempty"`
+	Context                *CustomViewDataContext `json:"context,omitempty" url:"context,omitempty"`
 	// The raw, self-contained HTML render bundle to preview — the SAME string you would pass to createCustomView. Pass it verbatim; do NOT escape `</script>`, backticks, or quotes yourself (that is exactly what this endpoint does for you).
 	RenderBundle string `json:"renderBundle" url:"renderBundle"`
 	// Optional sample data keyed by query id (the `data` field of a getCustomViewData response), e.g. `{ "usage": [{ "day": "2026-01-01", "signals": "42" }] }`. Delivered to the bundle via the same `paid:data` message the real embed sends. Omit to preview the empty state. If these rows are fabricated (a data-restricted org), also set `sampleData: true` so the harness is marked with a sample-data banner.
@@ -1181,6 +1192,13 @@ type CustomViewPreviewHarnessRequest struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (c *CustomViewPreviewHarnessRequest) GetStoredCurrencyDecimals() map[string]int {
+	if c == nil {
+		return nil
+	}
+	return c.StoredCurrencyDecimals
 }
 
 func (c *CustomViewPreviewHarnessRequest) GetContext() *CustomViewDataContext {
@@ -1561,10 +1579,14 @@ func (c *CustomerByID) String() string {
 // Usage in the current period, when the returned version is in force now and usage is available; otherwise `null`.
 type CustomerUnitCapCurrentPeriod struct {
 	Window *CustomerUnitCapPeriod `json:"window" url:"window"`
-	// Credits of this currency spent by this unit and its descendants during the window. JSON number; exact within ±2^53.
+	// Credits of this currency spent by this unit and its descendants during the window. JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `usedDecimal` for the exact value.
 	Used float64 `json:"used" url:"used"`
-	// `amount - used`; negative once the cap is exceeded. Advisory: spend may land between this read and the next burn.
+	// Exact value of `used` as a decimal string, at any magnitude and every decimal place it carries.
+	UsedDecimal string `json:"usedDecimal" url:"usedDecimal"`
+	// `amount - used`; negative once the cap is exceeded. Advisory: spend may land between this read and the next burn. JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `remainingDecimal` for the exact value.
 	Remaining float64 `json:"remaining" url:"remaining"`
+	// Exact value of `remaining` as a decimal string, at any magnitude and every decimal place it carries.
+	RemainingDecimal string `json:"remainingDecimal" url:"remainingDecimal"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -1584,11 +1606,25 @@ func (c *CustomerUnitCapCurrentPeriod) GetUsed() float64 {
 	return c.Used
 }
 
+func (c *CustomerUnitCapCurrentPeriod) GetUsedDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.UsedDecimal
+}
+
 func (c *CustomerUnitCapCurrentPeriod) GetRemaining() float64 {
 	if c == nil {
 		return 0
 	}
 	return c.Remaining
+}
+
+func (c *CustomerUnitCapCurrentPeriod) GetRemainingDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.RemainingDecimal
 }
 
 func (c *CustomerUnitCapCurrentPeriod) GetExtraProperties() map[string]interface{} {
@@ -2231,19 +2267,25 @@ func (p *ProductByID) String() string {
 type ProductCreditBenefitInput struct {
 	ID                *string `json:"id,omitempty" url:"id,omitempty"`
 	CreditsCurrencyID string  `json:"creditsCurrencyId" url:"creditsCurrencyId"`
-	// Credit amount, exact to at most 6 decimal places.
-	Amount            float64                                     `json:"amount" url:"amount"`
+	// Up to 15 decimal places. Send this or `amountDecimal`; when both are sent they must be equal.
+	Amount *float64 `json:"amount,omitempty" url:"amount,omitempty"`
+	// The same amount as `amount`, as an exact decimal string with up to 15 decimal places. Send this or `amount`; when both are sent they must be equal.
+	AmountDecimal     *string                                     `json:"amountDecimal,omitempty" url:"amountDecimal,omitempty"`
 	Recipient         *ProductCreditBenefitInputRecipient         `json:"recipient,omitempty" url:"recipient,omitempty"`
 	IsInfiniteTotal   *bool                                       `json:"isInfiniteTotal,omitempty" url:"isInfiniteTotal,omitempty"`
 	AllocationCadence *ProductCreditBenefitInputAllocationCadence `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
 	CreditGrantTiming *ProductCreditBenefitInputCreditGrantTiming `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
 	OverageUnitPrice  *int                                        `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Exact overage price per credit, keyed by currency, as decimal text in the currency’s smallest stored unit. Used instead of overageUnitPrices when present. Requires decimal pricing to be enabled.
+	OverageUnitPricesDecimal map[string]*string `json:"overageUnitPricesDecimal,omitempty" url:"overageUnitPricesDecimal,omitempty"`
 	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
 	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
-	// Credit amount, exact to at most 6 decimal places.
-	RolloverAmount       *float64 `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
-	RolloverDuration     *int     `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
-	RolloverDurationUnit *string  `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
+	// Up to 15 decimal places. Send this or `rolloverAmountDecimal`; when both are sent they must be equal.
+	RolloverAmount *float64 `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	// The same amount as `rolloverAmount`, as an exact decimal string with up to 15 decimal places. Send this or `rolloverAmount`; when both are sent they must be equal.
+	RolloverAmountDecimal *string `json:"rolloverAmountDecimal,omitempty" url:"rolloverAmountDecimal,omitempty"`
+	RolloverDuration      *int    `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDurationUnit  *string `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -2263,11 +2305,18 @@ func (p *ProductCreditBenefitInput) GetCreditsCurrencyID() string {
 	return p.CreditsCurrencyID
 }
 
-func (p *ProductCreditBenefitInput) GetAmount() float64 {
+func (p *ProductCreditBenefitInput) GetAmount() *float64 {
 	if p == nil {
-		return 0
+		return nil
 	}
 	return p.Amount
+}
+
+func (p *ProductCreditBenefitInput) GetAmountDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.AmountDecimal
 }
 
 func (p *ProductCreditBenefitInput) GetRecipient() *ProductCreditBenefitInputRecipient {
@@ -2305,6 +2354,13 @@ func (p *ProductCreditBenefitInput) GetOverageUnitPrice() *int {
 	return p.OverageUnitPrice
 }
 
+func (p *ProductCreditBenefitInput) GetOverageUnitPricesDecimal() map[string]*string {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPricesDecimal
+}
+
 func (p *ProductCreditBenefitInput) GetOverageUnitPrices() map[string]*int {
 	if p == nil {
 		return nil
@@ -2317,6 +2373,13 @@ func (p *ProductCreditBenefitInput) GetRolloverAmount() *float64 {
 		return nil
 	}
 	return p.RolloverAmount
+}
+
+func (p *ProductCreditBenefitInput) GetRolloverAmountDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverAmountDecimal
 }
 
 func (p *ProductCreditBenefitInput) GetRolloverDuration() *int {
@@ -3732,10 +3795,14 @@ func (p ProductSeatBasedPerUnitInputBillingType) Ptr() *ProductSeatBasedPerUnitI
 
 type ProductSeatBasedPrepaidCreditsInput struct {
 	CreditsCurrencyID string `json:"creditsCurrencyId" url:"creditsCurrencyId"`
-	// Credit amount, exact to at most 6 decimal places.
-	CreditCost       float64  `json:"creditCost" url:"creditCost"`
-	UnitValue        *float64 `json:"unitValue,omitempty" url:"unitValue,omitempty"`
-	OverageUnitPrice *int     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Up to 15 decimal places. Send this or `creditCostDecimal`; when both are sent they must be equal.
+	CreditCost *float64 `json:"creditCost,omitempty" url:"creditCost,omitempty"`
+	// The same amount as `creditCost`, as an exact decimal string with up to 15 decimal places. Send this or `creditCost`; when both are sent they must be equal.
+	CreditCostDecimal *string  `json:"creditCostDecimal,omitempty" url:"creditCostDecimal,omitempty"`
+	UnitValue         *float64 `json:"unitValue,omitempty" url:"unitValue,omitempty"`
+	OverageUnitPrice  *int     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Exact overage price per credit, keyed by currency, as decimal text in the currency’s smallest stored unit. Used instead of overageUnitPrices when present. Requires decimal pricing to be enabled.
+	OverageUnitPricesDecimal map[string]*string `json:"overageUnitPricesDecimal,omitempty" url:"overageUnitPricesDecimal,omitempty"`
 	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
 	OverageUnitPrices            map[string]*int                                     `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
 	BillingFrequency             ProductSeatBasedPrepaidCreditsInputBillingFrequency `json:"billingFrequency" url:"billingFrequency"`
@@ -3754,11 +3821,18 @@ func (p *ProductSeatBasedPrepaidCreditsInput) GetCreditsCurrencyID() string {
 	return p.CreditsCurrencyID
 }
 
-func (p *ProductSeatBasedPrepaidCreditsInput) GetCreditCost() float64 {
+func (p *ProductSeatBasedPrepaidCreditsInput) GetCreditCost() *float64 {
 	if p == nil {
-		return 0
+		return nil
 	}
 	return p.CreditCost
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetCreditCostDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CreditCostDecimal
 }
 
 func (p *ProductSeatBasedPrepaidCreditsInput) GetUnitValue() *float64 {
@@ -3773,6 +3847,13 @@ func (p *ProductSeatBasedPrepaidCreditsInput) GetOverageUnitPrice() *int {
 		return nil
 	}
 	return p.OverageUnitPrice
+}
+
+func (p *ProductSeatBasedPrepaidCreditsInput) GetOverageUnitPricesDecimal() map[string]*string {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPricesDecimal
 }
 
 func (p *ProductSeatBasedPrepaidCreditsInput) GetOverageUnitPrices() map[string]*int {
@@ -4019,8 +4100,12 @@ func (p ProductSeatBasedVolumeInputBillingType) Ptr() *ProductSeatBasedVolumeInp
 }
 
 type ProductSimplePricePoint struct {
-	Currency         string                              `json:"currency" url:"currency"`
-	UnitPrice        int                                 `json:"unitPrice" url:"unitPrice"`
+	Currency string `json:"currency" url:"currency"`
+	// Explicitly replace a stored decimal price with the submitted price. Requires the organization's sub-cent prices flag; omission preserves an unchanged stored decimal or refuses a rate change.
+	UnitPriceOrigin *ProductSimplePricePointUnitPriceOrigin `json:"unitPriceOrigin,omitempty" url:"unitPriceOrigin,omitempty"`
+	UnitPrice       int                                     `json:"unitPrice" url:"unitPrice"`
+	// An exact per-unit price as decimal text in minor units, with at most 15 decimal places: `"0.025"` is 0.025¢ per unit. Set `unitPrice` to its whole-number fallback. Fractional prices require sub-cent prices enabled and are only for per-unit usage prices (including per-N), usage tier rates and flat amounts, overage price per credit, and credit units per unit. Flat recurring, one-time and seat prices have at most the currency’s decimals and must be whole minor units, including custom plan prices. Text exactly equal to the whole price is ordinary and is stored without decimal text. To replace a plan's stored fraction with a whole price, explicitly send its decimal text (such as `"500"`) with the flag enabled; omitting it preserves the rate or refuses an unsafe change.
+	UnitPriceDecimal *string                             `json:"unitPriceDecimal,omitempty" url:"unitPriceDecimal,omitempty"`
 	Tiers            []*ProductSimplePricePointTiersItem `json:"tiers,omitempty" url:"tiers,omitempty"`
 	MinQuantity      *int                                `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
 	MaxQuantity      *int                                `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
@@ -4037,11 +4122,25 @@ func (p *ProductSimplePricePoint) GetCurrency() string {
 	return p.Currency
 }
 
+func (p *ProductSimplePricePoint) GetUnitPriceOrigin() *ProductSimplePricePointUnitPriceOrigin {
+	if p == nil {
+		return nil
+	}
+	return p.UnitPriceOrigin
+}
+
 func (p *ProductSimplePricePoint) GetUnitPrice() int {
 	if p == nil {
 		return 0
 	}
 	return p.UnitPrice
+}
+
+func (p *ProductSimplePricePoint) GetUnitPriceDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.UnitPriceDecimal
 }
 
 func (p *ProductSimplePricePoint) GetTiers() []*ProductSimplePricePointTiersItem {
@@ -4105,13 +4204,17 @@ func (p *ProductSimplePricePoint) String() string {
 }
 
 type ProductSimplePricePointTiersItem struct {
-	FlatAmount      *int                                             `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
-	Index           *float64                                         `json:"index,omitempty" url:"index,omitempty"`
-	LowerBound      int                                              `json:"lowerBound" url:"lowerBound"`
-	Number          *int                                             `json:"number,omitempty" url:"number,omitempty"`
-	TierBillingType *ProductSimplePricePointTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
-	UnitAmount      *int                                             `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
-	UpperBound      *int                                             `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+	FlatAmount *int `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	// The tier's flat amount as exact decimal text in the currency's minor unit, with at most 15 decimal places. When present it replaces the corresponding whole-number field. Only for volume or graduated pricing in organizations with sub-cent prices enabled.
+	FlatAmountDecimal *string `json:"flatAmountDecimal,omitempty" url:"flatAmountDecimal,omitempty"`
+	// The tier's per-unit rate as exact decimal text in the currency's minor unit, with at most 15 decimal places. When present it replaces the corresponding whole-number field. Only for volume or graduated pricing in organizations with sub-cent prices enabled.
+	UnitAmountDecimal *string                                          `json:"unitAmountDecimal,omitempty" url:"unitAmountDecimal,omitempty"`
+	Index             *float64                                         `json:"index,omitempty" url:"index,omitempty"`
+	LowerBound        int                                              `json:"lowerBound" url:"lowerBound"`
+	Number            *int                                             `json:"number,omitempty" url:"number,omitempty"`
+	TierBillingType   *ProductSimplePricePointTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
+	UnitAmount        *int                                             `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound        *int                                             `json:"upperBound,omitempty" url:"upperBound,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -4122,6 +4225,20 @@ func (p *ProductSimplePricePointTiersItem) GetFlatAmount() *int {
 		return nil
 	}
 	return p.FlatAmount
+}
+
+func (p *ProductSimplePricePointTiersItem) GetFlatAmountDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.FlatAmountDecimal
+}
+
+func (p *ProductSimplePricePointTiersItem) GetUnitAmountDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.UnitAmountDecimal
 }
 
 func (p *ProductSimplePricePointTiersItem) GetIndex() *float64 {
@@ -4220,13 +4337,35 @@ func (p ProductSimplePricePointTiersItemTierBillingType) Ptr() *ProductSimplePri
 	return &p
 }
 
+// Explicitly replace a stored decimal price with the submitted price. Requires the organization's sub-cent prices flag; omission preserves an unchanged stored decimal or refuses a rate change.
+type ProductSimplePricePointUnitPriceOrigin string
+
+const (
+	ProductSimplePricePointUnitPriceOriginCustom ProductSimplePricePointUnitPriceOrigin = "custom"
+)
+
+func NewProductSimplePricePointUnitPriceOriginFromString(s string) (ProductSimplePricePointUnitPriceOrigin, error) {
+	switch s {
+	case "custom":
+		return ProductSimplePricePointUnitPriceOriginCustom, nil
+	}
+	var t ProductSimplePricePointUnitPriceOrigin
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductSimplePricePointUnitPriceOrigin) Ptr() *ProductSimplePricePointUnitPriceOrigin {
+	return &p
+}
+
 type ProductTieredPricePoint struct {
-	Currency         string                              `json:"currency" url:"currency"`
-	UnitPrice        int                                 `json:"unitPrice" url:"unitPrice"`
-	Tiers            []*ProductTieredPricePointTiersItem `json:"tiers" url:"tiers"`
-	MinQuantity      *int                                `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
-	MaxQuantity      *int                                `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
-	IncludedQuantity *int                                `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
+	Currency string `json:"currency" url:"currency"`
+	// Explicitly replace a stored decimal price with the submitted price. Requires the organization's sub-cent prices flag; omission preserves an unchanged stored decimal or refuses a rate change.
+	UnitPriceOrigin  *ProductTieredPricePointUnitPriceOrigin `json:"unitPriceOrigin,omitempty" url:"unitPriceOrigin,omitempty"`
+	UnitPrice        int                                     `json:"unitPrice" url:"unitPrice"`
+	Tiers            []*ProductTieredPricePointTiersItem     `json:"tiers" url:"tiers"`
+	MinQuantity      *int                                    `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
+	MaxQuantity      *int                                    `json:"maxQuantity,omitempty" url:"maxQuantity,omitempty"`
+	IncludedQuantity *int                                    `json:"includedQuantity,omitempty" url:"includedQuantity,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -4237,6 +4376,13 @@ func (p *ProductTieredPricePoint) GetCurrency() string {
 		return ""
 	}
 	return p.Currency
+}
+
+func (p *ProductTieredPricePoint) GetUnitPriceOrigin() *ProductTieredPricePointUnitPriceOrigin {
+	if p == nil {
+		return nil
+	}
+	return p.UnitPriceOrigin
 }
 
 func (p *ProductTieredPricePoint) GetUnitPrice() int {
@@ -4307,13 +4453,17 @@ func (p *ProductTieredPricePoint) String() string {
 }
 
 type ProductTieredPricePointTiersItem struct {
-	FlatAmount      *int                                             `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
-	Index           *float64                                         `json:"index,omitempty" url:"index,omitempty"`
-	LowerBound      int                                              `json:"lowerBound" url:"lowerBound"`
-	Number          *int                                             `json:"number,omitempty" url:"number,omitempty"`
-	TierBillingType *ProductTieredPricePointTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
-	UnitAmount      *int                                             `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
-	UpperBound      *int                                             `json:"upperBound,omitempty" url:"upperBound,omitempty"`
+	FlatAmount *int `json:"flatAmount,omitempty" url:"flatAmount,omitempty"`
+	// The tier's flat amount as exact decimal text in the currency's minor unit, with at most 15 decimal places. When present it replaces the corresponding whole-number field. Only for volume or graduated pricing in organizations with sub-cent prices enabled.
+	FlatAmountDecimal *string `json:"flatAmountDecimal,omitempty" url:"flatAmountDecimal,omitempty"`
+	// The tier's per-unit rate as exact decimal text in the currency's minor unit, with at most 15 decimal places. When present it replaces the corresponding whole-number field. Only for volume or graduated pricing in organizations with sub-cent prices enabled.
+	UnitAmountDecimal *string                                          `json:"unitAmountDecimal,omitempty" url:"unitAmountDecimal,omitempty"`
+	Index             *float64                                         `json:"index,omitempty" url:"index,omitempty"`
+	LowerBound        int                                              `json:"lowerBound" url:"lowerBound"`
+	Number            *int                                             `json:"number,omitempty" url:"number,omitempty"`
+	TierBillingType   *ProductTieredPricePointTiersItemTierBillingType `json:"tierBillingType,omitempty" url:"tierBillingType,omitempty"`
+	UnitAmount        *int                                             `json:"unitAmount,omitempty" url:"unitAmount,omitempty"`
+	UpperBound        *int                                             `json:"upperBound,omitempty" url:"upperBound,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -4324,6 +4474,20 @@ func (p *ProductTieredPricePointTiersItem) GetFlatAmount() *int {
 		return nil
 	}
 	return p.FlatAmount
+}
+
+func (p *ProductTieredPricePointTiersItem) GetFlatAmountDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.FlatAmountDecimal
+}
+
+func (p *ProductTieredPricePointTiersItem) GetUnitAmountDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.UnitAmountDecimal
 }
 
 func (p *ProductTieredPricePointTiersItem) GetIndex() *float64 {
@@ -4422,16 +4586,40 @@ func (p ProductTieredPricePointTiersItemTierBillingType) Ptr() *ProductTieredPri
 	return &p
 }
 
+// Explicitly replace a stored decimal price with the submitted price. Requires the organization's sub-cent prices flag; omission preserves an unchanged stored decimal or refuses a rate change.
+type ProductTieredPricePointUnitPriceOrigin string
+
+const (
+	ProductTieredPricePointUnitPriceOriginCustom ProductTieredPricePointUnitPriceOrigin = "custom"
+)
+
+func NewProductTieredPricePointUnitPriceOriginFromString(s string) (ProductTieredPricePointUnitPriceOrigin, error) {
+	switch s {
+	case "custom":
+		return ProductTieredPricePointUnitPriceOriginCustom, nil
+	}
+	var t ProductTieredPricePointUnitPriceOrigin
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProductTieredPricePointUnitPriceOrigin) Ptr() *ProductTieredPricePointUnitPriceOrigin {
+	return &p
+}
+
 type ProductUsageBracketedPrepaidCreditsInput struct {
 	EventName         string                                              `json:"eventName" url:"eventName"`
 	SignalType        *ProductUsageBracketedPrepaidCreditsInputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
 	CreditsCurrencyID *string                                             `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
 	UnitValue         *float64                                            `json:"unitValue,omitempty" url:"unitValue,omitempty"`
 	OverageUnitPrice  *int                                                `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Exact overage price per credit, keyed by currency, as decimal text in the currency’s smallest stored unit. Used instead of overageUnitPrices when present. Requires decimal pricing to be enabled.
+	OverageUnitPricesDecimal map[string]*string `json:"overageUnitPricesDecimal,omitempty" url:"overageUnitPricesDecimal,omitempty"`
 	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
 	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
-	// Credit amount, exact to at most 6 decimal places.
-	CreditRolloverAmount         *float64                                                          `json:"creditRolloverAmount,omitempty" url:"creditRolloverAmount,omitempty"`
+	// Up to 15 decimal places. Send this or `creditRolloverAmountDecimal`; when both are sent they must be equal.
+	CreditRolloverAmount *float64 `json:"creditRolloverAmount,omitempty" url:"creditRolloverAmount,omitempty"`
+	// The same amount as `creditRolloverAmount`, as an exact decimal string with up to 15 decimal places. Send this or `creditRolloverAmount`; when both are sent they must be equal.
+	CreditRolloverAmountDecimal  *string                                                           `json:"creditRolloverAmountDecimal,omitempty" url:"creditRolloverAmountDecimal,omitempty"`
 	PricingInput                 *ProductUsageBracketedPrepaidCreditsInputPricingInput             `json:"pricingInput" url:"pricingInput"`
 	CreditUnitBrackets           []*ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem `json:"creditUnitBrackets" url:"creditUnitBrackets"`
 	BillingFrequency             *ProductUsageBracketedPrepaidCreditsInputBillingFrequency         `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
@@ -4479,6 +4667,13 @@ func (p *ProductUsageBracketedPrepaidCreditsInput) GetOverageUnitPrice() *int {
 	return p.OverageUnitPrice
 }
 
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetOverageUnitPricesDecimal() map[string]*string {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPricesDecimal
+}
+
 func (p *ProductUsageBracketedPrepaidCreditsInput) GetOverageUnitPrices() map[string]*int {
 	if p == nil {
 		return nil
@@ -4491,6 +4686,13 @@ func (p *ProductUsageBracketedPrepaidCreditsInput) GetCreditRolloverAmount() *fl
 		return nil
 	}
 	return p.CreditRolloverAmount
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInput) GetCreditRolloverAmountDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CreditRolloverAmountDecimal
 }
 
 func (p *ProductUsageBracketedPrepaidCreditsInput) GetPricingInput() *ProductUsageBracketedPrepaidCreditsInputPricingInput {
@@ -4623,10 +4825,14 @@ func (p ProductUsageBracketedPrepaidCreditsInputBillingType) Ptr() *ProductUsage
 
 type ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem struct {
 	UpTo *int `json:"upTo,omitempty" url:"upTo,omitempty"`
-	// Credit amount, exact to at most 6 decimal places.
-	CreditUnits float64 `json:"creditUnits" url:"creditUnits"`
-	// Credits burned per unit in this band (graduated), instead of the flat creditUnits per signal. Brackets must be all flat or all graduated. Requires the graduated-credit-brackets flag.
+	// Up to 15 decimal places. Send this or `creditUnitsDecimal`; when both are sent they must be equal.
+	CreditUnits *float64 `json:"creditUnits,omitempty" url:"creditUnits,omitempty"`
+	// The same amount as `creditUnits`, as an exact decimal string with up to 15 decimal places. Send this or `creditUnits`; when both are sent they must be equal.
+	CreditUnitsDecimal *string `json:"creditUnitsDecimal,omitempty" url:"creditUnitsDecimal,omitempty"`
+	// Credits burned per unit in this band (graduated), instead of the flat creditUnits per signal. Brackets must be all flat or all graduated. Requires the graduated-credit-brackets flag. Up to 15 decimal places. Send this or `creditUnitsPerUnitDecimal`; when both are sent they must be equal.
 	CreditUnitsPerUnit *float64 `json:"creditUnitsPerUnit,omitempty" url:"creditUnitsPerUnit,omitempty"`
+	// The same amount as `creditUnitsPerUnit`, as an exact decimal string with up to 15 decimal places. Send this or `creditUnitsPerUnit`; when both are sent they must be equal.
+	CreditUnitsPerUnitDecimal *string `json:"creditUnitsPerUnitDecimal,omitempty" url:"creditUnitsPerUnitDecimal,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -4639,11 +4845,18 @@ func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetUpTo
 	return p.UpTo
 }
 
-func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnits() float64 {
+func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnits() *float64 {
 	if p == nil {
-		return 0
+		return nil
 	}
 	return p.CreditUnits
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnitsDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CreditUnitsDecimal
 }
 
 func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnitsPerUnit() *float64 {
@@ -4651,6 +4864,13 @@ func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCred
 		return nil
 	}
 	return p.CreditUnitsPerUnit
+}
+
+func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetCreditUnitsPerUnitDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CreditUnitsPerUnitDecimal
 }
 
 func (p *ProductUsageBracketedPrepaidCreditsInputCreditUnitBracketsItem) GetExtraProperties() map[string]interface{} {
@@ -5108,8 +5328,12 @@ func (p ProductUsageGraduatedInputSignalType) Ptr() *ProductUsageGraduatedInputS
 }
 
 type ProductUsagePerUnitInput struct {
-	EventName                    string                                    `json:"eventName" url:"eventName"`
-	SignalType                   *ProductUsagePerUnitInputSignalType       `json:"signalType,omitempty" url:"signalType,omitempty"`
+	EventName  string                              `json:"eventName" url:"eventName"`
+	SignalType *ProductUsagePerUnitInputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
+	// How many raw signal units one priced unit is made of. A price per CPU-hour over signals in microseconds carries 3600000000: the signal keeps its raw count, and the amount is rate × quantity ÷ unitSize, rounded once. Omit when the signal is already in the priced unit.
+	UnitSize *int `json:"unitSize,omitempty" url:"unitSize,omitempty"`
+	// The priced unit's name, shown with converted quantities.
+	UnitName                     *string                                   `json:"unitName,omitempty" url:"unitName,omitempty"`
 	BillingFrequency             *ProductUsagePerUnitInputBillingFrequency `json:"billingFrequency,omitempty" url:"billingFrequency,omitempty"`
 	BillingFrequencyCustomMonths *int                                      `json:"billingFrequencyCustomMonths,omitempty" url:"billingFrequencyCustomMonths,omitempty"`
 	// When usage is billed. Usage must use Arrears, prepaid credits included; to sell credits up front, add a credit benefit to a recurring, seat or one-time attribute.
@@ -5132,6 +5356,20 @@ func (p *ProductUsagePerUnitInput) GetSignalType() *ProductUsagePerUnitInputSign
 		return nil
 	}
 	return p.SignalType
+}
+
+func (p *ProductUsagePerUnitInput) GetUnitSize() *int {
+	if p == nil {
+		return nil
+	}
+	return p.UnitSize
+}
+
+func (p *ProductUsagePerUnitInput) GetUnitName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.UnitName
 }
 
 func (p *ProductUsagePerUnitInput) GetBillingFrequency() *ProductUsagePerUnitInputBillingFrequency {
@@ -5274,10 +5512,18 @@ type ProductUsagePrepaidCreditsInput struct {
 	EventName         string                                     `json:"eventName" url:"eventName"`
 	SignalType        *ProductUsagePrepaidCreditsInputSignalType `json:"signalType,omitempty" url:"signalType,omitempty"`
 	CreditsCurrencyID string                                     `json:"creditsCurrencyId" url:"creditsCurrencyId"`
-	// Credit amount, exact to at most 6 decimal places.
-	CreditCost       float64  `json:"creditCost" url:"creditCost"`
+	// Up to 15 decimal places. Send this or `creditCostDecimal`; when both are sent they must be equal.
+	CreditCost *float64 `json:"creditCost,omitempty" url:"creditCost,omitempty"`
+	// The same amount as `creditCost`, as an exact decimal string with up to 15 decimal places. Send this or `creditCost`; when both are sent they must be equal.
+	CreditCostDecimal *string `json:"creditCostDecimal,omitempty" url:"creditCostDecimal,omitempty"`
+	// How many raw signal units one priced unit is made of. A price per CPU-hour over signals in microseconds carries 3600000000: the signal keeps its raw count, and the amount is rate × quantity ÷ unitSize, rounded once. Omit when the signal is already in the priced unit.
+	UnitSize *int `json:"unitSize,omitempty" url:"unitSize,omitempty"`
+	// The priced unit's name, shown with converted quantities.
+	UnitName         *string  `json:"unitName,omitempty" url:"unitName,omitempty"`
 	UnitValue        *float64 `json:"unitValue,omitempty" url:"unitValue,omitempty"`
 	OverageUnitPrice *int     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Exact overage price per credit, keyed by currency, as decimal text in the currency’s smallest stored unit. Used instead of overageUnitPrices when present. Requires decimal pricing to be enabled.
+	OverageUnitPricesDecimal map[string]*string `json:"overageUnitPricesDecimal,omitempty" url:"overageUnitPricesDecimal,omitempty"`
 	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
 	OverageUnitPrices            map[string]*int                                  `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
 	PricingInput                 *ProductUsagePrepaidCreditsInputPricingInput     `json:"pricingInput,omitempty" url:"pricingInput,omitempty"`
@@ -5312,11 +5558,32 @@ func (p *ProductUsagePrepaidCreditsInput) GetCreditsCurrencyID() string {
 	return p.CreditsCurrencyID
 }
 
-func (p *ProductUsagePrepaidCreditsInput) GetCreditCost() float64 {
+func (p *ProductUsagePrepaidCreditsInput) GetCreditCost() *float64 {
 	if p == nil {
-		return 0
+		return nil
 	}
 	return p.CreditCost
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetCreditCostDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CreditCostDecimal
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetUnitSize() *int {
+	if p == nil {
+		return nil
+	}
+	return p.UnitSize
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetUnitName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.UnitName
 }
 
 func (p *ProductUsagePrepaidCreditsInput) GetUnitValue() *float64 {
@@ -5331,6 +5598,13 @@ func (p *ProductUsagePrepaidCreditsInput) GetOverageUnitPrice() *int {
 		return nil
 	}
 	return p.OverageUnitPrice
+}
+
+func (p *ProductUsagePrepaidCreditsInput) GetOverageUnitPricesDecimal() map[string]*string {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPricesDecimal
 }
 
 func (p *ProductUsagePrepaidCreditsInput) GetOverageUnitPrices() map[string]*int {

@@ -49,19 +49,21 @@ type ListInvoicesRequest struct {
 }
 
 type Invoice struct {
-	ID                       string                 `json:"id" url:"id"`
-	DisplayNumber            *string                `json:"displayNumber,omitempty" url:"displayNumber,omitempty"`
-	OrderID                  *string                `json:"orderId,omitempty" url:"orderId,omitempty"`
-	CustomerID               string                 `json:"customerId" url:"customerId"`
-	Status                   InvoiceStatus          `json:"status" url:"status"`
-	PaymentStatus            InvoicePaymentStatus   `json:"paymentStatus" url:"paymentStatus"`
-	Source                   InvoiceSource          `json:"source" url:"source"`
-	StartDate                time.Time              `json:"startDate" url:"startDate"`
-	EndDate                  *time.Time             `json:"endDate,omitempty" url:"endDate,omitempty"`
-	IssueDate                time.Time              `json:"issueDate" url:"issueDate"`
-	PostedDate               *time.Time             `json:"postedDate,omitempty" url:"postedDate,omitempty"`
-	DueDate                  *time.Time             `json:"dueDate,omitempty" url:"dueDate,omitempty"`
-	Currency                 string                 `json:"currency" url:"currency"`
+	ID            string               `json:"id" url:"id"`
+	DisplayNumber *string              `json:"displayNumber,omitempty" url:"displayNumber,omitempty"`
+	OrderID       *string              `json:"orderId,omitempty" url:"orderId,omitempty"`
+	CustomerID    string               `json:"customerId" url:"customerId"`
+	Status        InvoiceStatus        `json:"status" url:"status"`
+	PaymentStatus InvoicePaymentStatus `json:"paymentStatus" url:"paymentStatus"`
+	Source        InvoiceSource        `json:"source" url:"source"`
+	StartDate     time.Time            `json:"startDate" url:"startDate"`
+	EndDate       *time.Time           `json:"endDate,omitempty" url:"endDate,omitempty"`
+	IssueDate     time.Time            `json:"issueDate" url:"issueDate"`
+	PostedDate    *time.Time           `json:"postedDate,omitempty" url:"postedDate,omitempty"`
+	DueDate       *time.Time           `json:"dueDate,omitempty" url:"dueDate,omitempty"`
+	Currency      string               `json:"currency" url:"currency"`
+	// Decimals of this record's amounts, from the currency and how Paid stores it: 2 for USD (4999 is $49.99), and for JPY 2 while Paid stores yen in hundredths, then 0. Divide amounts by 10^currencyDecimals; never assume 100.
+	CurrencyDecimals         int                    `json:"currencyDecimals" url:"currencyDecimals"`
 	TaxAmount                float64                `json:"taxAmount" url:"taxAmount"`
 	TaxRate                  float64                `json:"taxRate" url:"taxRate"`
 	TaxStatus                InvoiceTaxStatus       `json:"taxStatus" url:"taxStatus"`
@@ -176,6 +178,13 @@ func (i *Invoice) GetCurrency() string {
 		return ""
 	}
 	return i.Currency
+}
+
+func (i *Invoice) GetCurrencyDecimals() int {
+	if i == nil {
+		return 0
+	}
+	return i.CurrencyDecimals
 }
 
 func (i *Invoice) GetTaxAmount() float64 {
@@ -392,11 +401,13 @@ type InvoiceLine struct {
 	TaxRate              float64                  `json:"taxRate" url:"taxRate"`
 	TotalPriceAfterTax   float64                  `json:"totalPriceAfterTax" url:"totalPriceAfterTax"`
 	Currency             string                   `json:"currency" url:"currency"`
-	Description          string                   `json:"description" url:"description"`
-	BalanceAmount        float64                  `json:"balanceAmount" url:"balanceAmount"`
-	CreditedAmount       float64                  `json:"creditedAmount" url:"creditedAmount"`
-	CreatedAt            time.Time                `json:"createdAt" url:"createdAt"`
-	UpdatedAt            time.Time                `json:"updatedAt" url:"updatedAt"`
+	// Decimals of this record's amounts, from the currency and how Paid stores it: 2 for USD (4999 is $49.99), and for JPY 2 while Paid stores yen in hundredths, then 0. Divide amounts by 10^currencyDecimals; never assume 100.
+	CurrencyDecimals int       `json:"currencyDecimals" url:"currencyDecimals"`
+	Description      string    `json:"description" url:"description"`
+	BalanceAmount    float64   `json:"balanceAmount" url:"balanceAmount"`
+	CreditedAmount   float64   `json:"creditedAmount" url:"creditedAmount"`
+	CreatedAt        time.Time `json:"createdAt" url:"createdAt"`
+	UpdatedAt        time.Time `json:"updatedAt" url:"updatedAt"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -491,6 +502,13 @@ func (i *InvoiceLine) GetCurrency() string {
 		return ""
 	}
 	return i.Currency
+}
+
+func (i *InvoiceLine) GetCurrencyDecimals() int {
+	if i == nil {
+		return 0
+	}
+	return i.CurrencyDecimals
 }
 
 func (i *InvoiceLine) GetDescription() string {

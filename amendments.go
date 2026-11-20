@@ -48,6 +48,8 @@ type AddAttributeIntent struct {
 	ProductAttributeID *string `json:"productAttributeId,omitempty" url:"productAttributeId,omitempty"`
 	// Name of the new line.
 	LineName string `json:"lineName" url:"lineName"`
+	// Source of the supplied price. Linked attributes default to `catalog`. Set `custom` for an intentional override, including a free `0` price.
+	PriceSource *AddAttributeIntentPriceSource `json:"priceSource,omitempty" url:"priceSource,omitempty"`
 	// Full pricing JSON. Prefer `addFromCatalog` or `newUnitPriceMinor` unless you are replacing the pricing shape.
 	Pricing  map[string]interface{} `json:"pricing" url:"pricing"`
 	Quantity int                    `json:"quantity" url:"quantity"`
@@ -89,6 +91,13 @@ func (a *AddAttributeIntent) GetLineName() string {
 		return ""
 	}
 	return a.LineName
+}
+
+func (a *AddAttributeIntent) GetPriceSource() *AddAttributeIntentPriceSource {
+	if a == nil {
+		return nil
+	}
+	return a.PriceSource
 }
 
 func (a *AddAttributeIntent) GetPricing() map[string]interface{} {
@@ -211,6 +220,29 @@ func (a AddAttributeIntentCreditGrant) Ptr() *AddAttributeIntentCreditGrant {
 	return &a
 }
 
+// Source of the supplied price. Linked attributes default to `catalog`. Set `custom` for an intentional override, including a free `0` price.
+type AddAttributeIntentPriceSource string
+
+const (
+	AddAttributeIntentPriceSourceCatalog AddAttributeIntentPriceSource = "catalog"
+	AddAttributeIntentPriceSourceCustom  AddAttributeIntentPriceSource = "custom"
+)
+
+func NewAddAttributeIntentPriceSourceFromString(s string) (AddAttributeIntentPriceSource, error) {
+	switch s {
+	case "catalog":
+		return AddAttributeIntentPriceSourceCatalog, nil
+	case "custom":
+		return AddAttributeIntentPriceSourceCustom, nil
+	}
+	var t AddAttributeIntentPriceSource
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (a AddAttributeIntentPriceSource) Ptr() *AddAttributeIntentPriceSource {
+	return &a
+}
+
 // Recurring charges pick next-cycle vs settle-now. Usage price changes pick new usage only vs the whole current period.
 type AddAttributeIntentTreatment string
 
@@ -248,6 +280,8 @@ type AddFromCatalogIntent struct {
 	Quantity *int `json:"quantity,omitempty" url:"quantity,omitempty"`
 	// Override unit price. Only for per-unit pricing. Amount in cents (minor currency units).
 	UnitPriceMinor *int `json:"unitPriceMinor,omitempty" url:"unitPriceMinor,omitempty"`
+	// Exact custom order price in minor units, for flagged organizations and per-unit pricing. Takes precedence over unitPriceMinor.
+	UnitPriceDecimal *string `json:"unitPriceDecimal,omitempty" url:"unitPriceDecimal,omitempty"`
 	// How to charge the partial first period when adding an attribute mid-cycle.
 	ChargeStub *AddFromCatalogIntentChargeStub `json:"chargeStub,omitempty" url:"chargeStub,omitempty"`
 
@@ -274,6 +308,13 @@ func (a *AddFromCatalogIntent) GetUnitPriceMinor() *int {
 		return nil
 	}
 	return a.UnitPriceMinor
+}
+
+func (a *AddFromCatalogIntent) GetUnitPriceDecimal() *string {
+	if a == nil {
+		return nil
+	}
+	return a.UnitPriceDecimal
 }
 
 func (a *AddFromCatalogIntent) GetChargeStub() *AddFromCatalogIntentChargeStub {
@@ -622,6 +663,10 @@ type AmendmentAttributeState struct {
 	Quantity float64 `json:"quantity" url:"quantity"`
 	// Unit price in cents. Absent when no single per-unit rate exists (tiered models).
 	UnitPriceMinor *float64 `json:"unitPriceMinor,omitempty" url:"unitPriceMinor,omitempty"`
+	// How many raw units unitPriceMinor or creditCost is quoted per, for a price per N raw units. Absent for a per-raw-unit price.
+	UnitSize *float64 `json:"unitSize,omitempty" url:"unitSize,omitempty"`
+	// The priced unit's name ("GB"), when the price is per N raw units and names it.
+	UnitName *string `json:"unitName,omitempty" url:"unitName,omitempty"`
 	// Total in cents of this attribute's currency.
 	TotalAmountMinor *float64 `json:"totalAmountMinor,omitempty" url:"totalAmountMinor,omitempty"`
 	// Credits burned per signal unit for credit-billed usage.
@@ -655,6 +700,20 @@ func (a *AmendmentAttributeState) GetUnitPriceMinor() *float64 {
 		return nil
 	}
 	return a.UnitPriceMinor
+}
+
+func (a *AmendmentAttributeState) GetUnitSize() *float64 {
+	if a == nil {
+		return nil
+	}
+	return a.UnitSize
+}
+
+func (a *AmendmentAttributeState) GetUnitName() *string {
+	if a == nil {
+		return nil
+	}
+	return a.UnitName
 }
 
 func (a *AmendmentAttributeState) GetTotalAmountMinor() *float64 {
@@ -1769,8 +1828,10 @@ type AmendmentPlanCreditEffect struct {
 	OrderLineAttributeID *string                   `json:"orderLineAttributeId,omitempty" url:"orderLineAttributeId,omitempty"`
 	// When the effect applies.
 	At string `json:"at" url:"at"`
-	// Credits ended or granted. Absent for infinite benefits.
+	// Credits ended or granted. Absent for infinite benefits. JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `creditAmountDecimal` for the exact value.
 	CreditAmount *float64 `json:"creditAmount,omitempty" url:"creditAmount,omitempty"`
+	// Exact value of `creditAmount` as a decimal string, at any magnitude and every decimal place it carries.
+	CreditAmountDecimal *string `json:"creditAmountDecimal,omitempty" url:"creditAmountDecimal,omitempty"`
 	// True when the affected benefit is unlimited.
 	HasInfiniteCredits *bool `json:"hasInfiniteCredits,omitempty" url:"hasInfiniteCredits,omitempty"`
 
@@ -1812,6 +1873,13 @@ func (a *AmendmentPlanCreditEffect) GetCreditAmount() *float64 {
 		return nil
 	}
 	return a.CreditAmount
+}
+
+func (a *AmendmentPlanCreditEffect) GetCreditAmountDecimal() *string {
+	if a == nil {
+		return nil
+	}
+	return a.CreditAmountDecimal
 }
 
 func (a *AmendmentPlanCreditEffect) GetHasInfiniteCredits() *bool {
@@ -4540,7 +4608,7 @@ type UpdatePricingIntent struct {
 	OrderLineAttributeID string `json:"orderLineAttributeId" url:"orderLineAttributeId"`
 	// New unit price. Prefer this over `newPricing` when you are only changing the rate. Amount in cents (minor currency units).
 	NewUnitPriceMinor *int `json:"newUnitPriceMinor,omitempty" url:"newUnitPriceMinor,omitempty"`
-	// Full pricing JSON. Prefer `addFromCatalog` or `newUnitPriceMinor` unless you are replacing the pricing shape.
+	// Full replacement pricing. Carry stored unitPriceDecimal values on copied rates. For flagged organizations an explicitly submitted unitPriceDecimal, including whole text or zero, selects a custom replacement. unitPrice alone never clears a saved decimal; an omitted decimal is kept only while rate-setting fields are unchanged.
 	NewPricing map[string]interface{} `json:"newPricing,omitempty" url:"newPricing,omitempty"`
 	// Optional quantity change in the same intent.
 	NewQuantity *int `json:"newQuantity,omitempty" url:"newQuantity,omitempty"`
