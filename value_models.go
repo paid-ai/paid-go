@@ -1802,12 +1802,12 @@ type ValueModelContentValueTypesItem struct {
 	LongDescription     *string                                                   `json:"longDescription,omitempty" url:"longDescription,omitempty"`
 	Sources             []*ValueModelContentValueTypesItemSourcesItem             `json:"sources,omitempty" url:"sources,omitempty"`
 	// Gates when this value type's number is published to a customer on a value receipt. Evaluated per customer, cumulative since their first signal for this value type, as of the receipt's end date. Until the threshold is met the receipt withholds the figure and shows a 'gathering data' state instead. At least one of minDataPoints or minMonths is required.
-	Maturation   interface{}                              `json:"maturation,omitempty" url:"maturation,omitempty"`
-	DisplayOrder *int                                     `json:"displayOrder,omitempty" url:"displayOrder,omitempty"`
-	Color        *string                                  `json:"color,omitempty" url:"color,omitempty"`
-	Icon         *string                                  `json:"icon,omitempty" url:"icon,omitempty"`
-	Category     *ValueModelContentValueTypesItemCategory `json:"category,omitempty" url:"category,omitempty"`
-	ArchivedAt   *time.Time                               `json:"archivedAt,omitempty" url:"archivedAt,omitempty"`
+	Maturation   *ValueModelContentValueTypesItemMaturation `json:"maturation,omitempty" url:"maturation,omitempty"`
+	DisplayOrder *int                                       `json:"displayOrder,omitempty" url:"displayOrder,omitempty"`
+	Color        *string                                    `json:"color,omitempty" url:"color,omitempty"`
+	Icon         *string                                    `json:"icon,omitempty" url:"icon,omitempty"`
+	Category     *ValueModelContentValueTypesItemCategory   `json:"category,omitempty" url:"category,omitempty"`
+	ArchivedAt   *time.Time                                 `json:"archivedAt,omitempty" url:"archivedAt,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -1855,7 +1855,7 @@ func (v *ValueModelContentValueTypesItem) GetSources() []*ValueModelContentValue
 	return v.Sources
 }
 
-func (v *ValueModelContentValueTypesItem) GetMaturation() interface{} {
+func (v *ValueModelContentValueTypesItem) GetMaturation() *ValueModelContentValueTypesItemMaturation {
 	if v == nil {
 		return nil
 	}
@@ -2868,6 +2868,48 @@ func NewValueModelContentValueTypesItemCategoryFromString(s string) (ValueModelC
 
 func (v ValueModelContentValueTypesItemCategory) Ptr() *ValueModelContentValueTypesItemCategory {
 	return &v
+}
+
+// Gates when this value type's number is published to a customer on a value receipt. Evaluated per customer, cumulative since their first signal for this value type, as of the receipt's end date. Until the threshold is met the receipt withholds the figure and shows a 'gathering data' state instead. At least one of minDataPoints or minMonths is required.
+type ValueModelContentValueTypesItemMaturation struct {
+	Unknown interface{}
+
+	typ string
+}
+
+func (v *ValueModelContentValueTypesItemMaturation) GetUnknown() interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.Unknown
+}
+
+func (v *ValueModelContentValueTypesItemMaturation) UnmarshalJSON(data []byte) error {
+	var valueUnknown interface{}
+	if err := json.Unmarshal(data, &valueUnknown); err == nil {
+		v.typ = "Unknown"
+		v.Unknown = valueUnknown
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, v)
+}
+
+func (v ValueModelContentValueTypesItemMaturation) MarshalJSON() ([]byte, error) {
+	if v.typ == "Unknown" || v.Unknown != nil {
+		return json.Marshal(v.Unknown)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", v)
+}
+
+type ValueModelContentValueTypesItemMaturationVisitor interface {
+	VisitUnknown(interface{}) error
+}
+
+func (v *ValueModelContentValueTypesItemMaturation) Accept(visitor ValueModelContentValueTypesItemMaturationVisitor) error {
+	if v.typ == "Unknown" || v.Unknown != nil {
+		return visitor.VisitUnknown(v.Unknown)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", v)
 }
 
 type ValueModelContentValueTypesItemSourcesItem struct {
