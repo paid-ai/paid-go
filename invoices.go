@@ -46,22 +46,26 @@ type ListInvoicesRequest struct {
 	PurchaseOrderReference *string `json:"-" url:"purchaseOrderReference,omitempty"`
 	// Filter by invoice currency code (case-insensitive, e.g. USD).
 	Currency *string `json:"-" url:"currency,omitempty"`
+	// Only finalized invoices whose email delivery is this. For "issued but never sent", pass notSent: it matches notSent and failed, and each row's delivery.reason says why. noRecord means Paid has no evidence either way: say so, never call those "not sent". Only for accounts with invoice delivery status enabled. Otherwise 400 FEATURE_NOT_ENABLED.
+	DeliveryStatus *ListInvoicesRequestDeliveryStatus `json:"-" url:"deliveryStatus,omitempty"`
 }
 
 type Invoice struct {
-	ID                       string                 `json:"id" url:"id"`
-	DisplayNumber            *string                `json:"displayNumber,omitempty" url:"displayNumber,omitempty"`
-	OrderID                  *string                `json:"orderId,omitempty" url:"orderId,omitempty"`
-	CustomerID               string                 `json:"customerId" url:"customerId"`
-	Status                   InvoiceStatus          `json:"status" url:"status"`
-	PaymentStatus            InvoicePaymentStatus   `json:"paymentStatus" url:"paymentStatus"`
-	Source                   InvoiceSource          `json:"source" url:"source"`
-	StartDate                time.Time              `json:"startDate" url:"startDate"`
-	EndDate                  *time.Time             `json:"endDate,omitempty" url:"endDate,omitempty"`
-	IssueDate                time.Time              `json:"issueDate" url:"issueDate"`
-	PostedDate               *time.Time             `json:"postedDate,omitempty" url:"postedDate,omitempty"`
-	DueDate                  *time.Time             `json:"dueDate,omitempty" url:"dueDate,omitempty"`
-	Currency                 string                 `json:"currency" url:"currency"`
+	ID            string               `json:"id" url:"id"`
+	DisplayNumber *string              `json:"displayNumber,omitempty" url:"displayNumber,omitempty"`
+	OrderID       *string              `json:"orderId,omitempty" url:"orderId,omitempty"`
+	CustomerID    string               `json:"customerId" url:"customerId"`
+	Status        InvoiceStatus        `json:"status" url:"status"`
+	PaymentStatus InvoicePaymentStatus `json:"paymentStatus" url:"paymentStatus"`
+	Source        InvoiceSource        `json:"source" url:"source"`
+	StartDate     time.Time            `json:"startDate" url:"startDate"`
+	EndDate       *time.Time           `json:"endDate,omitempty" url:"endDate,omitempty"`
+	IssueDate     time.Time            `json:"issueDate" url:"issueDate"`
+	PostedDate    *time.Time           `json:"postedDate,omitempty" url:"postedDate,omitempty"`
+	DueDate       *time.Time           `json:"dueDate,omitempty" url:"dueDate,omitempty"`
+	Currency      string               `json:"currency" url:"currency"`
+	// Decimals of this record's amounts, from the currency and how Paid stores it: 2 for USD (4999 is $49.99), and 2 for JPY, which Paid stores in hundredths of a yen (150000 is ¥1,500). Divide amounts by 10^currencyDecimals; never assume 100.
+	CurrencyDecimals         int                    `json:"currencyDecimals" url:"currencyDecimals"`
 	TaxAmount                float64                `json:"taxAmount" url:"taxAmount"`
 	TaxRate                  float64                `json:"taxRate" url:"taxRate"`
 	TaxStatus                InvoiceTaxStatus       `json:"taxStatus" url:"taxStatus"`
@@ -82,6 +86,9 @@ type Invoice struct {
 	BillingContactID *string `json:"billingContactId,omitempty" url:"billingContactId,omitempty"`
 	// Purchase order reference stamped on this invoice.
 	PurchaseOrderReference *string `json:"purchaseOrderReference,omitempty" url:"purchaseOrderReference,omitempty"`
+	// When the email provider last accepted this invoice's email, or null. Only for accounts with invoice delivery status enabled.
+	SentAt   *time.Time       `json:"sentAt,omitempty" url:"sentAt,omitempty"`
+	Delivery *InvoiceDelivery `json:"delivery,omitempty" url:"delivery,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -176,6 +183,13 @@ func (i *Invoice) GetCurrency() string {
 		return ""
 	}
 	return i.Currency
+}
+
+func (i *Invoice) GetCurrencyDecimals() int {
+	if i == nil {
+		return 0
+	}
+	return i.CurrencyDecimals
 }
 
 func (i *Invoice) GetTaxAmount() float64 {
@@ -304,6 +318,20 @@ func (i *Invoice) GetPurchaseOrderReference() *string {
 	return i.PurchaseOrderReference
 }
 
+func (i *Invoice) GetSentAt() *time.Time {
+	if i == nil {
+		return nil
+	}
+	return i.SentAt
+}
+
+func (i *Invoice) GetDelivery() *InvoiceDelivery {
+	if i == nil {
+		return nil
+	}
+	return i.Delivery
+}
+
 func (i *Invoice) GetExtraProperties() map[string]interface{} {
 	return i.extraProperties
 }
@@ -319,6 +347,7 @@ func (i *Invoice) UnmarshalJSON(data []byte) error {
 		DueDate    *internal.DateTime `json:"dueDate,omitempty"`
 		CreatedAt  *internal.DateTime `json:"createdAt"`
 		UpdatedAt  *internal.DateTime `json:"updatedAt"`
+		SentAt     *internal.DateTime `json:"sentAt,omitempty"`
 	}{
 		embed: embed(*i),
 	}
@@ -333,6 +362,7 @@ func (i *Invoice) UnmarshalJSON(data []byte) error {
 	i.DueDate = unmarshaler.DueDate.TimePtr()
 	i.CreatedAt = unmarshaler.CreatedAt.Time()
 	i.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	i.SentAt = unmarshaler.SentAt.TimePtr()
 	extraProperties, err := internal.ExtractExtraProperties(data, *i)
 	if err != nil {
 		return err
@@ -353,6 +383,7 @@ func (i *Invoice) MarshalJSON() ([]byte, error) {
 		DueDate    *internal.DateTime `json:"dueDate,omitempty"`
 		CreatedAt  *internal.DateTime `json:"createdAt"`
 		UpdatedAt  *internal.DateTime `json:"updatedAt"`
+		SentAt     *internal.DateTime `json:"sentAt,omitempty"`
 	}{
 		embed:      embed(*i),
 		StartDate:  internal.NewDateTime(i.StartDate),
@@ -362,6 +393,7 @@ func (i *Invoice) MarshalJSON() ([]byte, error) {
 		DueDate:    internal.NewOptionalDateTime(i.DueDate),
 		CreatedAt:  internal.NewDateTime(i.CreatedAt),
 		UpdatedAt:  internal.NewDateTime(i.UpdatedAt),
+		SentAt:     internal.NewOptionalDateTime(i.SentAt),
 	}
 	return json.Marshal(marshaler)
 }
@@ -378,6 +410,318 @@ func (i *Invoice) String() string {
 	return fmt.Sprintf("%#v", i)
 }
 
+// Whether this invoice's email went out, and if not why. Only for accounts with invoice delivery status enabled.
+type InvoiceDelivery struct {
+	// sent: the email provider accepted the invoice email (not proof of receipt). notSent: Paid recorded a reason it skipped the send. failed: a send was tried and failed. noRecord: Paid has no evidence either way; never report these as not sent. notIssued: a draft.
+	Status InvoiceDeliveryStatus `json:"status" url:"status"`
+	// Why it was not sent or failed. autoSendDisabled: auto-send is off for the order or account. notRequested: finalized with the email unticked or send: false. stuck: queued with no answer for 2 hours.
+	Reason *InvoiceDeliveryReason `json:"reason,omitempty" url:"reason,omitempty"`
+	// To and cc of the last accepted send; empty when none, or when an older send did not record its recipients.
+	SentTo []string `json:"sentTo" url:"sentTo"`
+	// The latest email decision, even after a successful send, so a failed resend is visible.
+	LastAttempt *InvoiceDeliveryLastAttempt `json:"lastAttempt,omitempty" url:"lastAttempt,omitempty"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (i *InvoiceDelivery) GetStatus() InvoiceDeliveryStatus {
+	if i == nil {
+		return ""
+	}
+	return i.Status
+}
+
+func (i *InvoiceDelivery) GetReason() *InvoiceDeliveryReason {
+	if i == nil {
+		return nil
+	}
+	return i.Reason
+}
+
+func (i *InvoiceDelivery) GetSentTo() []string {
+	if i == nil {
+		return nil
+	}
+	return i.SentTo
+}
+
+func (i *InvoiceDelivery) GetLastAttempt() *InvoiceDeliveryLastAttempt {
+	if i == nil {
+		return nil
+	}
+	return i.LastAttempt
+}
+
+func (i *InvoiceDelivery) GetExtraProperties() map[string]interface{} {
+	return i.extraProperties
+}
+
+func (i *InvoiceDelivery) UnmarshalJSON(data []byte) error {
+	type unmarshaler InvoiceDelivery
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*i = InvoiceDelivery(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *i)
+	if err != nil {
+		return err
+	}
+	i.extraProperties = extraProperties
+	i.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (i *InvoiceDelivery) String() string {
+	if len(i.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(i.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(i); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", i)
+}
+
+// The latest email decision, even after a successful send, so a failed resend is visible.
+type InvoiceDeliveryLastAttempt struct {
+	Type   InvoiceDeliveryLastAttemptType    `json:"type" url:"type"`
+	Reason *InvoiceDeliveryLastAttemptReason `json:"reason,omitempty" url:"reason,omitempty"`
+	At     time.Time                         `json:"at" url:"at"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (i *InvoiceDeliveryLastAttempt) GetType() InvoiceDeliveryLastAttemptType {
+	if i == nil {
+		return ""
+	}
+	return i.Type
+}
+
+func (i *InvoiceDeliveryLastAttempt) GetReason() *InvoiceDeliveryLastAttemptReason {
+	if i == nil {
+		return nil
+	}
+	return i.Reason
+}
+
+func (i *InvoiceDeliveryLastAttempt) GetAt() time.Time {
+	if i == nil {
+		return time.Time{}
+	}
+	return i.At
+}
+
+func (i *InvoiceDeliveryLastAttempt) GetExtraProperties() map[string]interface{} {
+	return i.extraProperties
+}
+
+func (i *InvoiceDeliveryLastAttempt) UnmarshalJSON(data []byte) error {
+	type embed InvoiceDeliveryLastAttempt
+	var unmarshaler = struct {
+		embed
+		At *internal.DateTime `json:"at"`
+	}{
+		embed: embed(*i),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*i = InvoiceDeliveryLastAttempt(unmarshaler.embed)
+	i.At = unmarshaler.At.Time()
+	extraProperties, err := internal.ExtractExtraProperties(data, *i)
+	if err != nil {
+		return err
+	}
+	i.extraProperties = extraProperties
+	i.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (i *InvoiceDeliveryLastAttempt) MarshalJSON() ([]byte, error) {
+	type embed InvoiceDeliveryLastAttempt
+	var marshaler = struct {
+		embed
+		At *internal.DateTime `json:"at"`
+	}{
+		embed: embed(*i),
+		At:    internal.NewDateTime(i.At),
+	}
+	return json.Marshal(marshaler)
+}
+
+func (i *InvoiceDeliveryLastAttempt) String() string {
+	if len(i.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(i.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(i); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", i)
+}
+
+type InvoiceDeliveryLastAttemptReason string
+
+const (
+	InvoiceDeliveryLastAttemptReasonAutoSendDisabled InvoiceDeliveryLastAttemptReason = "autoSendDisabled"
+	InvoiceDeliveryLastAttemptReasonNotRequested     InvoiceDeliveryLastAttemptReason = "notRequested"
+	InvoiceDeliveryLastAttemptReasonManualInvoice    InvoiceDeliveryLastAttemptReason = "manualInvoice"
+	InvoiceDeliveryLastAttemptReasonNoRecipients     InvoiceDeliveryLastAttemptReason = "noRecipients"
+	InvoiceDeliveryLastAttemptReasonTestMode         InvoiceDeliveryLastAttemptReason = "testMode"
+	InvoiceDeliveryLastAttemptReasonNotFinalized     InvoiceDeliveryLastAttemptReason = "notFinalized"
+	InvoiceDeliveryLastAttemptReasonSendFailed       InvoiceDeliveryLastAttemptReason = "sendFailed"
+	InvoiceDeliveryLastAttemptReasonJobFailed        InvoiceDeliveryLastAttemptReason = "jobFailed"
+	InvoiceDeliveryLastAttemptReasonQueueFailed      InvoiceDeliveryLastAttemptReason = "queueFailed"
+	InvoiceDeliveryLastAttemptReasonStuck            InvoiceDeliveryLastAttemptReason = "stuck"
+)
+
+func NewInvoiceDeliveryLastAttemptReasonFromString(s string) (InvoiceDeliveryLastAttemptReason, error) {
+	switch s {
+	case "autoSendDisabled":
+		return InvoiceDeliveryLastAttemptReasonAutoSendDisabled, nil
+	case "notRequested":
+		return InvoiceDeliveryLastAttemptReasonNotRequested, nil
+	case "manualInvoice":
+		return InvoiceDeliveryLastAttemptReasonManualInvoice, nil
+	case "noRecipients":
+		return InvoiceDeliveryLastAttemptReasonNoRecipients, nil
+	case "testMode":
+		return InvoiceDeliveryLastAttemptReasonTestMode, nil
+	case "notFinalized":
+		return InvoiceDeliveryLastAttemptReasonNotFinalized, nil
+	case "sendFailed":
+		return InvoiceDeliveryLastAttemptReasonSendFailed, nil
+	case "jobFailed":
+		return InvoiceDeliveryLastAttemptReasonJobFailed, nil
+	case "queueFailed":
+		return InvoiceDeliveryLastAttemptReasonQueueFailed, nil
+	case "stuck":
+		return InvoiceDeliveryLastAttemptReasonStuck, nil
+	}
+	var t InvoiceDeliveryLastAttemptReason
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (i InvoiceDeliveryLastAttemptReason) Ptr() *InvoiceDeliveryLastAttemptReason {
+	return &i
+}
+
+type InvoiceDeliveryLastAttemptType string
+
+const (
+	InvoiceDeliveryLastAttemptTypeQueued  InvoiceDeliveryLastAttemptType = "queued"
+	InvoiceDeliveryLastAttemptTypeSkipped InvoiceDeliveryLastAttemptType = "skipped"
+	InvoiceDeliveryLastAttemptTypeFailed  InvoiceDeliveryLastAttemptType = "failed"
+	InvoiceDeliveryLastAttemptTypeSent    InvoiceDeliveryLastAttemptType = "sent"
+)
+
+func NewInvoiceDeliveryLastAttemptTypeFromString(s string) (InvoiceDeliveryLastAttemptType, error) {
+	switch s {
+	case "queued":
+		return InvoiceDeliveryLastAttemptTypeQueued, nil
+	case "skipped":
+		return InvoiceDeliveryLastAttemptTypeSkipped, nil
+	case "failed":
+		return InvoiceDeliveryLastAttemptTypeFailed, nil
+	case "sent":
+		return InvoiceDeliveryLastAttemptTypeSent, nil
+	}
+	var t InvoiceDeliveryLastAttemptType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (i InvoiceDeliveryLastAttemptType) Ptr() *InvoiceDeliveryLastAttemptType {
+	return &i
+}
+
+// Why it was not sent or failed. autoSendDisabled: auto-send is off for the order or account. notRequested: finalized with the email unticked or send: false. stuck: queued with no answer for 2 hours.
+type InvoiceDeliveryReason string
+
+const (
+	InvoiceDeliveryReasonAutoSendDisabled InvoiceDeliveryReason = "autoSendDisabled"
+	InvoiceDeliveryReasonNotRequested     InvoiceDeliveryReason = "notRequested"
+	InvoiceDeliveryReasonManualInvoice    InvoiceDeliveryReason = "manualInvoice"
+	InvoiceDeliveryReasonNoRecipients     InvoiceDeliveryReason = "noRecipients"
+	InvoiceDeliveryReasonTestMode         InvoiceDeliveryReason = "testMode"
+	InvoiceDeliveryReasonNotFinalized     InvoiceDeliveryReason = "notFinalized"
+	InvoiceDeliveryReasonSendFailed       InvoiceDeliveryReason = "sendFailed"
+	InvoiceDeliveryReasonJobFailed        InvoiceDeliveryReason = "jobFailed"
+	InvoiceDeliveryReasonQueueFailed      InvoiceDeliveryReason = "queueFailed"
+	InvoiceDeliveryReasonStuck            InvoiceDeliveryReason = "stuck"
+)
+
+func NewInvoiceDeliveryReasonFromString(s string) (InvoiceDeliveryReason, error) {
+	switch s {
+	case "autoSendDisabled":
+		return InvoiceDeliveryReasonAutoSendDisabled, nil
+	case "notRequested":
+		return InvoiceDeliveryReasonNotRequested, nil
+	case "manualInvoice":
+		return InvoiceDeliveryReasonManualInvoice, nil
+	case "noRecipients":
+		return InvoiceDeliveryReasonNoRecipients, nil
+	case "testMode":
+		return InvoiceDeliveryReasonTestMode, nil
+	case "notFinalized":
+		return InvoiceDeliveryReasonNotFinalized, nil
+	case "sendFailed":
+		return InvoiceDeliveryReasonSendFailed, nil
+	case "jobFailed":
+		return InvoiceDeliveryReasonJobFailed, nil
+	case "queueFailed":
+		return InvoiceDeliveryReasonQueueFailed, nil
+	case "stuck":
+		return InvoiceDeliveryReasonStuck, nil
+	}
+	var t InvoiceDeliveryReason
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (i InvoiceDeliveryReason) Ptr() *InvoiceDeliveryReason {
+	return &i
+}
+
+// sent: the email provider accepted the invoice email (not proof of receipt). notSent: Paid recorded a reason it skipped the send. failed: a send was tried and failed. noRecord: Paid has no evidence either way; never report these as not sent. notIssued: a draft.
+type InvoiceDeliveryStatus string
+
+const (
+	InvoiceDeliveryStatusNotIssued InvoiceDeliveryStatus = "notIssued"
+	InvoiceDeliveryStatusSending   InvoiceDeliveryStatus = "sending"
+	InvoiceDeliveryStatusSent      InvoiceDeliveryStatus = "sent"
+	InvoiceDeliveryStatusNotSent   InvoiceDeliveryStatus = "notSent"
+	InvoiceDeliveryStatusFailed    InvoiceDeliveryStatus = "failed"
+	InvoiceDeliveryStatusNoRecord  InvoiceDeliveryStatus = "noRecord"
+)
+
+func NewInvoiceDeliveryStatusFromString(s string) (InvoiceDeliveryStatus, error) {
+	switch s {
+	case "notIssued":
+		return InvoiceDeliveryStatusNotIssued, nil
+	case "sending":
+		return InvoiceDeliveryStatusSending, nil
+	case "sent":
+		return InvoiceDeliveryStatusSent, nil
+	case "notSent":
+		return InvoiceDeliveryStatusNotSent, nil
+	case "failed":
+		return InvoiceDeliveryStatusFailed, nil
+	case "noRecord":
+		return InvoiceDeliveryStatusNoRecord, nil
+	}
+	var t InvoiceDeliveryStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (i InvoiceDeliveryStatus) Ptr() *InvoiceDeliveryStatus {
+	return &i
+}
+
 type InvoiceLine struct {
 	ID                   string                   `json:"id" url:"id"`
 	OrderID              *string                  `json:"orderId,omitempty" url:"orderId,omitempty"`
@@ -392,11 +736,13 @@ type InvoiceLine struct {
 	TaxRate              float64                  `json:"taxRate" url:"taxRate"`
 	TotalPriceAfterTax   float64                  `json:"totalPriceAfterTax" url:"totalPriceAfterTax"`
 	Currency             string                   `json:"currency" url:"currency"`
-	Description          string                   `json:"description" url:"description"`
-	BalanceAmount        float64                  `json:"balanceAmount" url:"balanceAmount"`
-	CreditedAmount       float64                  `json:"creditedAmount" url:"creditedAmount"`
-	CreatedAt            time.Time                `json:"createdAt" url:"createdAt"`
-	UpdatedAt            time.Time                `json:"updatedAt" url:"updatedAt"`
+	// Decimals of this record's amounts, from the currency and how Paid stores it: 2 for USD (4999 is $49.99), and 2 for JPY, which Paid stores in hundredths of a yen (150000 is ¥1,500). Divide amounts by 10^currencyDecimals; never assume 100.
+	CurrencyDecimals int       `json:"currencyDecimals" url:"currencyDecimals"`
+	Description      string    `json:"description" url:"description"`
+	BalanceAmount    float64   `json:"balanceAmount" url:"balanceAmount"`
+	CreditedAmount   float64   `json:"creditedAmount" url:"creditedAmount"`
+	CreatedAt        time.Time `json:"createdAt" url:"createdAt"`
+	UpdatedAt        time.Time `json:"updatedAt" url:"updatedAt"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -491,6 +837,13 @@ func (i *InvoiceLine) GetCurrency() string {
 		return ""
 	}
 	return i.Currency
+}
+
+func (i *InvoiceLine) GetCurrencyDecimals() int {
+	if i == nil {
+		return 0
+	}
+	return i.CurrencyDecimals
 }
 
 func (i *InvoiceLine) GetDescription() string {
@@ -848,6 +1201,37 @@ func NewInvoiceTaxStatusFromString(s string) (InvoiceTaxStatus, error) {
 
 func (i InvoiceTaxStatus) Ptr() *InvoiceTaxStatus {
 	return &i
+}
+
+type ListInvoicesRequestDeliveryStatus string
+
+const (
+	ListInvoicesRequestDeliveryStatusSending  ListInvoicesRequestDeliveryStatus = "sending"
+	ListInvoicesRequestDeliveryStatusSent     ListInvoicesRequestDeliveryStatus = "sent"
+	ListInvoicesRequestDeliveryStatusNotSent  ListInvoicesRequestDeliveryStatus = "notSent"
+	ListInvoicesRequestDeliveryStatusFailed   ListInvoicesRequestDeliveryStatus = "failed"
+	ListInvoicesRequestDeliveryStatusNoRecord ListInvoicesRequestDeliveryStatus = "noRecord"
+)
+
+func NewListInvoicesRequestDeliveryStatusFromString(s string) (ListInvoicesRequestDeliveryStatus, error) {
+	switch s {
+	case "sending":
+		return ListInvoicesRequestDeliveryStatusSending, nil
+	case "sent":
+		return ListInvoicesRequestDeliveryStatusSent, nil
+	case "notSent":
+		return ListInvoicesRequestDeliveryStatusNotSent, nil
+	case "failed":
+		return ListInvoicesRequestDeliveryStatusFailed, nil
+	case "noRecord":
+		return ListInvoicesRequestDeliveryStatusNoRecord, nil
+	}
+	var t ListInvoicesRequestDeliveryStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (l ListInvoicesRequestDeliveryStatus) Ptr() *ListInvoicesRequestDeliveryStatus {
+	return &l
 }
 
 type ListInvoicesRequestPaymentStatus string

@@ -178,8 +178,10 @@ func (c *CustomView) String() string {
 
 // A cap in force on one of the customer's units, as the customer unit cap read returns it. `used` covers the unit and every unit under it.
 type CustomViewContextCap struct {
-	// The cap, in credits of the currency. JSON number; exact within ±2^53.
+	// The cap, in credits of the currency. JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `amountDecimal` for the exact value.
 	Amount float64 `json:"amount" url:"amount"`
+	// Exact value of `amount` as a decimal string, at any magnitude and every decimal place it carries.
+	AmountDecimal string `json:"amountDecimal" url:"amountDecimal"`
 	// Monthly UTC periods, with boundaries defined by `schedule`.
 	Frequency CustomViewContextCapFrequency `json:"frequency" url:"frequency"`
 	Schedule  *CustomerUnitCapSchedule      `json:"schedule" url:"schedule"`
@@ -202,6 +204,13 @@ func (c *CustomViewContextCap) GetAmount() float64 {
 		return 0
 	}
 	return c.Amount
+}
+
+func (c *CustomViewContextCap) GetAmountDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.AmountDecimal
 }
 
 func (c *CustomViewContextCap) GetFrequency() CustomViewContextCapFrequency {
@@ -2000,12 +2009,21 @@ func (v *ViewCustomerUnitsResponse) String() string {
 }
 
 type ViewDataResponse struct {
-	Context *CustomViewDataContext `json:"context,omitempty" url:"context,omitempty"`
+	// The decimals Paid stores each listed currency's amounts at, where they differ from the currency's own minor unit. Divide a listed currency's amounts by 10 to this power: `{ "JPY": 2 }` means yen are stored in hundredths (150000 is ¥1,500). A currency not listed uses its own minor unit. `fact_cost.cost_amount` and `fact_delivered_value.delivered_value_cents` are exceptions: always hundredths of `cost_currency` and `delivered_value_currency`, respectively (the major unit × 100), whatever this says.
+	StoredCurrencyDecimals map[string]int         `json:"storedCurrencyDecimals" url:"storedCurrencyDecimals"`
+	Context                *CustomViewDataContext `json:"context,omitempty" url:"context,omitempty"`
 	// Result sets keyed by query id. Each value is an array of row objects (column name → value); 64-bit integers are returned as JSON strings to preserve precision.
 	Data map[string][]map[string]interface{} `json:"data" url:"data"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (v *ViewDataResponse) GetStoredCurrencyDecimals() map[string]int {
+	if v == nil {
+		return nil
+	}
+	return v.StoredCurrencyDecimals
 }
 
 func (v *ViewDataResponse) GetContext() *CustomViewDataContext {

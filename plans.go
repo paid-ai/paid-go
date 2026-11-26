@@ -13,6 +13,8 @@ type CreatePlanRequest struct {
 	// Paid product ID, for example `prod_abc123`
 	ProductID string  `json:"productId" url:"-"`
 	Name      *string `json:"name,omitempty" url:"-"`
+	// What your customers see for this plan on invoices, checkout and the customer portal, up to 250 characters. Omit it or send null to use the plan name.
+	DisplayName *string `json:"displayName,omitempty" url:"-"`
 	// Your stable identifier for this plan
 	ExternalID          *string               `json:"externalId,omitempty" url:"-"`
 	SupportedCurrencies []string              `json:"supportedCurrencies,omitempty" url:"-"`
@@ -38,9 +40,11 @@ type ListPlansRequest struct {
 }
 
 type Plan struct {
-	ID                  string           `json:"id" url:"id"`
-	ProductID           string           `json:"productId" url:"productId"`
-	Name                *string          `json:"name,omitempty" url:"name,omitempty"`
+	ID        string  `json:"id" url:"id"`
+	ProductID string  `json:"productId" url:"productId"`
+	Name      *string `json:"name,omitempty" url:"name,omitempty"`
+	// What your customers see for this plan on invoices, checkout and the customer portal. Null means they see the plan name.
+	DisplayName         *string          `json:"displayName,omitempty" url:"displayName,omitempty"`
 	ExternalID          *string          `json:"externalId,omitempty" url:"externalId,omitempty"`
 	SupportedCurrencies []string         `json:"supportedCurrencies" url:"supportedCurrencies"`
 	IsDefault           bool             `json:"isDefault" url:"isDefault"`
@@ -74,6 +78,13 @@ func (p *Plan) GetName() *string {
 		return nil
 	}
 	return p.Name
+}
+
+func (p *Plan) GetDisplayName() *string {
+	if p == nil {
+		return nil
+	}
+	return p.DisplayName
 }
 
 func (p *Plan) GetExternalID() *string {
@@ -352,6 +363,8 @@ type PlanCreditBenefit struct {
 	OverageUnitPrice     *float64                               `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
 	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
 	OverageUnitPrices map[string]*float64 `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
+	// Exact overage price per credit, keyed by currency, as decimal text in the currency’s smallest stored unit. Used instead of overageUnitPrices when present. Requires decimal pricing to be enabled.
+	OverageUnitPricesDecimal map[string]*string `json:"overageUnitPricesDecimal,omitempty" url:"overageUnitPricesDecimal,omitempty"`
 
 	ExtraProperties map[string]interface{} `json:"-" url:"-"`
 
@@ -440,6 +453,13 @@ func (p *PlanCreditBenefit) GetOverageUnitPrices() map[string]*float64 {
 		return nil
 	}
 	return p.OverageUnitPrices
+}
+
+func (p *PlanCreditBenefit) GetOverageUnitPricesDecimal() map[string]*string {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPricesDecimal
 }
 
 func (p *PlanCreditBenefit) GetExtraProperties() map[string]interface{} {
@@ -617,6 +637,8 @@ type PlanPricing struct {
 	ChargeType   string                   `json:"chargeType" url:"chargeType"`
 	PricingModel string                   `json:"pricingModel" url:"pricingModel"`
 	PricePoints  []map[string]interface{} `json:"pricePoints" url:"pricePoints"`
+	// Exact overage price per credit, keyed by currency, as decimal text in the currency’s smallest stored unit. Used instead of overageUnitPrices when present. Requires decimal pricing to be enabled.
+	OverageUnitPricesDecimal map[string]*string `json:"overageUnitPricesDecimal,omitempty" url:"overageUnitPricesDecimal,omitempty"`
 
 	ExtraProperties map[string]interface{} `json:"-" url:"-"`
 
@@ -649,6 +671,13 @@ func (p *PlanPricing) GetPricePoints() []map[string]interface{} {
 		return nil
 	}
 	return p.PricePoints
+}
+
+func (p *PlanPricing) GetOverageUnitPricesDecimal() map[string]*string {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPricesDecimal
 }
 
 func (p *PlanPricing) GetExtraProperties() map[string]interface{} {
@@ -881,7 +910,9 @@ func (p *PlanUpgradePathResponse) String() string {
 }
 
 type UpdatePlanRequest struct {
-	Name                *string  `json:"name,omitempty" url:"name,omitempty"`
+	Name *string `json:"name,omitempty" url:"name,omitempty"`
+	// What your customers see for this plan on invoices, checkout and the customer portal, up to 250 characters. Omit it or send null to use the plan name.
+	DisplayName         *string  `json:"displayName,omitempty" url:"displayName,omitempty"`
 	ExternalID          *string  `json:"externalId,omitempty" url:"externalId,omitempty"`
 	SupportedCurrencies []string `json:"supportedCurrencies,omitempty" url:"supportedCurrencies,omitempty"`
 	IsDefault           *bool    `json:"isDefault,omitempty" url:"isDefault,omitempty"`
@@ -898,6 +929,13 @@ func (u *UpdatePlanRequest) GetName() *string {
 		return nil
 	}
 	return u.Name
+}
+
+func (u *UpdatePlanRequest) GetDisplayName() *string {
+	if u == nil {
+		return nil
+	}
+	return u.DisplayName
 }
 
 func (u *UpdatePlanRequest) GetExternalID() *string {

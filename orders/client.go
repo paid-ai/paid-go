@@ -94,7 +94,7 @@ func (c *Client) ListOrders(
 	return response, nil
 }
 
-// Creates a new order for the organization
+// Creates a new order for the organization. If draft pricing cannot be confirmed, returns 503 BILLING_UNAVAILABLE only after deleting the new draft. A retained draft returns 409 ORDER_RETAINED with its order id and externalId in details. Retrieve that order and check its state instead of repeating creation.
 func (c *Client) CreateOrder(
 	ctx context.Context,
 	request *v2.CreateOrderRequest,
@@ -123,8 +123,18 @@ func (c *Client) CreateOrder(
 				APIError: apiError,
 			}
 		},
+		409: func(apiError *core.APIError) error {
+			return &v2.ConflictError{
+				APIError: apiError,
+			}
+		},
 		500: func(apiError *core.APIError) error {
 			return &v2.InternalServerError{
+				APIError: apiError,
+			}
+		},
+		503: func(apiError *core.APIError) error {
+			return &v2.ServiceUnavailableError{
 				APIError: apiError,
 			}
 		},
@@ -246,6 +256,11 @@ func (c *Client) UpdateOrderByID(
 				APIError: apiError,
 			}
 		},
+		409: func(apiError *core.APIError) error {
+			return &v2.ConflictError{
+				APIError: apiError,
+			}
+		},
 		500: func(apiError *core.APIError) error {
 			return &v2.InternalServerError{
 				APIError: apiError,
@@ -302,6 +317,11 @@ func (c *Client) DeleteOrderByID(
 		},
 		404: func(apiError *core.APIError) error {
 			return &v2.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
@@ -365,6 +385,11 @@ func (c *Client) ActivateOrderByID(
 		},
 		404: func(apiError *core.APIError) error {
 			return &v2.NotFoundError{
+				APIError: apiError,
+			}
+		},
+		409: func(apiError *core.APIError) error {
+			return &v2.ConflictError{
 				APIError: apiError,
 			}
 		},
@@ -671,7 +696,7 @@ func (c *Client) BatchOrderSeatAssignments(
 	return response, nil
 }
 
-// Creates or updates a customer, an optional contact, the products on the order, and the order with its lines, in one call. Each record is matched by its `externalId`, so you can send the same deal again after it changes in your CRM. Returns 201 Created when the order is new, and 200 OK when an existing draft order with the same `externalId` was updated. Treat both as success. Re-provisioning an order that is already active returns 409 `ORDER_ALREADY_ACTIVE`; change an active order through the amendments API instead. Amounts are whole numbers in minor currency units (cents).
+// Creates or updates a customer, an optional contact, the products on the order, and the order with its lines, in one call. Each record is matched by its `externalId`, so you can send the same deal again after it changes in your CRM. Returns 201 Created when the order is new, and 200 OK when an existing draft order with the same `externalId` was updated. Treat both as success. Re-provisioning an order that is already active returns 409 `ORDER_ALREADY_ACTIVE`; change an active order through the amendments API instead. A 503 `BILLING_UNAVAILABLE` means draft pricing could not be confirmed and any newly created draft was deleted; send the same request again with the same idempotency key. If a new draft is retained, returns 409 `ORDER_RETAINED` with its order id and externalId in `details`. Retrieve that order and check its state instead of repeating creation. Amounts are whole numbers in minor currency units (cents).
 func (c *Client) UpsertOrderByExternalID(
 	ctx context.Context,
 	request *v2.ProvisionRequest,
@@ -708,6 +733,11 @@ func (c *Client) UpsertOrderByExternalID(
 		},
 		500: func(apiError *core.APIError) error {
 			return &v2.InternalServerError{
+				APIError: apiError,
+			}
+		},
+		503: func(apiError *core.APIError) error {
+			return &v2.ServiceUnavailableError{
 				APIError: apiError,
 			}
 		},

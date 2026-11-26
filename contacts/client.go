@@ -208,7 +208,7 @@ func (c *Client) GetContactByID(
 	return response, nil
 }
 
-// Update a contact by its ID. A contact can move to another customer only if no orders or invoices reference it; otherwise a different `customerId` returns 400 `CONTACT_CUSTOMER_IMMUTABLE`.
+// Update a contact by its ID. A contact can move to another customer only if no orders or invoices reference it; otherwise a different `customerId` returns 400 `CONTACT_CUSTOMER_IMMUTABLE`. A contact archived through the Date Versioned API can't be updated (409 `CONTACT_ARCHIVED`).
 func (c *Client) UpdateContactByID(
 	ctx context.Context,
 	request *v2.UpdateContactByIDRequest,
@@ -245,6 +245,11 @@ func (c *Client) UpdateContactByID(
 				APIError: apiError,
 			}
 		},
+		409: func(apiError *core.APIError) error {
+			return &v2.ConflictError{
+				APIError: apiError,
+			}
+		},
 		500: func(apiError *core.APIError) error {
 			return &v2.InternalServerError{
 				APIError: apiError,
@@ -273,7 +278,7 @@ func (c *Client) UpdateContactByID(
 	return response, nil
 }
 
-// Delete a contact by its ID. A contact referenced by an order or an unsettled invoice cannot be deleted (409 `CONTACT_HAS_ASSOCIATIONS`). Posted paid invoices, voided invoices and canceled invoices do not block deletion.
+// Delete a contact by its ID. A contact referenced by an order or an unsettled invoice cannot be deleted (409 `CONTACT_HAS_ASSOCIATIONS`). Posted paid invoices, voided invoices and canceled invoices do not block deletion. A contact archived through the Date Versioned API cannot be deleted either (409 `CONTACT_ARCHIVED`).
 func (c *Client) DeleteContactByID(
 	ctx context.Context,
 	request *v2.DeleteContactByIDRequest,
@@ -394,7 +399,7 @@ func (c *Client) GetContactByExternalID(
 	return response, nil
 }
 
-// Update a contact by its external ID. A contact can move to another customer only if no orders or invoices reference it; otherwise a different `customerId` returns 400 `CONTACT_CUSTOMER_IMMUTABLE`.
+// Update a contact by its external ID. A contact can move to another customer only if no orders or invoices reference it; otherwise a different `customerId` returns 400 `CONTACT_CUSTOMER_IMMUTABLE`. A contact archived through the Date Versioned API can't be updated (409 `CONTACT_ARCHIVED`).
 func (c *Client) UpdateContactByExternalID(
 	ctx context.Context,
 	request *v2.UpdateContactByExternalIDRequest,
@@ -431,6 +436,11 @@ func (c *Client) UpdateContactByExternalID(
 				APIError: apiError,
 			}
 		},
+		409: func(apiError *core.APIError) error {
+			return &v2.ConflictError{
+				APIError: apiError,
+			}
+		},
 		500: func(apiError *core.APIError) error {
 			return &v2.InternalServerError{
 				APIError: apiError,
@@ -459,7 +469,7 @@ func (c *Client) UpdateContactByExternalID(
 	return response, nil
 }
 
-// Delete a contact by its external ID. A contact referenced by an order or an unsettled invoice cannot be deleted (409 `CONTACT_HAS_ASSOCIATIONS`). Posted paid invoices, voided invoices and canceled invoices do not block deletion.
+// Delete a contact by its external ID. A contact referenced by an order or an unsettled invoice cannot be deleted (409 `CONTACT_HAS_ASSOCIATIONS`). Posted paid invoices, voided invoices and canceled invoices do not block deletion. A contact archived through the Date Versioned API cannot be deleted either (409 `CONTACT_ARCHIVED`).
 func (c *Client) DeleteContactByExternalID(
 	ctx context.Context,
 	request *v2.DeleteContactByExternalIDRequest,
