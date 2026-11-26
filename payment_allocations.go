@@ -34,7 +34,7 @@ type PaymentAllocation struct {
 	InvoiceID string `json:"invoiceId" url:"invoiceId"`
 	// The invoice line the amount was allocated to, as returned by the invoice lines endpoint.
 	InvoiceLineID string `json:"invoiceLineId" url:"invoiceLineId"`
-	// Allocated amount in cents (minor currency units).
+	// Allocated amount in the payment's stored minor units. Divide by 10^currencyDecimals from the payment response.
 	Amount int `json:"amount" url:"amount"`
 	// Three-letter ISO currency code.
 	Currency string `json:"currency" url:"currency"`
@@ -223,7 +223,7 @@ func (p *PaymentAllocationCreateResponse) String() string {
 type PaymentAllocationInput struct {
 	// Invoice line to allocate to, as returned by the invoice lines endpoint.
 	InvoiceLineID string `json:"invoiceLineId" url:"invoiceLineId"`
-	// Amount to allocate in cents (minor currency units).
+	// Amount to allocate in the payment's stored minor units, as described by currencyDecimals in the payment response.
 	Amount int `json:"amount" url:"amount"`
 	// Three-letter ISO currency code. Defaults to the payment's currency.
 	Currency *string `json:"currency,omitempty" url:"currency,omitempty"`

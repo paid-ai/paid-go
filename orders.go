@@ -231,16 +231,22 @@ type CreateOrderLineAttributeRequestPricing struct {
 	BillingType       *CreateOrderLineAttributeRequestPricingBillingType `json:"billingType,omitempty" url:"billingType,omitempty"`
 	SignalType        *CreateOrderLineAttributeRequestPricingSignalType  `json:"signalType,omitempty" url:"signalType,omitempty"`
 	CreditsCurrencyID *string                                            `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
-	// Credit amount, exact to at most 6 decimal places.
-	CreditCost       *float64 `json:"creditCost,omitempty" url:"creditCost,omitempty"`
-	OverageUnitPrice *int     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Up to 15 decimal places. Send this or `creditCostDecimal`; when both are sent they must be equal.
+	CreditCost *float64 `json:"creditCost,omitempty" url:"creditCost,omitempty"`
+	// The same amount as `creditCost`, as an exact decimal string with up to 15 decimal places. Send this or `creditCost`; when both are sent they must be equal.
+	CreditCostDecimal *string `json:"creditCostDecimal,omitempty" url:"creditCostDecimal,omitempty"`
+	OverageUnitPrice  *int    `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Exact overage price per credit, keyed by currency, as decimal text in the currency’s smallest stored unit. Used instead of overageUnitPrices when present. Requires decimal pricing to be enabled.
+	OverageUnitPricesDecimal map[string]*string `json:"overageUnitPricesDecimal,omitempty" url:"overageUnitPricesDecimal,omitempty"`
 	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
 	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
-	// Credit amount, exact to at most 6 decimal places.
-	CreditRolloverAmount *float64                                                        `json:"creditRolloverAmount,omitempty" url:"creditRolloverAmount,omitempty"`
-	CreditBenefits       []*CreateOrderLineAttributeRequestPricingCreditBenefitsItem     `json:"creditBenefits,omitempty" url:"creditBenefits,omitempty"`
-	PricingInput         *CreateOrderLineAttributeRequestPricingPricingInput             `json:"pricingInput,omitempty" url:"pricingInput,omitempty"`
-	CreditUnitBrackets   []*CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem `json:"creditUnitBrackets,omitempty" url:"creditUnitBrackets,omitempty"`
+	// Up to 15 decimal places. Send this or `creditRolloverAmountDecimal`; when both are sent they must be equal.
+	CreditRolloverAmount *float64 `json:"creditRolloverAmount,omitempty" url:"creditRolloverAmount,omitempty"`
+	// The same amount as `creditRolloverAmount`, as an exact decimal string with up to 15 decimal places. Send this or `creditRolloverAmount`; when both are sent they must be equal.
+	CreditRolloverAmountDecimal *string                                                         `json:"creditRolloverAmountDecimal,omitempty" url:"creditRolloverAmountDecimal,omitempty"`
+	CreditBenefits              []*CreateOrderLineAttributeRequestPricingCreditBenefitsItem     `json:"creditBenefits,omitempty" url:"creditBenefits,omitempty"`
+	PricingInput                *CreateOrderLineAttributeRequestPricingPricingInput             `json:"pricingInput,omitempty" url:"pricingInput,omitempty"`
+	CreditUnitBrackets          []*CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem `json:"creditUnitBrackets,omitempty" url:"creditUnitBrackets,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -316,11 +322,25 @@ func (c *CreateOrderLineAttributeRequestPricing) GetCreditCost() *float64 {
 	return c.CreditCost
 }
 
+func (c *CreateOrderLineAttributeRequestPricing) GetCreditCostDecimal() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CreditCostDecimal
+}
+
 func (c *CreateOrderLineAttributeRequestPricing) GetOverageUnitPrice() *int {
 	if c == nil {
 		return nil
 	}
 	return c.OverageUnitPrice
+}
+
+func (c *CreateOrderLineAttributeRequestPricing) GetOverageUnitPricesDecimal() map[string]*string {
+	if c == nil {
+		return nil
+	}
+	return c.OverageUnitPricesDecimal
 }
 
 func (c *CreateOrderLineAttributeRequestPricing) GetOverageUnitPrices() map[string]*int {
@@ -335,6 +355,13 @@ func (c *CreateOrderLineAttributeRequestPricing) GetCreditRolloverAmount() *floa
 		return nil
 	}
 	return c.CreditRolloverAmount
+}
+
+func (c *CreateOrderLineAttributeRequestPricing) GetCreditRolloverAmountDecimal() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CreditRolloverAmountDecimal
 }
 
 func (c *CreateOrderLineAttributeRequestPricing) GetCreditBenefits() []*CreateOrderLineAttributeRequestPricingCreditBenefitsItem {
@@ -476,17 +503,23 @@ type CreateOrderLineAttributeRequestPricingCreditBenefitsItem struct {
 	ID                string                                                             `json:"id" url:"id"`
 	CreditsCurrencyID *string                                                            `json:"creditsCurrencyId,omitempty" url:"creditsCurrencyId,omitempty"`
 	Recipient         *CreateOrderLineAttributeRequestPricingCreditBenefitsItemRecipient `json:"recipient,omitempty" url:"recipient,omitempty"`
-	// Credit amount, exact to at most 6 decimal places.
-	Amount           float64 `json:"amount" url:"amount"`
+	// Up to 15 decimal places. Send this or `amountDecimal`; when both are sent they must be equal.
+	Amount *float64 `json:"amount,omitempty" url:"amount,omitempty"`
+	// The same amount as `amount`, as an exact decimal string with up to 15 decimal places. Send this or `amount`; when both are sent they must be equal.
+	AmountDecimal    *string `json:"amountDecimal,omitempty" url:"amountDecimal,omitempty"`
 	OverageUnitPrice *int    `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Exact overage price per credit, keyed by currency, as decimal text in the currency’s smallest stored unit. Used instead of overageUnitPrices when present. Requires decimal pricing to be enabled.
+	OverageUnitPricesDecimal map[string]*string `json:"overageUnitPricesDecimal,omitempty" url:"overageUnitPricesDecimal,omitempty"`
 	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
 	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
-	// Credit amount, exact to at most 6 decimal places.
-	RolloverAmount       *float64                                                                      `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
-	RolloverDuration     *int                                                                          `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
-	RolloverDurationUnit *CreateOrderLineAttributeRequestPricingCreditBenefitsItemRolloverDurationUnit `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
-	AllocationCadence    *CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence    `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
-	CreditGrantTiming    *CreateOrderLineAttributeRequestPricingCreditBenefitsItemCreditGrantTiming    `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
+	// Up to 15 decimal places. Send this or `rolloverAmountDecimal`; when both are sent they must be equal.
+	RolloverAmount *float64 `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	// The same amount as `rolloverAmount`, as an exact decimal string with up to 15 decimal places. Send this or `rolloverAmount`; when both are sent they must be equal.
+	RolloverAmountDecimal *string                                                                       `json:"rolloverAmountDecimal,omitempty" url:"rolloverAmountDecimal,omitempty"`
+	RolloverDuration      *int                                                                          `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDurationUnit  *CreateOrderLineAttributeRequestPricingCreditBenefitsItemRolloverDurationUnit `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
+	AllocationCadence     *CreateOrderLineAttributeRequestPricingCreditBenefitsItemAllocationCadence    `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
+	CreditGrantTiming     *CreateOrderLineAttributeRequestPricingCreditBenefitsItemCreditGrantTiming    `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -513,11 +546,18 @@ func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetRecipient(
 	return c.Recipient
 }
 
-func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetAmount() float64 {
+func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetAmount() *float64 {
 	if c == nil {
-		return 0
+		return nil
 	}
 	return c.Amount
+}
+
+func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetAmountDecimal() *string {
+	if c == nil {
+		return nil
+	}
+	return c.AmountDecimal
 }
 
 func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetOverageUnitPrice() *int {
@@ -525,6 +565,13 @@ func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetOverageUni
 		return nil
 	}
 	return c.OverageUnitPrice
+}
+
+func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetOverageUnitPricesDecimal() map[string]*string {
+	if c == nil {
+		return nil
+	}
+	return c.OverageUnitPricesDecimal
 }
 
 func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetOverageUnitPrices() map[string]*int {
@@ -539,6 +586,13 @@ func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetRolloverAm
 		return nil
 	}
 	return c.RolloverAmount
+}
+
+func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetRolloverAmountDecimal() *string {
+	if c == nil {
+		return nil
+	}
+	return c.RolloverAmountDecimal
 }
 
 func (c *CreateOrderLineAttributeRequestPricingCreditBenefitsItem) GetRolloverDuration() *int {
@@ -700,10 +754,14 @@ func (c CreateOrderLineAttributeRequestPricingCreditBenefitsItemRolloverDuration
 
 type CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem struct {
 	UpTo *int `json:"upTo,omitempty" url:"upTo,omitempty"`
-	// Credit amount, exact to at most 6 decimal places.
-	CreditUnits float64 `json:"creditUnits" url:"creditUnits"`
-	// Credits burned per unit in this band (graduated), instead of the flat creditUnits per signal. Brackets must be all flat or all graduated. Requires the graduated-credit-brackets flag.
+	// Up to 15 decimal places. Send this or `creditUnitsDecimal`; when both are sent they must be equal.
+	CreditUnits *float64 `json:"creditUnits,omitempty" url:"creditUnits,omitempty"`
+	// The same amount as `creditUnits`, as an exact decimal string with up to 15 decimal places. Send this or `creditUnits`; when both are sent they must be equal.
+	CreditUnitsDecimal *string `json:"creditUnitsDecimal,omitempty" url:"creditUnitsDecimal,omitempty"`
+	// Credits burned per unit in this band (graduated), instead of the flat creditUnits per signal. Brackets must be all flat or all graduated. Requires the graduated-credit-brackets flag. Up to 15 decimal places. Send this or `creditUnitsPerUnitDecimal`; when both are sent they must be equal.
 	CreditUnitsPerUnit *float64 `json:"creditUnitsPerUnit,omitempty" url:"creditUnitsPerUnit,omitempty"`
+	// The same amount as `creditUnitsPerUnit`, as an exact decimal string with up to 15 decimal places. Send this or `creditUnitsPerUnit`; when both are sent they must be equal.
+	CreditUnitsPerUnitDecimal *string `json:"creditUnitsPerUnitDecimal,omitempty" url:"creditUnitsPerUnitDecimal,omitempty"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -716,11 +774,18 @@ func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetUpTo()
 	return c.UpTo
 }
 
-func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetCreditUnits() float64 {
+func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetCreditUnits() *float64 {
 	if c == nil {
-		return 0
+		return nil
 	}
 	return c.CreditUnits
+}
+
+func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetCreditUnitsDecimal() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CreditUnitsDecimal
 }
 
 func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetCreditUnitsPerUnit() *float64 {
@@ -728,6 +793,13 @@ func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetCredit
 		return nil
 	}
 	return c.CreditUnitsPerUnit
+}
+
+func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetCreditUnitsPerUnitDecimal() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CreditUnitsPerUnitDecimal
 }
 
 func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) GetExtraProperties() map[string]interface{} {
@@ -764,6 +836,8 @@ func (c *CreateOrderLineAttributeRequestPricingCreditUnitBracketsItem) String() 
 
 // Single flat price point for this order attribute override. Do not send a currency-keyed map here.
 type CreateOrderLineAttributeRequestPricingPricePoints struct {
+	// Exact per-unit order price in minor currency units, as decimal text with at most 15 decimal places. Requires sub-cent prices for this organization. The whole-number unitPrice remains the fallback.
+	UnitPriceDecimal *string                                                       `json:"unitPriceDecimal,omitempty" url:"unitPriceDecimal,omitempty"`
 	Currency         *string                                                       `json:"currency,omitempty" url:"currency,omitempty"`
 	UnitPrice        int                                                           `json:"unitPrice" url:"unitPrice"`
 	MinQuantity      *int                                                          `json:"minQuantity,omitempty" url:"minQuantity,omitempty"`
@@ -772,6 +846,13 @@ type CreateOrderLineAttributeRequestPricingPricePoints struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (c *CreateOrderLineAttributeRequestPricingPricePoints) GetUnitPriceDecimal() *string {
+	if c == nil {
+		return nil
+	}
+	return c.UnitPriceDecimal
 }
 
 func (c *CreateOrderLineAttributeRequestPricingPricePoints) GetCurrency() *string {
@@ -1205,16 +1286,20 @@ func (c *CreateOrderLineRequest) String() string {
 }
 
 type Order struct {
-	ID                         string                         `json:"id" url:"id"`
-	CustomerID                 string                         `json:"customerId" url:"customerId"`
-	BillingCustomerID          *string                        `json:"billingCustomerId,omitempty" url:"billingCustomerId,omitempty"`
-	BillingContactIDs          []string                       `json:"billingContactIds" url:"billingContactIds"`
-	CreatedAt                  time.Time                      `json:"createdAt" url:"createdAt"`
-	UpdatedAt                  time.Time                      `json:"updatedAt" url:"updatedAt"`
-	EndDate                    *time.Time                     `json:"endDate,omitempty" url:"endDate,omitempty"`
-	Name                       string                         `json:"name" url:"name"`
-	StartDate                  time.Time                      `json:"startDate" url:"startDate"`
-	SubscriptionTerms          *int                           `json:"subscriptionTerms,omitempty" url:"subscriptionTerms,omitempty"`
+	ID                string     `json:"id" url:"id"`
+	CustomerID        string     `json:"customerId" url:"customerId"`
+	BillingCustomerID *string    `json:"billingCustomerId,omitempty" url:"billingCustomerId,omitempty"`
+	BillingContactIDs []string   `json:"billingContactIds" url:"billingContactIds"`
+	CreatedAt         time.Time  `json:"createdAt" url:"createdAt"`
+	UpdatedAt         time.Time  `json:"updatedAt" url:"updatedAt"`
+	EndDate           *time.Time `json:"endDate,omitempty" url:"endDate,omitempty"`
+	Name              string     `json:"name" url:"name"`
+	StartDate         time.Time  `json:"startDate" url:"startDate"`
+	SubscriptionTerms *int       `json:"subscriptionTerms,omitempty" url:"subscriptionTerms,omitempty"`
+	// Three-letter ISO currency code of the order's amounts.
+	Currency string `json:"currency" url:"currency"`
+	// Decimals of this order's amounts, from the currency and how Paid stores it: 2 for USD (4999 is $49.99); 2 for JPY, which Paid stores in hundredths of a yen (150000 is ¥1,500). Divide amounts by 10^currencyDecimals; never assume 100.
+	CurrencyDecimals           int                            `json:"currencyDecimals" url:"currencyDecimals"`
 	BilledAmountNoTax          float64                        `json:"billedAmountNoTax" url:"billedAmountNoTax"`
 	BilledTax                  float64                        `json:"billedTax" url:"billedTax"`
 	EstimatedTax               float64                        `json:"estimatedTax" url:"estimatedTax"`
@@ -1308,6 +1393,20 @@ func (o *Order) GetSubscriptionTerms() *int {
 		return nil
 	}
 	return o.SubscriptionTerms
+}
+
+func (o *Order) GetCurrency() string {
+	if o == nil {
+		return ""
+	}
+	return o.Currency
+}
+
+func (o *Order) GetCurrencyDecimals() int {
+	if o == nil {
+		return 0
+	}
+	return o.CurrencyDecimals
 }
 
 func (o *Order) GetBilledAmountNoTax() float64 {
@@ -2693,19 +2792,25 @@ func (p ProvisionCreatedOrderProvisionStatus) Ptr() *ProvisionCreatedOrderProvis
 type ProvisionCreditBenefit struct {
 	// The `key` of the credits currency.
 	CreditsCurrencyKey string `json:"creditsCurrencyKey" url:"creditsCurrencyKey"`
-	// Credits granted per allocation period. Must be greater than 0, with at most 6 decimal places. For an unlimited grant, set `isInfiniteTotal: true` and send any positive amount.
-	Amount            float64                                  `json:"amount" url:"amount"`
+	// Credits granted per allocation period. Must be greater than 0. For an unlimited grant, set `isInfiniteTotal: true` and send any positive amount. Up to 15 decimal places. Send this or `amountDecimal`; when both are sent they must be equal.
+	Amount *float64 `json:"amount,omitempty" url:"amount,omitempty"`
+	// The same amount as `amount`, as an exact decimal string with up to 15 decimal places. Send this or `amount`; when both are sent they must be equal. Must be greater than 0.
+	AmountDecimal     *string                                  `json:"amountDecimal,omitempty" url:"amountDecimal,omitempty"`
 	Recipient         *ProvisionCreditBenefitRecipient         `json:"recipient,omitempty" url:"recipient,omitempty"`
 	IsInfiniteTotal   *bool                                    `json:"isInfiniteTotal,omitempty" url:"isInfiniteTotal,omitempty"`
 	AllocationCadence *ProvisionCreditBenefitAllocationCadence `json:"allocationCadence,omitempty" url:"allocationCadence,omitempty"`
 	CreditGrantTiming *ProvisionCreditBenefitCreditGrantTiming `json:"creditGrantTiming,omitempty" url:"creditGrantTiming,omitempty"`
 	OverageUnitPrice  *int                                     `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Exact overage price per credit, keyed by currency, as decimal text in the currency’s smallest stored unit. Used instead of overageUnitPrices when present. Requires decimal pricing to be enabled.
+	OverageUnitPricesDecimal map[string]*string `json:"overageUnitPricesDecimal,omitempty" url:"overageUnitPricesDecimal,omitempty"`
 	// Overage price per credit in the currency's minor units (40 is $0.40 for USD, ¥40 for JPY, 0.040 KWD for KWD), keyed by uppercase ISO 4217 currency code. On an invoice, an entry for the invoice currency on any of the order's pricing or credit benefits beats every overageUnitPrice; overageUnitPrice applies only when no holder has an entry for that currency. Writes keep the two consistent for the primary currency (the organization's default when the product is priced in it, else the product's only pricing currency; an order line's own currency): a map entry for it sets overageUnitPrice, winning when a write sends both, and an overageUnitPrice sent without the map updates an existing entry for it. A write that sends only overageUnitPrice never creates a map.
 	OverageUnitPrices map[string]*int `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
-	// Credit amount, exact to at most 6 decimal places.
-	RolloverAmount       *float64                                    `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
-	RolloverDuration     *int                                        `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
-	RolloverDurationUnit *ProvisionCreditBenefitRolloverDurationUnit `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
+	// Up to 15 decimal places. Send this or `rolloverAmountDecimal`; when both are sent they must be equal.
+	RolloverAmount *float64 `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	// The same amount as `rolloverAmount`, as an exact decimal string with up to 15 decimal places. Send this or `rolloverAmount`; when both are sent they must be equal.
+	RolloverAmountDecimal *string                                     `json:"rolloverAmountDecimal,omitempty" url:"rolloverAmountDecimal,omitempty"`
+	RolloverDuration      *int                                        `json:"rolloverDuration,omitempty" url:"rolloverDuration,omitempty"`
+	RolloverDurationUnit  *ProvisionCreditBenefitRolloverDurationUnit `json:"rolloverDurationUnit,omitempty" url:"rolloverDurationUnit,omitempty"`
 	// When true, Paid adds a usage line to the order that draws down this credit currency: one credit for each signal whose event name is the `creditsCurrencyKey`. The line uses a product named `Paid Usage - <creditsCurrencyKey>`, with external ID `paid:usage:<creditsCurrencyKey>`, which Paid creates if it does not exist. An order gets one such line per credit currency, even when several benefits set this flag.
 	CreateUsageLine *bool `json:"createUsageLine,omitempty" url:"createUsageLine,omitempty"`
 
@@ -2720,11 +2825,18 @@ func (p *ProvisionCreditBenefit) GetCreditsCurrencyKey() string {
 	return p.CreditsCurrencyKey
 }
 
-func (p *ProvisionCreditBenefit) GetAmount() float64 {
+func (p *ProvisionCreditBenefit) GetAmount() *float64 {
 	if p == nil {
-		return 0
+		return nil
 	}
 	return p.Amount
+}
+
+func (p *ProvisionCreditBenefit) GetAmountDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.AmountDecimal
 }
 
 func (p *ProvisionCreditBenefit) GetRecipient() *ProvisionCreditBenefitRecipient {
@@ -2762,6 +2874,13 @@ func (p *ProvisionCreditBenefit) GetOverageUnitPrice() *int {
 	return p.OverageUnitPrice
 }
 
+func (p *ProvisionCreditBenefit) GetOverageUnitPricesDecimal() map[string]*string {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPricesDecimal
+}
+
 func (p *ProvisionCreditBenefit) GetOverageUnitPrices() map[string]*int {
 	if p == nil {
 		return nil
@@ -2774,6 +2893,13 @@ func (p *ProvisionCreditBenefit) GetRolloverAmount() *float64 {
 		return nil
 	}
 	return p.RolloverAmount
+}
+
+func (p *ProvisionCreditBenefit) GetRolloverAmountDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.RolloverAmountDecimal
 }
 
 func (p *ProvisionCreditBenefit) GetRolloverDuration() *int {
@@ -3459,14 +3585,22 @@ func (p *ProvisionOrderLine) String() string {
 }
 
 type ProvisionOrderLineAttribute struct {
-	Name     string `json:"name" url:"name"`
-	Quantity *int   `json:"quantity,omitempty" url:"quantity,omitempty"`
+	// The existing product attribute's ID. Disambiguates catalogue fees with the same name; must belong to this line's product.
+	AttributeID *string `json:"attributeId,omitempty" url:"attributeId,omitempty"`
+	Name        string  `json:"name" url:"name"`
+	// Whether the line uses the catalog price or an intentional custom override. Omitted pricing uses the catalog; explicit pricing defaults to custom.
+	PriceSource *ProvisionOrderLineAttributePriceSource `json:"priceSource,omitempty" url:"priceSource,omitempty"`
+	Quantity    *int                                    `json:"quantity,omitempty" url:"quantity,omitempty"`
 	// When omitted, the line uses the pricing of the product attribute with the same name, unchanged. This includes pricing models that this request cannot express. Send pricing only to override the catalog price for this order.
 	Pricing *ProvisionOrderLineAttributePricing `json:"pricing,omitempty" url:"pricing,omitempty"`
-	// Overrides the credit amount on every credit benefit this attribute carries onto the order line. Paid grants creditAmount × quantity per allocation. When omitted, the product attribute's configured benefit amount applies.
+	// Overrides the credit amount on every credit benefit this attribute carries onto the order line. Paid grants creditAmount × quantity per allocation. When omitted, the product attribute's configured benefit amount applies. Send this or `creditAmountDecimal`; when both are sent they must be equal.
 	CreditAmount *float64 `json:"creditAmount,omitempty" url:"creditAmount,omitempty"`
+	// The same amount as `creditAmount`, as an exact decimal string with up to 15 decimal places. Send this or `creditAmount`; when both are sent they must be equal.
+	CreditAmountDecimal *string `json:"creditAmountDecimal,omitempty" url:"creditAmountDecimal,omitempty"`
 	// Overrides the overage unit price, in the currency's minor units, for credits consumed beyond the granted balance, on this attribute only: applied to every credit benefit this attribute carries onto the order line, or to the attribute's pricing when it carries no benefits, and it replaces this attribute's per-currency price for the order currency, so it is what this attribute bills in every currency. Other attributes on the order that price the same credits currency keep their own overage prices, and the invoice bills the highest entry for its currency across all of them. When omitted, the product attribute's configured overage applies; null clears it, so the attribute takes its order-currency per-currency price, or none if it has no map.
 	OverageUnitPrice *int `json:"overageUnitPrice,omitempty" url:"overageUnitPrice,omitempty"`
+	// Exact overage price per credit, keyed by currency, as decimal text in the currency’s smallest stored unit. Used instead of overageUnitPrices when present. Requires decimal pricing to be enabled.
+	OverageUnitPricesDecimal map[string]*string `json:"overageUnitPricesDecimal,omitempty" url:"overageUnitPricesDecimal,omitempty"`
 	// Overrides this attribute's per-currency overage prices, in each currency's minor units keyed by uppercase ISO 4217 currency code, wherever overageUnitPrice would land. An entry for the order currency also becomes the attribute's overageUnitPrice. Keys must be currencies the product is priced in. When omitted, the product attribute's configured per-currency prices apply; null removes them, leaving only the scalar overage.
 	OverageUnitPrices map[string]*int                          `json:"overageUnitPrices,omitempty" url:"overageUnitPrices,omitempty"`
 	DiscountType      *ProvisionOrderLineAttributeDiscountType `json:"discountType,omitempty" url:"discountType,omitempty"`
@@ -3479,11 +3613,25 @@ type ProvisionOrderLineAttribute struct {
 	rawJSON         json.RawMessage
 }
 
+func (p *ProvisionOrderLineAttribute) GetAttributeID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.AttributeID
+}
+
 func (p *ProvisionOrderLineAttribute) GetName() string {
 	if p == nil {
 		return ""
 	}
 	return p.Name
+}
+
+func (p *ProvisionOrderLineAttribute) GetPriceSource() *ProvisionOrderLineAttributePriceSource {
+	if p == nil {
+		return nil
+	}
+	return p.PriceSource
 }
 
 func (p *ProvisionOrderLineAttribute) GetQuantity() *int {
@@ -3507,11 +3655,25 @@ func (p *ProvisionOrderLineAttribute) GetCreditAmount() *float64 {
 	return p.CreditAmount
 }
 
+func (p *ProvisionOrderLineAttribute) GetCreditAmountDecimal() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CreditAmountDecimal
+}
+
 func (p *ProvisionOrderLineAttribute) GetOverageUnitPrice() *int {
 	if p == nil {
 		return nil
 	}
 	return p.OverageUnitPrice
+}
+
+func (p *ProvisionOrderLineAttribute) GetOverageUnitPricesDecimal() map[string]*string {
+	if p == nil {
+		return nil
+	}
+	return p.OverageUnitPricesDecimal
 }
 
 func (p *ProvisionOrderLineAttribute) GetOverageUnitPrices() map[string]*int {
@@ -3593,6 +3755,29 @@ func NewProvisionOrderLineAttributeDiscountTypeFromString(s string) (ProvisionOr
 }
 
 func (p ProvisionOrderLineAttributeDiscountType) Ptr() *ProvisionOrderLineAttributeDiscountType {
+	return &p
+}
+
+// Whether the line uses the catalog price or an intentional custom override. Omitted pricing uses the catalog; explicit pricing defaults to custom.
+type ProvisionOrderLineAttributePriceSource string
+
+const (
+	ProvisionOrderLineAttributePriceSourceCatalog ProvisionOrderLineAttributePriceSource = "catalog"
+	ProvisionOrderLineAttributePriceSourceCustom  ProvisionOrderLineAttributePriceSource = "custom"
+)
+
+func NewProvisionOrderLineAttributePriceSourceFromString(s string) (ProvisionOrderLineAttributePriceSource, error) {
+	switch s {
+	case "catalog":
+		return ProvisionOrderLineAttributePriceSourceCatalog, nil
+	case "custom":
+		return ProvisionOrderLineAttributePriceSourceCustom, nil
+	}
+	var t ProvisionOrderLineAttributePriceSource
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ProvisionOrderLineAttributePriceSource) Ptr() *ProvisionOrderLineAttributePriceSource {
 	return &p
 }
 
@@ -5102,6 +5287,7 @@ type UpdateSeatAssignmentRequest struct {
 }
 
 type ProvisionRequest struct {
+	// A unique key for this provision, such as the source record ID plus its last-modified time. Retrying with the same key and body returns the stored response with the `Idempotent-Replayed: true` header. The same key with a different body returns 409 `IDEMPOTENCY_KEY_CONFLICT`.
 	IdempotencyKey    string                      `json:"-" url:"-"`
 	ExternalReference *ProvisionExternalReference `json:"externalReference,omitempty" url:"-"`
 	Customer          *ProvisionCustomer          `json:"customer,omitempty" url:"-"`

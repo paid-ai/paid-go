@@ -643,12 +643,18 @@ type CreditBalance struct {
 	CreditsCurrencyID string `json:"creditsCurrencyId" url:"creditsCurrencyId"`
 	CurrencyName      string `json:"currencyName" url:"currencyName"`
 	CurrencyKey       string `json:"currencyKey" url:"currencyKey"`
-	// Effective spendable balance across all grants in this pool, rollover-capped during rollover windows. Equals sum(grants[].available). JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
+	// Effective spendable balance across all grants in this pool, rollover-capped during rollover windows. Equals sum(grants[].availableDecimal). JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `availableDecimal` for the exact value.
 	Available float64 `json:"available" url:"available"`
-	// JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
+	// Exact value of `available` as a decimal string, at any magnitude and every decimal place it carries.
+	AvailableDecimal string `json:"availableDecimal" url:"availableDecimal"`
+	// JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `usedDecimal` for the exact value.
 	Used float64 `json:"used" url:"used"`
-	// JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
+	// Exact value of `used` as a decimal string, at any magnitude and every decimal place it carries.
+	UsedDecimal string `json:"usedDecimal" url:"usedDecimal"`
+	// JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `totalDecimal` for the exact value.
 	Total float64 `json:"total" url:"total"`
+	// Exact value of `total` as a decimal string, at any magnitude and every decimal place it carries.
+	TotalDecimal string `json:"totalDecimal" url:"totalDecimal"`
 	// Aggregate min(periodStart) across grants in this pool. Does not correspond to any real billing period when grants overlap. Use grants[].periodStart instead. Will be removed in a future API version.
 	PeriodStart *time.Time `json:"periodStart,omitempty" url:"periodStart,omitempty"`
 	// Aggregate max(periodEnd) across grants in this pool. Does not correspond to any real billing period when grants overlap. Use grants[].periodEnd or grants[].expiresAt instead. Will be removed in a future API version.
@@ -690,6 +696,13 @@ func (c *CreditBalance) GetAvailable() float64 {
 	return c.Available
 }
 
+func (c *CreditBalance) GetAvailableDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.AvailableDecimal
+}
+
 func (c *CreditBalance) GetUsed() float64 {
 	if c == nil {
 		return 0
@@ -697,11 +710,25 @@ func (c *CreditBalance) GetUsed() float64 {
 	return c.Used
 }
 
+func (c *CreditBalance) GetUsedDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.UsedDecimal
+}
+
 func (c *CreditBalance) GetTotal() float64 {
 	if c == nil {
 		return 0
 	}
 	return c.Total
+}
+
+func (c *CreditBalance) GetTotalDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.TotalDecimal
 }
 
 func (c *CreditBalance) GetPeriodStart() *time.Time {
@@ -866,18 +893,27 @@ func (c CreditBalanceRecipient) Ptr() *CreditBalanceRecipient {
 }
 
 type CreditGrant struct {
-	// JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
+	// JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `availableDecimal` for the exact value.
 	Available float64 `json:"available" url:"available"`
-	// JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
+	// Exact value of `available` as a decimal string, at any magnitude and every decimal place it carries.
+	AvailableDecimal string `json:"availableDecimal" url:"availableDecimal"`
+	// JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `usedDecimal` for the exact value.
 	Used float64 `json:"used" url:"used"`
-	// JSON number; exact within ±2^53 — balances are sums and can legitimately exceed it.
-	Total              float64    `json:"total" url:"total"`
-	RolloverAmount     *float64   `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
-	PeriodStart        time.Time  `json:"periodStart" url:"periodStart"`
-	PeriodEnd          *time.Time `json:"periodEnd,omitempty" url:"periodEnd,omitempty"`
-	RolloverEndDate    *time.Time `json:"rolloverEndDate,omitempty" url:"rolloverEndDate,omitempty"`
-	ExpiresAt          *time.Time `json:"expiresAt,omitempty" url:"expiresAt,omitempty"`
-	IsInRolloverWindow bool       `json:"isInRolloverWindow" url:"isInRolloverWindow"`
+	// Exact value of `used` as a decimal string, at any magnitude and every decimal place it carries.
+	UsedDecimal string `json:"usedDecimal" url:"usedDecimal"`
+	// JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `totalDecimal` for the exact value.
+	Total float64 `json:"total" url:"total"`
+	// Exact value of `total` as a decimal string, at any magnitude and every decimal place it carries.
+	TotalDecimal string `json:"totalDecimal" url:"totalDecimal"`
+	// JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `rolloverAmountDecimal` for the exact value.
+	RolloverAmount *float64 `json:"rolloverAmount,omitempty" url:"rolloverAmount,omitempty"`
+	// Exact value of `rolloverAmount` as a decimal string, at any magnitude and every decimal place it carries. Null when the grant has no rollover.
+	RolloverAmountDecimal *string    `json:"rolloverAmountDecimal,omitempty" url:"rolloverAmountDecimal,omitempty"`
+	PeriodStart           time.Time  `json:"periodStart" url:"periodStart"`
+	PeriodEnd             *time.Time `json:"periodEnd,omitempty" url:"periodEnd,omitempty"`
+	RolloverEndDate       *time.Time `json:"rolloverEndDate,omitempty" url:"rolloverEndDate,omitempty"`
+	ExpiresAt             *time.Time `json:"expiresAt,omitempty" url:"expiresAt,omitempty"`
+	IsInRolloverWindow    bool       `json:"isInRolloverWindow" url:"isInRolloverWindow"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -890,11 +926,25 @@ func (c *CreditGrant) GetAvailable() float64 {
 	return c.Available
 }
 
+func (c *CreditGrant) GetAvailableDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.AvailableDecimal
+}
+
 func (c *CreditGrant) GetUsed() float64 {
 	if c == nil {
 		return 0
 	}
 	return c.Used
+}
+
+func (c *CreditGrant) GetUsedDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.UsedDecimal
 }
 
 func (c *CreditGrant) GetTotal() float64 {
@@ -904,11 +954,25 @@ func (c *CreditGrant) GetTotal() float64 {
 	return c.Total
 }
 
+func (c *CreditGrant) GetTotalDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.TotalDecimal
+}
+
 func (c *CreditGrant) GetRolloverAmount() *float64 {
 	if c == nil {
 		return nil
 	}
 	return c.RolloverAmount
+}
+
+func (c *CreditGrant) GetRolloverAmountDecimal() *string {
+	if c == nil {
+		return nil
+	}
+	return c.RolloverAmountDecimal
 }
 
 func (c *CreditGrant) GetPeriodStart() time.Time {
@@ -1011,8 +1075,10 @@ func (c *CreditGrant) String() string {
 type CreditGrantCreateRequest struct {
 	// Stable machine-readable key for the active credit currency to grant.
 	CreditCurrencyKey string `json:"creditCurrencyKey" url:"creditCurrencyKey"`
-	// Number of credits to grant, exact to at most 6 decimal places. This is not a monetary amount.
-	Amount float64 `json:"amount" url:"amount"`
+	// Number of credits to grant. This is not a monetary amount. Up to 15 decimal places. Send this or `amountDecimal`; when both are sent they must be equal.
+	Amount *float64 `json:"amount,omitempty" url:"amount,omitempty"`
+	// The same amount as `amount`, as an exact decimal string with up to 15 decimal places. Send this or `amount`; when both are sent they must be equal. Exact at any magnitude the balance can hold.
+	AmountDecimal *string `json:"amountDecimal,omitempty" url:"amountDecimal,omitempty"`
 	// When these credits become spendable, as an RFC3339 datetime with timezone. Must be at or before the current server time. Defaults to the current server time when omitted.
 	StartsAt *time.Time `json:"startsAt,omitempty" url:"startsAt,omitempty"`
 	// When these credits expire, as an RFC3339 datetime with timezone. Omit or set null for credits that do not expire.
@@ -1031,11 +1097,18 @@ func (c *CreditGrantCreateRequest) GetCreditCurrencyKey() string {
 	return c.CreditCurrencyKey
 }
 
-func (c *CreditGrantCreateRequest) GetAmount() float64 {
+func (c *CreditGrantCreateRequest) GetAmount() *float64 {
 	if c == nil {
-		return 0
+		return nil
 	}
 	return c.Amount
+}
+
+func (c *CreditGrantCreateRequest) GetAmountDecimal() *string {
+	if c == nil {
+		return nil
+	}
+	return c.AmountDecimal
 }
 
 func (c *CreditGrantCreateRequest) GetStartsAt() *time.Time {
@@ -1228,7 +1301,7 @@ func (c *CreditGrantCustomer) String() string {
 type CreditGrantResult struct {
 	// Whole-credit projection of the amount granted, truncated toward zero. May be 0 for a sub-unit grant. Exact for values within ±2^53; see amountDecimal for the exact value at any magnitude.
 	Amount int `json:"amount" url:"amount"`
-	// Exact number of credits granted, as a decimal string. Exact at any magnitude, and at the full 6 decimal places.
+	// Exact number of credits granted, as a decimal string. Exact at any magnitude and at every decimal place the value carries.
 	AmountDecimal string `json:"amountDecimal" url:"amountDecimal"`
 	// When these credits become spendable, as an RFC3339 datetime with timezone.
 	StartsAt time.Time `json:"startsAt" url:"startsAt"`
@@ -1795,7 +1868,9 @@ func (c *CustomerAliasListResponse) String() string {
 
 type CustomerAPIKey struct {
 	// The key's id.
-	ID          string  `json:"id" url:"id"`
+	ID string `json:"id" url:"id"`
+	// The key's display id (`key_…`), for telling keys apart in lists and logs. It is not the secret and cannot authenticate.
+	DisplayID   *string `json:"displayId,omitempty" url:"displayId,omitempty"`
 	Name        string  `json:"name" url:"name"`
 	Description *string `json:"description,omitempty" url:"description,omitempty"`
 	// Display id (`cus_…`) of the customer the key acts for.
@@ -1824,6 +1899,13 @@ func (c *CustomerAPIKey) GetID() string {
 		return ""
 	}
 	return c.ID
+}
+
+func (c *CustomerAPIKey) GetDisplayID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.DisplayID
 }
 
 func (c *CustomerAPIKey) GetName() string {
@@ -2057,7 +2139,9 @@ func (c *CustomerAPIKeyCreate) String() string {
 
 type CustomerAPIKeyCreated struct {
 	// The key's id.
-	ID          string  `json:"id" url:"id"`
+	ID string `json:"id" url:"id"`
+	// The key's display id (`key_…`), for telling keys apart in lists and logs. It is not the secret and cannot authenticate.
+	DisplayID   *string `json:"displayId,omitempty" url:"displayId,omitempty"`
 	Name        string  `json:"name" url:"name"`
 	Description *string `json:"description,omitempty" url:"description,omitempty"`
 	// Display id (`cus_…`) of the customer the key acts for.
@@ -2088,6 +2172,13 @@ func (c *CustomerAPIKeyCreated) GetID() string {
 		return ""
 	}
 	return c.ID
+}
+
+func (c *CustomerAPIKeyCreated) GetDisplayID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.DisplayID
 }
 
 func (c *CustomerAPIKeyCreated) GetName() string {
@@ -3020,10 +3111,13 @@ func (c CustomerStateCheckoutLinkStatus) Ptr() *CustomerStateCheckoutLinkStatus 
 }
 
 type CustomerStateCreditBalance struct {
-	CreditsCurrencyID string  `json:"creditsCurrencyId" url:"creditsCurrencyId"`
-	CurrencyName      string  `json:"currencyName" url:"currencyName"`
-	CurrencyKey       string  `json:"currencyKey" url:"currencyKey"`
-	Balance           float64 `json:"balance" url:"balance"`
+	CreditsCurrencyID string `json:"creditsCurrencyId" url:"creditsCurrencyId"`
+	CurrencyName      string `json:"currencyName" url:"currencyName"`
+	CurrencyKey       string `json:"currencyKey" url:"currencyKey"`
+	// JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `balanceDecimal` for the exact value.
+	Balance float64 `json:"balance" url:"balance"`
+	// Exact value of `balance` as a decimal string, at any magnitude and every decimal place it carries.
+	BalanceDecimal string `json:"balanceDecimal" url:"balanceDecimal"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -3055,6 +3149,13 @@ func (c *CustomerStateCreditBalance) GetBalance() float64 {
 		return 0
 	}
 	return c.Balance
+}
+
+func (c *CustomerStateCreditBalance) GetBalanceDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.BalanceDecimal
 }
 
 func (c *CustomerStateCreditBalance) GetExtraProperties() map[string]interface{} {
@@ -4162,8 +4263,10 @@ func (c *CustomerUnitCapEndResponse) String() string {
 
 // The cap version that was in force at the time of the call, now ended (`effectiveUntil` set). `null` when no version was in force — only scheduled versions were ended.
 type CustomerUnitCapEndedPolicy struct {
-	// The cap, in credits of the currency. JSON number; exact within ±2^53.
+	// The cap, in credits of the currency. JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `amountDecimal` for the exact value.
 	Amount float64 `json:"amount" url:"amount"`
+	// Exact value of `amount` as a decimal string, at any magnitude and every decimal place it carries.
+	AmountDecimal string `json:"amountDecimal" url:"amountDecimal"`
 	// Monthly UTC periods, with boundaries defined by `schedule`.
 	Frequency CustomerUnitCapEndedPolicyFrequency `json:"frequency" url:"frequency"`
 	Schedule  *CustomerUnitCapSchedule            `json:"schedule" url:"schedule"`
@@ -4185,6 +4288,13 @@ func (c *CustomerUnitCapEndedPolicy) GetAmount() float64 {
 		return 0
 	}
 	return c.Amount
+}
+
+func (c *CustomerUnitCapEndedPolicy) GetAmountDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.AmountDecimal
 }
 
 func (c *CustomerUnitCapEndedPolicy) GetFrequency() CustomerUnitCapEndedPolicyFrequency {
@@ -4309,8 +4419,10 @@ func (c CustomerUnitCapEndedPolicyFrequency) Ptr() *CustomerUnitCapEndedPolicyFr
 
 // The cap version in force now.
 type CustomerUnitCapPolicy struct {
-	// The cap, in credits of the currency. JSON number; exact within ±2^53.
+	// The cap, in credits of the currency. JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `amountDecimal` for the exact value.
 	Amount float64 `json:"amount" url:"amount"`
+	// Exact value of `amount` as a decimal string, at any magnitude and every decimal place it carries.
+	AmountDecimal string `json:"amountDecimal" url:"amountDecimal"`
 	// Monthly UTC periods, with boundaries defined by `schedule`.
 	Frequency CustomerUnitCapPolicyFrequency `json:"frequency" url:"frequency"`
 	Schedule  *CustomerUnitCapSchedule       `json:"schedule" url:"schedule"`
@@ -4332,6 +4444,13 @@ func (c *CustomerUnitCapPolicy) GetAmount() float64 {
 		return 0
 	}
 	return c.Amount
+}
+
+func (c *CustomerUnitCapPolicy) GetAmountDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.AmountDecimal
 }
 
 func (c *CustomerUnitCapPolicy) GetFrequency() CustomerUnitCapPolicyFrequency {
@@ -4537,8 +4656,10 @@ func (c *CustomerUnitCapResponse) String() string {
 
 // The new version, or the existing version covering the requested effectiveFrom when changed is false. New versions are open; an existing version may have a finite end.
 type CustomerUnitCapSavedPolicy struct {
-	// The cap, in credits of the currency. JSON number; exact within ±2^53.
+	// The cap, in credits of the currency. JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `amountDecimal` for the exact value.
 	Amount float64 `json:"amount" url:"amount"`
+	// Exact value of `amount` as a decimal string, at any magnitude and every decimal place it carries.
+	AmountDecimal string `json:"amountDecimal" url:"amountDecimal"`
 	// Monthly UTC periods, with boundaries defined by `schedule`.
 	Frequency CustomerUnitCapSavedPolicyFrequency `json:"frequency" url:"frequency"`
 	Schedule  *CustomerUnitCapSchedule            `json:"schedule" url:"schedule"`
@@ -4560,6 +4681,13 @@ func (c *CustomerUnitCapSavedPolicy) GetAmount() float64 {
 		return 0
 	}
 	return c.Amount
+}
+
+func (c *CustomerUnitCapSavedPolicy) GetAmountDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.AmountDecimal
 }
 
 func (c *CustomerUnitCapSavedPolicy) GetFrequency() CustomerUnitCapSavedPolicyFrequency {
@@ -4885,8 +5013,10 @@ func (c CustomerUnitCapScheduleInputOneType) Ptr() *CustomerUnitCapScheduleInput
 }
 
 type CustomerUnitCapSet struct {
-	// The cap, in credits of the currency, per period. Must be positive.
-	Amount float64 `json:"amount" url:"amount"`
+	// The cap, in credits of the currency, per period. Must be positive. Up to 15 decimal places. Send this or `amountDecimal`; when both are sent they must be equal.
+	Amount *float64 `json:"amount,omitempty" url:"amount,omitempty"`
+	// The same amount as `amount`, as an exact decimal string with up to 15 decimal places. Send this or `amount`; when both are sent they must be equal. Must be positive.
+	AmountDecimal *string `json:"amountDecimal,omitempty" url:"amountDecimal,omitempty"`
 	// Monthly UTC periods, with boundaries defined by `schedule`.
 	Frequency *CustomerUnitCapSetFrequency  `json:"frequency,omitempty" url:"frequency,omitempty"`
 	Schedule  *CustomerUnitCapScheduleInput `json:"schedule,omitempty" url:"schedule,omitempty"`
@@ -4899,11 +5029,18 @@ type CustomerUnitCapSet struct {
 	rawJSON         json.RawMessage
 }
 
-func (c *CustomerUnitCapSet) GetAmount() float64 {
+func (c *CustomerUnitCapSet) GetAmount() *float64 {
 	if c == nil {
-		return 0
+		return nil
 	}
 	return c.Amount
+}
+
+func (c *CustomerUnitCapSet) GetAmountDecimal() *string {
+	if c == nil {
+		return nil
+	}
+	return c.AmountDecimal
 }
 
 func (c *CustomerUnitCapSet) GetFrequency() *CustomerUnitCapSetFrequency {
@@ -5446,8 +5583,10 @@ type CustomerUnitSpendResponse struct {
 	// The credits currency this response is about: the requested `creditsCurrencyId`, or the organization's only credits currency when it was omitted.
 	CreditsCurrencyID string                   `json:"creditsCurrencyId" url:"creditsCurrencyId"`
 	Window            *CustomerUnitSpendWindow `json:"window" url:"window"`
-	// Credits of this currency spent by this unit and every unit beneath it during the window, net of reversals. Counted whether or not the unit has a cap. JSON number; exact within ±2^53.
+	// Credits of this currency spent by this unit and every unit beneath it during the window, net of reversals. Counted whether or not the unit has a cap. JSON number, up to 6 decimal places, truncated toward zero; exact only within ±2^53. Use `spentDecimal` for the exact value.
 	Spent float64 `json:"spent" url:"spent"`
+	// Exact value of `spent` as a decimal string, at any magnitude and every decimal place it carries.
+	SpentDecimal string `json:"spentDecimal" url:"spentDecimal"`
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
@@ -5486,6 +5625,13 @@ func (c *CustomerUnitSpendResponse) GetSpent() float64 {
 		return 0
 	}
 	return c.Spent
+}
+
+func (c *CustomerUnitSpendResponse) GetSpentDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return c.SpentDecimal
 }
 
 func (c *CustomerUnitSpendResponse) GetExtraProperties() map[string]interface{} {
@@ -5967,7 +6113,7 @@ func (g *GrantCustomerCreditsResponse) String() string {
 type PendingCreditConsumption struct {
 	// Whole-credit projection of the credits consumed, truncated toward zero. May be 0 for a sub-unit consumption. Exact for values within ±2^53; see creditsDecimal for the exact value at any magnitude. This is not a monetary amount.
 	Credits int `json:"credits" url:"credits"`
-	// Exact number of credits consumed, as a decimal string. Exact at any magnitude, and at the full 6 decimal places.
+	// Exact number of credits consumed, as a decimal string. Exact at any magnitude and at every decimal place the value carries.
 	CreditsDecimal string                            `json:"creditsDecimal" url:"creditsDecimal"`
 	CreditCurrency *PendingCreditConsumptionCurrency `json:"creditCurrency,omitempty" url:"creditCurrency,omitempty"`
 	// Paid order display ID the consumption belongs to, if any.

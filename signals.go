@@ -1542,7 +1542,7 @@ type SignalSummaryPoint struct {
 	GroupKey *string `json:"groupKey,omitempty" url:"groupKey,omitempty"`
 	// Signals recorded in this period, counted one per signal.
 	SignalCount float64 `json:"signalCount" url:"signalCount"`
-	// Quantity reported by those signals — one signal reporting a batch of 100 adds 100. Equals signalCount when every signal reported a single occurrence.
+	// Quantity reported by those signals — one signal reporting a batch of 100 adds 100. A decimal quantity counts as sent, so it can have a fractional part: two signals of 2.5 add 5. A signal with no quantity adds 1, and one whose quantity is not a number or is below zero adds 0. Equals signalCount when every signal reported a single occurrence.
 	QuantityTotal float64 `json:"quantityTotal" url:"quantityTotal"`
 
 	extraProperties map[string]interface{}
@@ -2304,6 +2304,8 @@ type SignalVoidCellEffect struct {
 	NextBillingDate time.Time `json:"nextBillingDate" url:"nextBillingDate"`
 	// How much usage was taken back from this billing period, in the attribute's own usage units: the signal's net quantity there.
 	Quantity float64 `json:"quantity" url:"quantity"`
+	// The exact net usage taken back, as a decimal string. Use this field when every fractional digit matters; quantity is the numeric approximation for clients using floating-point numbers.
+	QuantityDecimal *string `json:"quantityDecimal,omitempty" url:"quantityDecimal,omitempty"`
 	// True when the usage taken back was tracked but never billed, because the signal's customer unit is not billable; false for billable usage.
 	NonBillable bool `json:"nonBillable" url:"nonBillable"`
 
@@ -2330,6 +2332,13 @@ func (s *SignalVoidCellEffect) GetQuantity() float64 {
 		return 0
 	}
 	return s.Quantity
+}
+
+func (s *SignalVoidCellEffect) GetQuantityDecimal() *string {
+	if s == nil {
+		return nil
+	}
+	return s.QuantityDecimal
 }
 
 func (s *SignalVoidCellEffect) GetNonBillable() bool {

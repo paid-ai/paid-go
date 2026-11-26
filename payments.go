@@ -14,7 +14,7 @@ type CreatePaymentRequest struct {
 	CustomerID *string `json:"customerId,omitempty" url:"-"`
 	// Your external customer ID the payment belongs to.
 	ExternalCustomerID *string `json:"externalCustomerId,omitempty" url:"-"`
-	// Payment amount in cents (minor currency units).
+	// Payment amount in stored minor units: cents for USD, hundredths of a yen for JPY (currencyDecimals 2).
 	Amount int `json:"amount" url:"-"`
 	// Three-letter ISO 4217 currency code. Lowercase is accepted and stored upper-cased.
 	Currency string `json:"currency" url:"-"`
@@ -74,14 +74,16 @@ type Payment struct {
 	InvoiceID *string `json:"invoiceId,omitempty" url:"invoiceId,omitempty"`
 	// The order this payment relates to, when known.
 	OrderID *string `json:"orderId,omitempty" url:"orderId,omitempty"`
-	// Payment amount in cents (minor currency units).
+	// Payment amount in stored minor units: cents for USD, hundredths of a yen for JPY (currencyDecimals 2).
 	Amount int `json:"amount" url:"amount"`
-	// Portion of the amount already allocated to invoice lines, in cents.
+	// Portion allocated to invoice lines, in stored minor units described by currencyDecimals.
 	AllocatedAmount int `json:"allocatedAmount" url:"allocatedAmount"`
-	// Unallocated remainder of the payment, in cents.
+	// Unallocated remainder, in stored minor units described by currencyDecimals.
 	Balance int `json:"balance" url:"balance"`
 	// Three-letter ISO currency code.
 	Currency string `json:"currency" url:"currency"`
+	// Decimals of this payment's amounts, from the currency and how Paid stores it: 2 for USD (4999 is $49.99); 2 for JPY, which Paid stores in hundredths of a yen (150000 is ¥1,500). Divide amounts by 10^currencyDecimals; never assume 100.
+	CurrencyDecimals int `json:"currencyDecimals" url:"currencyDecimals"`
 	// When the payment was made.
 	PaymentDate time.Time `json:"paymentDate" url:"paymentDate"`
 	// How the payment was made, e.g. creditCard, bankTransfer, ach, cash, or check.
@@ -158,6 +160,13 @@ func (p *Payment) GetCurrency() string {
 		return ""
 	}
 	return p.Currency
+}
+
+func (p *Payment) GetCurrencyDecimals() int {
+	if p == nil {
+		return 0
+	}
+	return p.CurrencyDecimals
 }
 
 func (p *Payment) GetPaymentDate() time.Time {
